@@ -1,39 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 	
 	//Make items editable
-	document.querySelectorAll('.editable').forEach(function(element) {
-		let item = element.id,
-			edit = document.createElement('a');
-		edit.classList.add('edit');
-		edit.textContent="✎";
-		edit.href='#';
-		edit.addEventListener('click', function(e) {
-			e.preventDefault();
-			let inp = document.createElement(item=='semester' ? 'select' : 'input');
-			inp.name = item;
-			inp.id = item;
-			if (item=='classname') {
-				inp.placeholder = "Class name";
-				inp.type = 'text';
-			} else if (item=='year') {
-				inp.placeholder = "year";
-				inp.type = 'number';
-				inp.min = '2023';
-				inp.max = '2100';
-			} else if (item=='semester') {
-				let html = '', seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
-				seasons.forEach(function(s) { html += '<option value="'+s.toLowerCase()+'">'+s+'</option>'; })
-				inp.innerHTML = html;
-			}
-			if (item=='semester') inp.value = element.textContent.replace('✎','').toLowerCase(); //To do, not working
-			else inp.value = element.textContent.replace('✎','');
-
-			element.parentNode.insertBefore(inp, element)
-			element.remove();
-			inp.focus();
-		});
-		element.appendChild(edit);
-	});
+	document.querySelectorAll('.editable').forEach(addEditIcon);
 	
 	//Handle CSV
 	let csvElement = document.getElementById('csvfile');
@@ -75,3 +43,70 @@ document.addEventListener('DOMContentLoaded', function() {
 		reader.readAsText(this.files[0]);
 	});
 });
+
+var editables = {
+	name: {input: 'text', attrs: {placeholder: 'Class Name'}},
+	semester: {input: 'select'},
+	year: {input: 'number', attrs: {min: 2023, max: 2100, placeholder: 'year'}}
+}
+function addEditIcon(element) {
+	let item = element.id,
+		edit = document.createElement('a');
+	edit.classList.add('edit');
+	edit.textContent="✎";
+	edit.href='#';
+	edit.addEventListener('click', function(e) {
+		e.preventDefault();
+		let inp;
+		if (editables[item]['input']=='select') {
+			inp = document.createElement('select');
+			let html = '', seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
+			seasons.forEach(function(s) { html += '<option value="'+s.toLowerCase()+'">'+s+'</option>'; })
+			inp.innerHTML = html;
+		} else {
+			inp = document.createElement(item=='semester' ? 'select' : 'input');
+			inp.type = editables[item]['input'];
+		}
+		inp.name = item;
+		inp.id = item;
+		inp.oldTagName = element.tagName; //Save to recreate later
+		inp.classList.add('submittable');
+		if ('attrs' in editables[item])
+			for (const [attr,val] of Object.entries(editables[item]['attrs']))
+				inp.setAttribute(attr, val);
+
+		if (item=='semester') inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
+		else inp.value = element.textContent.replace('✎','');
+		inp.oldValue = inp.value;
+	
+		//Allow saving on blur
+		inp.addEventListener('blur', function(e) {
+			function solidify(iel) {
+				let el = document.createElement(iel.oldTagName);
+				el.classList.add('editable');
+				el.id = inp.name;
+				el.textContent = iel.tagName.toLowerCase() == 'select' ? iel.querySelector('[value="'+inp.value+'"]').textContent : iel.value;
+				iel.parentNode.insertBefore(el, iel);
+				addEditIcon(el);
+				iel.remove();
+				return el;
+			}
+			
+			//Only make a request if the value has changed
+			if (inp.value != inp.oldValue) {
+				let req = new XMLHttpRequest();
+				req.open('GET', '../ajax.php?req=updateclassinfo&class='+classid+'&k='+inp.name+'&v='+inp.value, true);
+				req.onload = function() {
+					el = solidify(inp);
+				};
+				req.onerror = function() { inp.addClass('error'); };
+				req.send();
+			} else solidify(inp);
+		});
+
+		element.parentNode.insertBefore(inp, element)
+		element.remove();
+		inp.focus();
+	});
+	element.appendChild(edit);
+}

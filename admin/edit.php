@@ -16,9 +16,9 @@ if ($classid) $class = $sql->get_class($classid); ?>
 	<form id="classinfo">
 		<?php if ($classid) {
 			echo "<input type='hidden' name='classid' value='{$classid}'>";
-			echo "<h1 id='classname' class='editable'>{$class->name}</h1>";
+			echo "<h1 id='name' class='editable'>{$class->name}</h1>";
 		} else {
-			echo '<input type="text" id="classname" name="classname" placeholder="Class name">';
+			echo '<input type="text" id="name" name="name" placeholder="Class name">';
 		} ?>
 		
 		<p>

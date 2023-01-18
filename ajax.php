@@ -31,5 +31,10 @@ switch ($req) {
 			$i++;
 		}
 		echo json_encode($added);
-		break;		
+		break;
+	
+	case 'updateclassinfo':
+		$response = $sql->update_class_info($_GET['class'], $_GET['k'], $_GET['v']);
+		if ($response) echo $response;
+		else http_response_code(403);
 }
