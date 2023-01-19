@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	//Handle CSV
 	let csvElement = document.getElementById('csvfile');
-	csvElement.addEventListener('change', function(e) {
+	if (csvElement) csvElement.addEventListener('change', function(e) {
 		if (this.files.length == 0) return;
 		let reader = new FileReader();
 		
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				csvElement.parentNode.innerHTML = "Uploaded "+response.length+" students";
 				
 				let stable = document.getElementById('roster').querySelector('tbody'),
-					i = !stable.lastElementChild.classList.contains('odd');
+					i = stable.childElementCount>0 && !stable.lastElementChild.classList.contains('odd');
 				response.forEach(function(row) {
 					let tr = document.createElement('tr');
 					if (i) tr.classList.add('odd');
@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					stable.appendChild(tr);
 					i = !i;
 				});
+				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
 			};
 			req.onerror = function() {
 				console.log(this.response);

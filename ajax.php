@@ -6,7 +6,7 @@ $req = isset($_POST['req']) ? $_POST['req'] : $_GET['req'];
 
 switch ($req) {
 	case 'writeevent':
-		echo $sql->write_event($_GET['rosterid'], $_GET['result']);
+		echo $sql->new_event($_GET['rosterid'], $_GET['result']);
 		break;
 	
 	case 'uploadroster':

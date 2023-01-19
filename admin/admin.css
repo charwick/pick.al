@@ -5,7 +5,7 @@ body {
 	margin: 40px 40px;
 }
 
-a.button, button {
+a.button, button, input[type='submit'] {
 	display: inline-block;
 	background: #369;
 	padding: 8px 16px;
@@ -14,9 +14,11 @@ a.button, button {
 	border-radius: 20px;
 	margin-top: 1em;
 	cursor: pointer;
+	border: none;
+	font-size: 1.25em;
 }
 
-a.button:hover, button:hover {
+a.button:hover, button:hover, input[type='submit']:hover {
 	background: #258;
 }
 

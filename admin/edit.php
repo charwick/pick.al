@@ -1,7 +1,17 @@
 <?php require_once('../query.php');
 $sql = new chooser_query();
 $classid = isset($_GET['class']) ? $_GET['class'] : null;
-if ($classid) $class = $sql->get_class($classid); ?>
+if ($classid) $class = $sql->get_class($classid);
+$error = false;
+
+if (isset($_POST['name'])) {
+	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year']);
+	if ($id) {
+		$url = "edit.php?class={$id}";
+		header("Location: {$url}");
+		exit;
+	} else $error = true;
+} ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
@@ -13,33 +23,41 @@ if ($classid) $class = $sql->get_class($classid); ?>
 </head>
 
 <body>
-	<form id="classinfo">
-		<?php if ($classid) {
+	<form id="classinfo" action="" method="post">
+		<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
+		
+		if ($classid) {
 			echo "<input type='hidden' name='classid' value='{$classid}'>";
 			echo "<h1 id='name' class='editable'>{$class->name}</h1>";
 		} else {
-			echo '<input type="text" id="name" name="name" placeholder="Class name">';
+			echo '<h1>New class</h1>';
+			echo '<p><input type="text" id="name" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'"></p>';
 		} ?>
 		
 		<p>
 			<?php if ($classid) { ?>
 				<span class="editable" id="semester"> <?php echo ucwords($class->semester); ?></span>
 				<span class="editable" id="year"><?php echo $class->year; ?></span>
-			<?php } else { ?>
+			<?php } else {
+				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
+				if ($error) $selected = $_POST['semester'];
+				else $selected = date('n')<6 ? 'spring' : 'fall'; ?>
 				<select name="semester" id="semester">
-					<option value="spring">Spring</option>
-					<option value="fall">Fall</option>
-					<option value="winter">Winter</option>
-					<option value="summer">Summer</option>
+					<?php foreach ($seasons as $season)
+						echo "<option value='".strtolower($season)."'".($selected==strtolower($season) ? ' selected' : '').">{$season}</option>"; ?>
 				</select>
-				<input type="number" min="2023" max="2100" value="<?php echo date("Y"); ?>" />
+				<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>">
 			<?php } ?>
 		</p>
+		
+		<?php if (!$classid) { ?>
+			<p><input type="submit" name="submit" value="Submit"></p>
+		<?php } ?>
 	</form>
 	
 	<?php if ($classid) {
 		$roster = $sql->get_roster($classid); ?>
-		<h2>Student Roster (<?php echo count($roster); ?>)</h2>
+		<h2>Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)</h2>
 		
 		<table id="roster">
 			<thead>
@@ -58,7 +76,7 @@ if ($classid) $class = $sql->get_class($classid); ?>
 		</table>
 		
 		<h2>Upload Students</h2>
-		<p>Upload a with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
+		<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
 		
 		<p><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>
 	<?php } ?>

@@ -34,6 +34,14 @@ class chooser_query extends mysqli {
 		$result = $pq->get_result();
 		return $result->fetch_object();
 	}
+	
+	function new_class($name, $semester, $year) {
+		$pq = $this->prepare("INSERT INTO classes (name, semester, year, user) VALUES (?, ?, ?, ?)");
+		$pq->bind_param('ssii', $name, $semester, $year, self::$user);
+		$pq->execute();
+		
+		return $pq->insert_id;
+	}
 
 	//Get the roster for a class. Returns an array of objects
 	function get_roster($classid) {
@@ -47,7 +55,7 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 
-	function write_event($rosterid, $result) {
+	function new_event($rosterid, $result) {
 		$pq = $this->prepare("INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)");
 		$pq->bind_param('id', $rosterid, $result);
 		$pq->execute();
