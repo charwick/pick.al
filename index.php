@@ -24,6 +24,7 @@ $classid = isset($_GET['class']) ? $_GET['class'] : null; ?>
 <body>
 	<?php if ($classid) { ?>
 		<h1 id="classname"><?php echo $class->name; ?></h1>
+		<a href="." title="Back" id="backbutton">←</a>
 		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
 	
 		<div id="sinfo">

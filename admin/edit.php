@@ -5,7 +5,7 @@ if ($classid) $class = $sql->get_class($classid);
 $error = false;
 
 if (isset($_POST['name'])) {
-	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year']);
+	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil']);
 	if ($id) {
 		$url = "edit.php?class={$id}";
 		header("Location: {$url}");
@@ -39,6 +39,8 @@ if (isset($_POST['name'])) {
 			<?php if ($classid) { ?>
 				<span class="editable" id="semester"> <?php echo ucwords($class->semester); ?></span>
 				<span class="editable" id="year"><?php echo $class->year; ?></span>
+				<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
+				<span class="editable" id="activeuntil"><?php echo $class->activeuntil; ?></span>
 			<?php } else {
 				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
 				if ($error) $selected = $_POST['semester'];
@@ -48,6 +50,7 @@ if (isset($_POST['name'])) {
 						echo "<option value='".strtolower($season)."'".($selected==strtolower($season) ? ' selected' : '').">{$season}</option>"; ?>
 				</select>
 				<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>">
+				Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>">
 			<?php } ?>
 		</p>
 		

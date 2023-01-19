@@ -5,6 +5,8 @@ body {
 	margin: 40px 40px;
 }
 
+h1 { margin-bottom: 0.35em; }
+
 a.button, button, input[type='submit'] {
 	display: inline-block;
 	background: #369;

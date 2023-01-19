@@ -9,10 +9,8 @@ class chooser_query extends mysqli {
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 	}
 
-	function get_classes($active=null) {
-		if ($active === true) $aw = ' AND active=1';
-		elseif ($active === false) $aw = 'AND active=0';
-		else $aw = '';
+	function get_classes($active=false) {
+		$aw = $active ? ' AND activeuntil >= NOW()' : '';
 		
 		$q = "SELECT classes.*, COUNT(students.class) AS students
 			FROM classes
@@ -39,9 +37,9 @@ class chooser_query extends mysqli {
 		return $result->fetch_object();
 	}
 	
-	function new_class($name, $semester, $year) {
-		$pq = $this->prepare("INSERT INTO classes (name, semester, year, user) VALUES (?, ?, ?, ?)");
-		$pq->bind_param('ssii', $name, $semester, $year, self::$user);
+	function new_class($name, $semester, $year, $activeuntil) {
+		$pq = $this->prepare("INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)");
+		$pq->bind_param('ssisi', $name, $semester, $year, $activeuntil, self::$user);
 		$pq->execute();
 		
 		return $pq->insert_id;
@@ -77,7 +75,7 @@ class chooser_query extends mysqli {
 	}
 	
 	function update_class_info($class, $key, $val) {
-		$keys = ['name', 'semester', 'year'];
+		$keys = ['name', 'semester', 'year', 'activeuntil'];
 		if (!in_array($key, $keys)) return False;
 		
 		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");

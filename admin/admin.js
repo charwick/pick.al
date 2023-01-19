@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
 var editables = {
 	name: {input: 'text', attrs: {placeholder: 'Class Name'}},
 	semester: {input: 'select'},
-	year: {input: 'number', attrs: {min: 2023, max: 2100, placeholder: 'year'}}
+	year: {input: 'number', attrs: {min: 2023, max: 2100, placeholder: 'year'}},
+	activeuntil: {input: 'date'}
 }
 function addEditIcon(element) {
 	let item = element.id,
