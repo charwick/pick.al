@@ -6,6 +6,7 @@ $sql = new chooser_query(); ?>
 <head>
 	<title>Student-Chooser Admin</title>
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
+	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
 <body>

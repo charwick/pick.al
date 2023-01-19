@@ -9,11 +9,15 @@ class chooser_query extends mysqli {
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 	}
 
-	function get_classes() {
+	function get_classes($active=null) {
+		if ($active === true) $aw = ' AND active=1';
+		elseif ($active === false) $aw = 'AND active=0';
+		else $aw = '';
+		
 		$q = "SELECT classes.*, COUNT(students.class) AS students
 			FROM classes
 			LEFT JOIN students ON students.class=classes.id
-			WHERE classes.user=?
+			WHERE classes.user=? {$aw}
 			GROUP BY id
 			ORDER BY year DESC";
 		$pq = $this->prepare($q);

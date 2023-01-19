@@ -5,10 +5,11 @@ Array.prototype.random = function () {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-	var actions = document.getElementById('actions').querySelectorAll('button');
+	var actions = document.querySelectorAll('#actions button');
 	
 	//Chooser button
-	document.getElementById('pick').addEventListener('click', function(e) {
+	let pick = document.getElementById('pick');
+	if (pick) pick.addEventListener('click', function(e) {
 		student = roster.random();
 		currentStudent = student.id;
 		sinfo = document.getElementById('sinfo');

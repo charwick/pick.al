@@ -8,17 +8,20 @@ body {
 
 h1 {
 	font-weight: normal;
-	margin: 10vh 0 0;
+	margin: 12vh 0 0;
+	font-size: 2.5em;
 }
 p.subtitle {
 	color: #999;
-	margin-top: 0.5em;
+	margin-top: 1.25em;
+	font-size: 1.2em;
 }
 
-button {
+a.button, button, input[type='submit'] {
 	cursor: pointer;
 	color: #EEE;
 	border: none;
+	text-decoration: none;
 }
 button:disabled { opacity: 0.25; }
 button.picked:disabled { opacity: 1; }
@@ -42,6 +45,7 @@ button.picked:disabled { opacity: 1; }
 	width: 100%;
 	font-size: 4em;
 	padding: 10px 0;
+	height: 1.5em;
 }
 #actions li:first-child button { border-radius: 0 0 0 10px; }
 #actions li:last-child button { border-radius: 0 0 10px 0; }
@@ -65,3 +69,48 @@ button.picked:disabled { opacity: 1; }
 	font-size: 28px;
 }
 #pick:hover { background: #292;}
+
+#classlist {
+	margin: 0; padding: 0;
+	list-style: none;
+	position: absolute;
+	left: 40px; right: 40px;
+	bottom: 40px;
+}
+
+#classlist a {
+	display: block;
+	font-size: 2em;
+	color: #CCC;
+	text-decoration: none;
+	padding: 0.75em 0;
+	width: 100%;
+	border-top: 1px solid rgba(255,255,255,0.2);
+}
+#classlist a:hover {
+	background: rgba(255,255,255,0.05);
+	color: #DDD;
+}
+#classlist li:last-child a { border-bottom: 1px solid rgba(255,255,255,0.2); }
+#classlist a span {
+	display: block;
+	font-size: 0.5em;
+	margin-top: 0.25em;
+	color: #999;
+}
+
+#adminbutton {
+	display: inline-block;
+	border: 1px solid rgba(255,255,255,0.25);
+	padding: 0.5em 1em;
+	color: #999;
+	font-size: 0.8em;
+	border-radius: 30px;
+	position: absolute;
+	top: 20px; right: 20px;
+}
+#adminbutton:hover {
+	background: rgba(255,255,255,0.1);
+	border-color: rgba(255,255,255,0.35);
+	color: #BBB;
+}

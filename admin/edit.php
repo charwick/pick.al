@@ -20,6 +20,7 @@ if (isset($_POST['name'])) {
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">var classid = <?php echo $classid ? $classid : 'null'; ?>;</script>
 	<script type="text/javascript" src="admin.js"></script>
+	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
 <body>
