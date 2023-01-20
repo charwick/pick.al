@@ -15,3 +15,4 @@ The backend, in progress, allows class and roster management.
 * Full management and reports in the backend
 * Registration and login
 * Allow excused absences to be set
+* Undo and resubmit

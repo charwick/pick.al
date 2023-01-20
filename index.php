@@ -1,12 +1,19 @@
 <?php require_once('query.php');
 $sql = new chooser_query();
-$classid = isset($_GET['class']) ? $_GET['class'] : null; ?>
+$classid = isset($_GET['class']) ? $_GET['class'] : null;
+
+if ($classid) {
+	$class = $sql->get_class($classid);
+	if (!$class) {
+		require_once('404.php');
+		exit;
+	}
+} ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<?php if ($classid) {
-		$class = $sql->get_class($classid); ?>
+	<?php if ($classid) { ?>
 		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Student Chooser</title>
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,

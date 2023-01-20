@@ -1,7 +1,13 @@
 <?php require_once('../query.php');
 $sql = new chooser_query();
 $classid = isset($_GET['class']) ? $_GET['class'] : null;
-if ($classid) $class = $sql->get_class($classid);
+if ($classid) {
+	$class = $sql->get_class($classid);
+	if (!$class) {
+		require_once('../404.php');
+		exit;
+	}
+}
 $error = false;
 
 if (isset($_POST['name'])) {
