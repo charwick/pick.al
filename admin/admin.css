@@ -54,3 +54,4 @@ input#name {
 	padding-bottom: 10px;
 }
 tr.odd { background: rgba(0,0,0,0.05); }
+.nullscore { color: #AAA; }

@@ -47,7 +47,12 @@ class chooser_query extends mysqli {
 
 	//Get the roster for a class. Returns an array of objects
 	function get_roster($classid) {
-		$pq = $this->prepare("SELECT * FROM students WHERE class=? AND user=?");
+		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
+			FROM students
+			LEFT JOIN events ON events.student=students.id
+			WHERE class=? AND user=?
+			GROUP BY students.id";
+		$pq = $this->prepare($q);
 		$pq->bind_param('ii', $classid, self::$user);
 		$pq->execute();
 		$students = $pq->get_result();

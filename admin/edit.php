@@ -74,12 +74,20 @@ if (isset($_POST['name'])) {
 				<tr>
 					<th>First name</th>
 					<th>Last name</th>
+					<th>Score</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php $row=0;
 				foreach ($roster as $student) {
-					echo "<tr class='".($row?'odd':'')."'><td>{$student->fname}</td><td>{$student->lname}</td></tr>";
+					echo "<tr class='".($row?'odd':'')."'>";
+						echo "<td>{$student->fname}</td>";
+						echo "<td>{$student->lname}</td>";
+						echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
+							if ($student->score===null) echo '—';
+							else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
+						echo "</td>";
+					echo "</tr>";
 					$row = !$row;
 				} ?>
 			</tbody>

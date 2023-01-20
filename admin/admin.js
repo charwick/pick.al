@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				response.forEach(function(row) {
 					let tr = document.createElement('tr');
 					if (i) tr.classList.add('odd');
-					tr.innerHTML = '<td>'+row['fname']+'</td><td>'+row['lname']+'</td>';
+					tr.innerHTML = '<td>'+row['fname']+'</td><td>'+row['lname']+'</td><td class="nullscore">—</td>';
 					stable.appendChild(tr);
 					i = !i;
 				});
