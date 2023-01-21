@@ -5,7 +5,10 @@ body {
 	margin: 40px 40px;
 }
 
-h1 { margin-bottom: 0.35em; }
+h1 {
+	margin-bottom: 0.35em;
+	line-height: 150%;
+}
 
 a.button, button, input[type='submit'] {
 	display: inline-block;
@@ -29,7 +32,7 @@ input#name {
 	padding: 10px 25px;
 }
 
-.edit, .save {
+.edit, .save, .cancel {
 	text-decoration: none;
 	color: #AAA;
 	display: inline-block;
@@ -37,7 +40,7 @@ input#name {
 	font-size: 0.75em;
 }
 .edit { transform: scaleX(-1); } /* Flip the pencil */
-.edit:hover, .save:hover { color: #888; }
+.edit:hover, .save:hover, .cancel:hover { color: #888; }
 
 .lname .edit, .lname .save {
 	float: right;
@@ -63,3 +66,22 @@ tr:hover .edit { visibility: visible; }
 }
 tr.odd { background: rgba(0,0,0,0.05); }
 .nullscore { color: #AAA; }
+
+#addnew td { padding: 0; }
+#addnew a {
+	text-align: center;
+	display: block;
+	font-size: 1.5em;
+	font-weight: bold;
+	text-decoration: none;
+	color: #777;
+	padding: 5px 0;
+	border-top: 1px solid rgba(0,0,0,0.1);
+}
+#addnew a:hover {
+	background: rgba(0,0,0,0.1);
+	color: #555;
+}
+#addnew a.disabled { color: #CCC; }
+#addnew a.disabled:hover { background: none; }
+input.error { box-shadow: 0 0 3px 1px #D22; }

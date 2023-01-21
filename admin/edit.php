@@ -90,6 +90,7 @@ if (isset($_POST['name'])) {
 					echo "</tr>";
 					$row = !$row;
 				} ?>
+				<tr id="addnew"><td colspan="3"><a href="#">+</a></td></tr>
 			</tbody>
 		</table>
 		

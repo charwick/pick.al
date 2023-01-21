@@ -4,6 +4,57 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.querySelectorAll('.editable').forEach(addEditIcon);
 	document.querySelectorAll('td.lname').forEach(addEditIcon);
 	
+	//Add new student
+	let addStudent = document.querySelector('#addnew a');
+	if (addStudent) addStudent.addEventListener('click', function(e) {
+		e.preventDefault();
+		if (this.classList.contains('disabled')) return;
+		this.classList.add('disabled');
+		
+		let inp1 = '<input type="text" name="fname" placeholder="First name">',
+			inp2 = '<input type="text" name="lname" placeholder="Last name"> <a href="#" class="save">✓</a><a href="#" class="cancel">×</a>',
+			tr = studentRow(inp1, inp2);
+		
+		tr.querySelector('.cancel').addEventListener('click', function(e) {
+			e.preventDefault();
+			tr.remove();
+			document.querySelector('#addnew a').classList.remove('disabled');
+		});
+		
+		tr.querySelector('.save').addEventListener('click', function(e) {
+			e.preventDefault();
+			let data = ['classid='+classid], go=true;
+			tr.querySelectorAll('input').forEach(function(inp) {
+				inp.classList.remove('error');
+				if (inp.value == '') { //Basic validation
+					inp.classList.add('error');
+					go = false; //Can't return since it would only return from this inner forEach function
+				}
+				data.push(inp.name+'='+inp.value);
+				inp.oldTagName='td';
+			});
+			if (!go) return;
+			
+			let req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=addstudent&'+data.join('&'), true);
+			function error() { tr.querySelectorAll('input').forEach(function(inp) { inp.classList.add('error'); }); }
+			req.onload = function() {
+				let studentid =  parseInt(this.response);
+				if (!studentid) {
+					error();
+					return;
+				}
+				tr.dataset.id = studentid;
+				let snum = document.getElementById('num_students');
+				snum.textContent = parseInt(snum.textContent)+1
+				tr.querySelectorAll('input').forEach(function(inp) { solidify(inp); });
+				document.querySelector('#addnew a').classList.remove('disabled');
+			};
+			req.onerror = error;
+			req.send();
+		});
+	});
+	
 	//Handle CSV
 	let csvElement = document.getElementById('csvfile');
 	if (csvElement) csvElement.addEventListener('change', function(e) {
@@ -19,24 +70,15 @@ document.addEventListener('DOMContentLoaded', function() {
 			formData.append("class", ''+classid);
 			req.open("POST", "../ajax.php", true);
 			req.onload = function() {
-				console.log(this.response);
 				response = JSON.parse(this.response);
 				csvElement.parentNode.innerHTML = "Uploaded "+response.length+" students";
-				
-				let stable = document.getElementById('roster').querySelector('tbody'),
-					i = stable.childElementCount>0 && !stable.lastElementChild.classList.contains('odd');
 				response.forEach(function(row) {
-					let tr = document.createElement('tr');
-					if (i) tr.classList.add('odd');
+					let tr = studentRow(row['fname'], row['lname']);
 					tr.dataset.id = row['id'];
-					tr.innerHTML = '<td class="fname">'+row['fname']+'</td><td class="lname">'+row['lname']+'</td><td class="nullscore">—</td>';
-					stable.appendChild(tr);
-					i = !i;
 				});
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
 			};
 			req.onerror = function() {
-				console.log(this.response);
 				let error = document.createElement('span');
 				error.textContent = 'There was an error uploading this CSV.';
 				csvElement.parentNode.insertBefore(error, csvElement);
@@ -71,6 +113,11 @@ function addEditIcon(element) {
 			save.href='#';
 			save.addEventListener('click', function(e) {
 				e.preventDefault();
+				inp.classList.remove('error');
+				inp2.classList.remove('error');
+				if (inp.value=='') inp.classList.add('error');
+				if (inp2.value=='') inp2.classList.add('error');
+				if (inp.value=='' || inp2.value=='') return;
 				
 				//Only make a request if the value has changed
 				if (inp.value != inp.oldValue || inp2.value != inp2.oldValue) {
@@ -92,7 +139,13 @@ function addEditIcon(element) {
 		} else {
 	
 			//Save on blur
-			inp.addEventListener('blur', function(e) {			
+			inp.addEventListener('blur', function(e) {
+				if (inp.value == '') { //Validate
+					inp.classList.add('error');
+					inp.focus();
+					return;
+				}
+					
 				//Only make a request if the value has changed
 				if (inp.value != inp.oldValue) {
 					let req = new XMLHttpRequest();
@@ -167,4 +220,13 @@ function solidify(iel) {
 	}
 	iel.remove();
 	return el;
+}
+
+function studentRow(col1, col2) {
+	let stable = document.getElementById('roster').querySelector('tbody'),
+		tr = document.createElement('tr');
+	if (stable.childElementCount>1 && !stable.lastElementChild.previousElementSibling.classList.contains('odd')) tr.classList.add('odd');
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="nullscore">—</td>';
+	stable.insertBefore(tr, stable.lastElementChild);
+	return tr;
 }

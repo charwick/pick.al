@@ -44,4 +44,10 @@ switch ($req) {
 		if ($response) echo $response;
 		else http_response_code(403);
 		break;
+	
+	case 'addstudent':
+		$id = $sql->add_student($_GET['fname'], $_GET['lname'], $_GET['classid']);
+		if ($id) echo $id;
+		else http_response_code(403);
+		break;
 }
