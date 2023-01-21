@@ -79,13 +79,21 @@ class chooser_query extends mysqli {
 		return $pq->insert_id;
 	}
 	
-	function update_class_info($class, $key, $val) {
+	function edit_student($id, $fname, $lname) {
+		$pq = $this->prepare("UPDATE students SET fname=?, lname=? WHERE id=? AND user=?");
+		$pq->bind_param('ssii', $fname, $lname, $id, self::$user);
+		$pq->execute();
+		
+		return $pq->affected_rows;
+	}
+	
+	function edit_class($class, $key, $val) {
 		$keys = ['name', 'semester', 'year', 'activeuntil'];
 		if (!in_array($key, $keys)) return False;
 		
 		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
 		$pq->bind_param('sii', $val, $class, self::$user);
 		$pq->execute();
-		return true;
+		return $pq->affected_rows;
 	}
 }

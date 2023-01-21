@@ -35,7 +35,7 @@ if (isset($_POST['name'])) {
 		
 		if ($classid) {
 			echo "<input type='hidden' name='classid' value='{$classid}'>";
-			echo "<h1 id='name' class='editable'>{$class->name}</h1>";
+			echo "<h1 id='name' class='editable' data-inputtype='text'>{$class->name}</h1>";
 		} else {
 			echo '<h1>New class</h1>';
 			echo '<p><input type="text" id="name" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'"></p>';
@@ -43,10 +43,10 @@ if (isset($_POST['name'])) {
 		
 		<p>
 			<?php if ($classid) { ?>
-				<span class="editable" id="semester"> <?php echo ucwords($class->semester); ?></span>
-				<span class="editable" id="year"><?php echo $class->year; ?></span>
+				<span class="editable" id="semester" data-inputtype='select'> <?php echo ucwords($class->semester); ?></span>
+				<span class="editable" id="year" data-inputtype='number'><?php echo $class->year; ?></span>
 				<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
-				<span class="editable" id="activeuntil"><?php echo $class->activeuntil; ?></span>
+				<span class="editable" id="activeuntil" data-inputtype='date'><?php echo $class->activeuntil; ?></span>
 			<?php } else {
 				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
 				if ($error) $selected = $_POST['semester'];
@@ -80,9 +80,9 @@ if (isset($_POST['name'])) {
 			<tbody>
 				<?php $row=0;
 				foreach ($roster as $student) {
-					echo "<tr class='".($row?'odd':'')."'>";
-						echo "<td>{$student->fname}</td>";
-						echo "<td>{$student->lname}</td>";
+					echo "<tr class='".($row?'odd':'')."' data-id='{$student->id}'>";
+						echo "<td class='fname'>{$student->fname}</td>";
+						echo "<td class='lname'>{$student->lname}</td>";
 						echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
 							if ($student->score===null) echo '—';
 							else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";

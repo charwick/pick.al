@@ -29,15 +29,23 @@ input#name {
 	padding: 10px 25px;
 }
 
-.edit {
+.edit, .save {
 	text-decoration: none;
 	color: #AAA;
 	display: inline-block;
-	transform: scaleX(-1);
 	margin: 0 0.75em;
 	font-size: 0.75em;
 }
-.edit:hover { color: #888; }
+.edit { transform: scaleX(-1); } /* Flip the pencil */
+.edit:hover, .save:hover { color: #888; }
+
+.lname .edit, .lname .save {
+	float: right;
+	font-size: 1em;
+	margin: 0 0 0 1em;
+}
+.lname .edit { 	visibility: hidden; }
+tr:hover .edit { visibility: visible; }
 
 #roster { border-collapse: collapse; }
 #roster td { font-size: 0.85em; }

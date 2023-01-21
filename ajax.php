@@ -34,7 +34,14 @@ switch ($req) {
 		break;
 	
 	case 'updateclassinfo':
-		$response = $sql->update_class_info($_GET['class'], $_GET['k'], $_GET['v']);
+		$response = $sql->edit_class($_GET['class'], $_GET['k'], $_GET['v']);
 		if ($response) echo $response;
 		else http_response_code(403);
+		break;
+	
+	case 'editstudent':
+		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname']);
+		if ($response) echo $response;
+		else http_response_code(403);
+		break;
 }
