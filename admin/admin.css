@@ -28,7 +28,7 @@ a.button:hover, button:hover, input[type='submit']:hover {
 }
 
 input#name {
-	font-size: 2em;
+	font-size: 1.25em;
 	padding: 10px 25px;
 }
 
@@ -67,8 +67,8 @@ tr:hover .edit { visibility: visible; }
 tr.odd { background: rgba(0,0,0,0.05); }
 .nullscore { color: #AAA; }
 
-#addnew td { padding: 0; }
-#addnew a {
+#roster tfoot td { padding: 0; }
+#roster tfoot a {
 	text-align: center;
 	display: block;
 	font-size: 1.5em;
@@ -78,10 +78,13 @@ tr.odd { background: rgba(0,0,0,0.05); }
 	padding: 5px 0;
 	border-top: 1px solid rgba(0,0,0,0.1);
 }
-#addnew a:hover {
+#roster tfoot a:hover {
 	background: rgba(0,0,0,0.1);
 	color: #555;
 }
-#addnew a.disabled { color: #CCC; }
-#addnew a.disabled:hover { background: none; }
+#roster tfoot a.disabled {
+	color: #CCC;
+	cursor: default;
+}
+#roster tfoot a.disabled:hover { background: none; }
 input.error { box-shadow: 0 0 3px 1px #D22; }

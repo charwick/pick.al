@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	//Make items editable
 	document.querySelectorAll('.editable').forEach(addEditIcon);
-	document.querySelectorAll('td.lname').forEach(addEditIcon);
+	document.querySelectorAll('#roster tbody tr').forEach(addEditIcon);
 	
 	//Add new student
 	let addStudent = document.querySelector('#addnew a');
@@ -11,48 +11,30 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
-		let inp1 = '<input type="text" name="fname" placeholder="First name">',
-			inp2 = '<input type="text" name="lname" placeholder="Last name"> <a href="#" class="save">✓</a><a href="#" class="cancel">×</a>',
-			tr = studentRow(inp1, inp2);
-		
-		tr.querySelector('.cancel').addEventListener('click', function(e) {
-			e.preventDefault();
+		let tr = studentRow('',''),
+			cancel = document.createElement('a');
+		makeInput(tr);
+		cancel.classList.add('cancel');
+		cancel.textContent="×";
+		cancel.href='#';
+		tr.cancel = function() {
 			tr.remove();
 			document.querySelector('#addnew a').classList.remove('disabled');
-		});
-		
-		tr.querySelector('.save').addEventListener('click', function(e) {
+		}
+		cancel.addEventListener('click', function(e) {
 			e.preventDefault();
-			let data = ['classid='+classid], go=true;
-			tr.querySelectorAll('input').forEach(function(inp) {
-				inp.classList.remove('error');
-				if (inp.value == '') { //Basic validation
-					inp.classList.add('error');
-					go = false; //Can't return since it would only return from this inner forEach function
-				}
-				data.push(inp.name+'='+inp.value);
-				inp.oldTagName='td';
-			});
-			if (!go) return;
-			
-			let req = new XMLHttpRequest();
-			req.open('GET', '../ajax.php?req=addstudent&'+data.join('&'), true);
-			function error() { tr.querySelectorAll('input').forEach(function(inp) { inp.classList.add('error'); }); }
-			req.onload = function() {
-				let studentid =  parseInt(this.response);
-				if (!studentid) {
-					error();
-					return;
-				}
-				tr.dataset.id = studentid;
-				let snum = document.getElementById('num_students');
-				snum.textContent = parseInt(snum.textContent)+1
-				tr.querySelectorAll('input').forEach(function(inp) { solidify(inp); });
-				document.querySelector('#addnew a').classList.remove('disabled');
-			};
-			req.onerror = error;
-			req.send();
+			tr.cancel();
 		});
+		tr.querySelector('.lname').append(cancel);
+		tr.save = function() {
+			let after = function(response) {
+				tr.dataset.id = response;
+				let snum = document.getElementById('num_students');
+				snum.textContent = parseInt(snum.textContent)+1;
+				document.querySelector('#addnew a').classList.remove('disabled');
+			}
+			sendInfo(tr, 'addstudent', ['classid='+classid, 'fname='+tr.querySelector('.fname input').value, 'lname='+tr.querySelector('.lname input').value], after)
+		}
 	});
 	
 	//Handle CSV
@@ -89,10 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 });
 
-var editables = {
-	name: {placeholder: 'Class Name'},
-	year: {min: 2023, max: 2100, placeholder: 'year'},
-}
 function addEditIcon(element) {
 	let edit = document.createElement('a');
 	edit.classList.add('edit');
@@ -100,133 +78,143 @@ function addEditIcon(element) {
 	edit.href='#';
 	edit.addEventListener('click', function(e) {
 		e.preventDefault();
-		
-		//Create an input element
-		let inp = makeInput(element);
-		
-		//Do the same for the first name if necessary, and add an explicit save button since we have 2 inputs
-		if (element.tagName.toLowerCase() == 'td') {
-			let inp2 = makeInput(element.previousElementSibling);
-			let save = document.createElement('a');
-			save.classList.add('save');
-			save.textContent="✓";
-			save.href='#';
-			save.addEventListener('click', function(e) {
-				e.preventDefault();
-				inp.classList.remove('error');
-				inp2.classList.remove('error');
-				if (inp.value=='') inp.classList.add('error');
-				if (inp2.value=='') inp2.classList.add('error');
-				if (inp.value=='' || inp2.value=='') return;
-				
-				//Only make a request if the value has changed
-				if (inp.value != inp.oldValue || inp2.value != inp2.oldValue) {
-					let req = new XMLHttpRequest();
-					req.open('GET', '../ajax.php?req=editstudent&student='+element.parentNode.dataset.id+'&fname='+inp2.value+'&lname='+inp.value, true);
-					req.onload = function() {
-						elLname = solidify(inp);
-						elFname = solidify(inp2);
-					};
-					req.onerror = function() { inp.addClass('error'); };
-					req.send();
-				} else {
-					solidify(inp);
-					solidify(inp2);
-				}
-			});
-			element.append(save);
-			inp2.focus();
-		} else {
-	
-			//Save on blur
-			inp.addEventListener('blur', function(e) {
-				if (inp.value == '') { //Validate
-					inp.classList.add('error');
-					inp.focus();
-					return;
-				}
-					
-				//Only make a request if the value has changed
-				if (inp.value != inp.oldValue) {
-					let req = new XMLHttpRequest();
-					req.open('GET', '../ajax.php?req=updateclassinfo&class='+classid+'&k='+inp.name+'&v='+inp.value, true);
-					req.onload = function() {
-						el = solidify(inp);
-					};
-					req.onerror = function() { inp.addClass('error'); };
-					req.send();
-				} else solidify(inp);
-			});
-			inp.focus();
-		}
+		makeInput(element);
 	});
-	element.appendChild(edit);
+	if (element.tagName.toLowerCase() == 'tr') element.querySelector('.lname').appendChild(edit);
+	else element.appendChild(edit);
+}
+
+var editables = {
+	name: {placeholder: 'Class Name'},
+	year: {min: 2023, max: 2100, placeholder: 'year'},
 }
 
 //Turns an element into an input
 function makeInput(element) {
-	let inp, item = element.id;
-	if (element.dataset.inputtype=='select') {
-		inp = document.createElement('select');
-		let html = '', seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
-		seasons.forEach(function(s) { html += '<option value="'+s.toLowerCase()+'">'+s+'</option>'; })
-		inp.innerHTML = html;
-	} else {
-		inp = document.createElement(item=='semester' ? 'select' : 'input');
-		inp.type = element.dataset.inputtype;
-	}
-	inp.name = item;
-	inp.id = item;
-	inp.oldTagName = element.tagName.toLowerCase(); //Save to recreate later
-	inp.classList.add('submittable');
-	if (item in editables)
-		for (const [attr,val] of Object.entries(editables[item]))
-			inp.setAttribute(attr, val);
-
-	if (item=='semester') inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
-	else inp.value = element.textContent.replace('✎','');
-	inp.oldValue = inp.value;
+	let inp;
 	
-	if (element.tagName.toLowerCase() == 'td') {
-		element.innerHTML = '';
-		element.append(inp);
+	//Edit students
+	if (element.tagName.toLowerCase() == 'tr') {
+		inp = document.createElement('input');
+		let inp2 = document.createElement('input'),
+			ftd = element.querySelector('.fname'),
+			ltd = element.querySelector('.lname');
+		inp.value = ltd.textContent.replace('✎','');
+		inp2.value = ftd.textContent;
+		inp.placeholder = 'Last Name';
+		inp2.placeholder = 'First Name';
+	
+		element.save = function() { sendInfo(element, 'editstudent', ['student='+element.dataset.id, 'fname='+inp2.value, 'lname='+inp.value]); }
+		let save = document.createElement('a');
+		save.classList.add('save');
+		save.textContent="✓";
+		save.href='#';
+		save.addEventListener('click', function(e) {
+			e.preventDefault();
+			element.save();
+		});
+	
+		ftd.textContent = ''; ltd.textContent = '';
+		ftd.append(inp2); ltd.append(inp);
+		ltd.append(save);
+	
+	//Edit class info
 	} else {
-		element.parentNode.insertBefore(inp, element)
-		element.remove();
+		let item = element.id;
+		if (element.dataset.inputtype=='select') {
+			inp = document.createElement('select');
+			let html = '', seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
+			seasons.forEach(function(s) { html += '<option value="'+s.toLowerCase()+'">'+s+'</option>'; })
+			inp.innerHTML = html;
+			inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
+		} else {
+			inp = document.createElement('input');
+			inp.type = element.dataset.inputtype || 'text';
+			inp.value = element.textContent.replace('✎','');
+		}
+		
+		inp.name = item;
+		if (item) inp.id = item;
+		inp.classList.add('submittable');
+		if (item in editables)
+			for (const [attr,val] of Object.entries(editables[item]))
+				inp.setAttribute(attr, val);
+		
+		element.save = function() { sendInfo(element, 'updateclassinfo', ['class='+classid, 'k='+inp.name, 'v='+inp.value]); };
+		inp.addEventListener('blur', element.save);
+		element.textContent = '';
+		element.append(inp);
+		inp.focus();
 	}
+	
+	//Revert any changes
+	element.cancel = function() {
+		element.querySelectorAll('input,select').forEach(function(input) { input.value = input.oldValue; });
+		solidify(element);
+	}
+	
+	element.querySelectorAll('input,select').forEach(function(input) {
+		input.oldValue = input.value;
+		input.addEventListener('keydown', function(e) {
+			if (e.key == "Enter") {
+				e.preventDefault();
+				element.save();
+			} else if (e.key == "Escape") {
+				e.preventDefault();
+				element.cancel();
+			}
+		});
+	});
+	
 	return inp;
 }
 
 //Turns an input back into an element
-function solidify(iel) {
-	let el;
-	if (iel.oldTagName == 'td') {
-		el = iel.parentNode;
-		el.textContent = iel.value;
-		if (el.classList.contains('lname')) addEditIcon(el);
-	} else {
-		el = document.createElement(iel.oldTagName);
-		el.classList.add('editable');
-		el.id = iel.name;
-		if (iel.tagName.toLowerCase() == 'select') {
-			el.textContent = iel.querySelector('[value="'+iel.value+'"]').textContent;
-			el.dataset.inputtype = iel.tagName.toLowerCase();
-		} else {
-			el.textContent = iel.value;
-			el.dataset.inputtype = iel.type;
-		}
-		iel.parentNode.insertBefore(el, iel);
+function solidify(el) {
+	let inps = el.querySelectorAll('input, select');
+	inps.forEach(function(inp) {
+		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
+		else inp.parentNode.textContent = inp.value;
 		addEditIcon(el);
-	}
-	iel.remove();
-	return el;
+	});
+}
+
+function sendInfo(element, command, data, after) {
+	let inputs = element.querySelectorAll('input,select'), blank, changed;
+	
+	//Check for blank values
+	inputs.forEach(function(inp) {
+		inp.classList.remove('error');
+		if (inp.value == '') {
+			inp.classList.add('error');
+			inp.focus();
+			blank = true; //Can't return since it would only return from this inner forEach function
+		}
+		if (inp.value != inp.oldValue) changed = true;
+	});
+	if (blank) return;
+		
+	//Only make a request if the value has changed
+	if (changed) {
+		let req = new XMLHttpRequest();
+		req.open('GET', '../ajax.php?req='+command+'&'+data.join('&'), true);
+		req.onload = function() {
+			if (!parseInt(this.response)) req.onerror();
+			else {
+				solidify(element);
+				if (after instanceof Function) after(parseInt(this.response));
+			}
+		};
+		req.onerror = function() { inputs.forEach(function(inp) { inp.classList.add('error'); }); };
+		req.send();
+	} else solidify(element);
 }
 
 function studentRow(col1, col2) {
 	let stable = document.getElementById('roster').querySelector('tbody'),
 		tr = document.createElement('tr');
-	if (stable.childElementCount>1 && !stable.lastElementChild.previousElementSibling.classList.contains('odd')) tr.classList.add('odd');
+	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="nullscore">—</td>';
-	stable.insertBefore(tr, stable.lastElementChild);
+	stable.append(tr);
 	return tr;
 }
