@@ -73,7 +73,7 @@ if (isset($_POST['name'])) {
 			<thead>
 				<tr>
 					<th>First name</th>
-					<th>Last name</th>
+					<th colspan="2">Last name</th>
 					<th>Score</th>
 				</tr>
 			</thead>
@@ -83,6 +83,7 @@ if (isset($_POST['name'])) {
 					echo "<tr class='".($row?'odd':'')."' data-id='{$student->id}'>";
 						echo "<td class='fname'>{$student->fname}</td>";
 						echo "<td class='lname'>{$student->lname}</td>";
+						echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="delete">🗑</a></td>';
 						echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
 							if ($student->score===null) echo '—';
 							else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
@@ -92,7 +93,7 @@ if (isset($_POST['name'])) {
 				} ?>
 			</tbody>
 			<tfoot>
-				<tr id="addnew"><td colspan="3"><a href="#">+</a></td></tr>
+				<tr id="addnew"><td colspan="4"><a href="#">+</a></td></tr>
 			</tfoot>
 		</table>
 		

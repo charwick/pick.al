@@ -1,8 +1,36 @@
 document.addEventListener('DOMContentLoaded', function() {
 	
-	//Make items editable
-	document.querySelectorAll('.editable').forEach(addEditIcon);
-	document.querySelectorAll('#roster tbody tr').forEach(addEditIcon);
+	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
+	let roster = document.querySelector('#roster tbody');
+	if (roster) roster.addEventListener('click', function(e) {
+		if (!e.target.matches('.actions a')) return;
+		e.preventDefault();
+		let tr = e.target.parentNode.parentNode;
+		if (e.target.classList.contains('edit')) makeInput(tr);
+		else if (e.target.classList.contains('save')) tr.save();
+		else if (e.target.classList.contains('delete')) {
+			if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
+			let req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
+			req.onload = function() {
+				if (parseInt(this.response) != 1) req.onerror();
+				else {
+					//Re-stripe the table
+					let subsequent = tr;
+					while (subsequent.nextElementSibling) {
+						if (subsequent.nextElementSibling.classList.contains('odd')) subsequent.nextElementSibling.classList.remove('odd');
+						else subsequent.nextElementSibling.classList.add('odd');
+						subsequent = subsequent.nextElementSibling;
+					}
+					tr.remove();
+					let snum = document.getElementById('num_students');
+					snum.textContent = parseInt(snum.textContent)-1;
+				}
+			};
+			req.onerror = function() {  };
+			req.send();
+		}
+	});
 	
 	//Add new student
 	let addStudent = document.querySelector('#addnew a');
@@ -12,11 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		this.classList.add('disabled');
 		
 		let tr = studentRow('',''),
-			cancel = document.createElement('a');
+			cancel = tr.querySelector('.delete');
 		makeInput(tr);
 		cancel.classList.add('cancel');
+		cancel.classList.remove('delete')
 		cancel.textContent="×";
-		cancel.href='#';
 		tr.cancel = function() {
 			tr.remove();
 			document.querySelector('#addnew a').classList.remove('disabled');
@@ -25,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			e.preventDefault();
 			tr.cancel();
 		});
-		tr.querySelector('.lname').append(cancel);
 		tr.save = function() {
 			let after = function(response) {
 				tr.dataset.id = response;
@@ -80,8 +107,7 @@ function addEditIcon(element) {
 		e.preventDefault();
 		makeInput(element);
 	});
-	if (element.tagName.toLowerCase() == 'tr') element.querySelector('.lname').appendChild(edit);
-	else element.appendChild(edit);
+	element.appendChild(edit);
 }
 
 var editables = {
@@ -91,6 +117,7 @@ var editables = {
 
 //Turns an element into an input
 function makeInput(element) {
+	element.classList.add('editing');
 	let inp;
 	
 	//Edit students
@@ -99,24 +126,20 @@ function makeInput(element) {
 		let inp2 = document.createElement('input'),
 			ftd = element.querySelector('.fname'),
 			ltd = element.querySelector('.lname');
-		inp.value = ltd.textContent.replace('✎','');
+		inp.value = ltd.textContent;
 		inp2.value = ftd.textContent;
 		inp.placeholder = 'Last Name';
 		inp2.placeholder = 'First Name';
 	
 		element.save = function() { sendInfo(element, 'editstudent', ['student='+element.dataset.id, 'fname='+inp2.value, 'lname='+inp.value]); }
-		let save = document.createElement('a');
+		let save = element.querySelector('.edit');
 		save.classList.add('save');
+		save.classList.remove('edit');
 		save.textContent="✓";
-		save.href='#';
-		save.addEventListener('click', function(e) {
-			e.preventDefault();
-			element.save();
-		});
 	
 		ftd.textContent = ''; ltd.textContent = '';
 		ftd.append(inp2); ltd.append(inp);
-		ltd.append(save);
+		inp2.focus();
 	
 	//Edit class info
 	} else {
@@ -171,12 +194,25 @@ function makeInput(element) {
 
 //Turns an input back into an element
 function solidify(el) {
+	el.classList.remove('editing');
 	let inps = el.querySelectorAll('input, select');
 	inps.forEach(function(inp) {
 		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
 		else inp.parentNode.textContent = inp.value;
-		addEditIcon(el);
 	});
+	if (el.tagName.toLowerCase() != 'tr') addEditIcon(el);
+	else { //Turn buttons back
+		let edit = el.querySelector('.save'),
+			del = el.querySelector('.cancel');
+		edit.classList.add('edit');
+		edit.classList.remove('save');
+		edit.textContent="✎";
+		if (del) {
+			del.classList.add('delete');
+			del.classList.remove('cancel');
+			del.textContent="🗑	";
+		}
+	}
 }
 
 function sendInfo(element, command, data, after) {
@@ -214,7 +250,7 @@ function studentRow(col1, col2) {
 	let stable = document.getElementById('roster').querySelector('tbody'),
 		tr = document.createElement('tr');
 	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="nullscore">—</td>';
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"><a href="#" class="edit">✎</a><a href="#" class="delete">🗑</a></td><td class="nullscore">—</td>';
 	stable.append(tr);
 	return tr;
 }

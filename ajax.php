@@ -50,4 +50,8 @@ switch ($req) {
 		if ($id) echo $id;
 		else http_response_code(403);
 		break;
+	
+	case 'deletestudent':
+		echo $sql->delete_student($_GET['id']);
+		break;
 }

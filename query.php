@@ -51,7 +51,8 @@ class chooser_query extends mysqli {
 			FROM students
 			LEFT JOIN events ON events.student=students.id
 			WHERE class=? AND user=?
-			GROUP BY students.id";
+			GROUP BY students.id
+			ORDER BY students.lname";
 		$pq = $this->prepare($q);
 		$pq->bind_param('ii', $classid, self::$user);
 		$pq->execute();
@@ -82,6 +83,14 @@ class chooser_query extends mysqli {
 	function edit_student($id, $fname, $lname) {
 		$pq = $this->prepare("UPDATE students SET fname=?, lname=? WHERE id=? AND user=?");
 		$pq->bind_param('ssii', $fname, $lname, $id, self::$user);
+		$pq->execute();
+		
+		return $pq->affected_rows;
+	}
+	
+	function delete_student($id) {
+		$pq = $this->prepare("DELETE FROM students WHERE id=? AND user=?");
+		$pq->bind_param('ii', $id, self::$user);
 		$pq->execute();
 		
 		return $pq->affected_rows;

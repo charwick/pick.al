@@ -32,23 +32,25 @@ input#name {
 	padding: 10px 25px;
 }
 
-.edit, .save, .cancel {
+.edit, .save, .cancel, .delete {
 	text-decoration: none;
 	color: #AAA;
 	display: inline-block;
-	margin: 0 0.75em;
+	margin: 0 0.6em;
 	font-size: 0.75em;
 }
 .edit { transform: scaleX(-1); } /* Flip the pencil */
 .edit:hover, .save:hover, .cancel:hover { color: #888; }
-
-.lname .edit, .lname .save {
-	float: right;
+.delete { opacity: 0.75; }
+.delete:hover { opacity: 1; } /* Since the trash emoji doesn't take a color */
+#roster .actions {
+	border-left-color: transparent;
+	padding: 0 5px;
 	font-size: 1em;
-	margin: 0 0 0 1em;
 }
-.lname .edit { 	visibility: hidden; }
-tr:hover .edit { visibility: visible; }
+#roster .actions a { visibility: hidden; }
+#roster tr:hover .actions, #roster tr.editing .actions { border-left-color: #CCC; }
+#roster tr:hover .actions a, #roster tr.editing .actions a { visibility: visible; }
 
 #roster { border-collapse: collapse; }
 #roster td { font-size: 0.85em; }
