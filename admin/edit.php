@@ -30,6 +30,7 @@ if (isset($_POST['name'])) {
 </head>
 
 <body>
+	<a href="." id="backlink">← Back to Admin</a>
 	<form id="classinfo" action="" method="post">
 		<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
 		

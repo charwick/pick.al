@@ -10,6 +10,7 @@ $sql = new chooser_query(); ?>
 </head>
 
 <body>
+	<a href="../" id="backlink">← Back to Chooser</a>
 	<h1>Student Chooser Admin</h1>
 	<h2>Classes</h2>
 	<ul id="classes">

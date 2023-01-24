@@ -2,13 +2,21 @@ body {
 	background: #F3F3F3;
 	color: #333;
 	font: 1em/150% 'Lucida Grande', Calibri, sans-serif;
-	margin: 40px 40px;
+	margin: 20px 40px 40px;
 }
 
 h1 {
-	margin-bottom: 0.35em;
+	margin: 0.35em 0;
 	line-height: 150%;
 }
+
+#backlink {
+  text-decoration: none;
+  color: #999;
+  font-size: 0.8em;
+  display: inline-block;
+}
+#backlink:hover { color: #777; }
 
 a.button, button, input[type='submit'] {
 	display: inline-block;

@@ -54,7 +54,7 @@ if ($classid) {
 		
 		<ul id="classlist">
 			<?php foreach ($sql->get_classes(true) as $class) {
-				echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}</span></a></li>";
+				echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
 			} ?>
 		</ul>
 	<?php }?>
