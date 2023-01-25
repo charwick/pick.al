@@ -68,44 +68,48 @@ if (isset($_POST['name'])) {
 	
 	<?php if ($classid) {
 		$roster = $sql->get_roster($classid, true); ?>
-		<h2>Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)</h2>
+		<section id="students">
+			<h2>Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)</h2>
 		
-		<table id="roster">
-			<thead>
-				<tr>
-					<th>First name</th>
-					<th colspan="2">Last name</th>
-					<th>Score</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php $row=0;
-				foreach ($roster as $student) {
-					if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
-					echo "<tr class='".($row ? 'odd':'')."' data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
-						echo "<td class='fname'>{$student->fname}</td>";
-						echo "<td class='lname'>{$student->lname}</td>";
-						echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="excuses">☽</a><a href="#" class="delete">🗑</a></td>';
-						echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
-							if ($student->score===null) echo '—';
-							else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
-						echo "</td>";
-					echo "</tr>";
-					$row = !$row;
-				} ?>
-			</tbody>
-			<tfoot>
-				<tr id="addnew"><td colspan="4"><a href="#">+</a></td></tr>
-			</tfoot>
-		</table>
+			<table id="roster">
+				<thead>
+					<tr>
+						<th>First name</th>
+						<th colspan="2">Last name</th>
+						<th>Score</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php $row=0;
+					foreach ($roster as $student) {
+						if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
+						echo "<tr class='".($row ? 'odd':'')."' data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
+							echo "<td class='fname'>{$student->fname}</td>";
+							echo "<td class='lname'>{$student->lname}</td>";
+							echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="excuses">☽</a><a href="#" class="delete">🗑</a></td>';
+							echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
+								if ($student->score===null) echo '—';
+								else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
+							echo "</td>";
+						echo "</tr>";
+						$row = !$row;
+					} ?>
+				</tbody>
+				<tfoot>
+					<tr id="addnew"><td colspan="4"><a href="#">+</a></td></tr>
+				</tfoot>
+			</table>
+		</section>
 		
-		<h2>Upload Students</h2>
-		<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
+		<section id="csvupload">
+			<h2>Upload Students</h2>
+			<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
 		
-		<p>
-			<label for="csvfile">Click here or drag a CSV file to upload</label>
-			<input type="file" id="csvfile" name="csvfile" accept="text/csv">
-		</p>
+			<p>
+				<label for="csvfile">Click here or drag a CSV file to upload</label>
+				<input type="file" id="csvfile" name="csvfile" accept="text/csv">
+			</p>
+		</section>
 	<?php } ?>
 </body>
 </html>

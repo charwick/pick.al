@@ -299,12 +299,14 @@ function uploadCSV(e) {
 	e.preventDefault();
 	let files = this.files || e.dataTransfer.items,
 		reader = new FileReader(),
-		csvElement = document.getElementById('csvfile');
+		csvElement = document.getElementById('csvfile'),
+		error = document.querySelector('#csvupload .info');
 	if (files.length == 0) return;
+	if (error) error.remove();
 	
 	reader.onload = function(e) {
 		let formData = new FormData(),
-			req = new XMLHttpRequest(); file
+			req = new XMLHttpRequest();
 		
 		formData.append("csv", e.target.result);
 		formData.append("req", "uploadroster");
@@ -312,12 +314,18 @@ function uploadCSV(e) {
 		req.open("POST", "../ajax.php", true);
 		req.onload = function() {
 			response = JSON.parse(this.response);
-			csvElement.parentNode.innerHTML = "Uploaded "+response.length+" students";
-			response.forEach(function(row) {
-				let tr = studentRow(row['fname'], row['lname']);
-				tr.dataset.id = row['id'];
-			});
-			document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+			if (!response) {
+				let error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
+				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+			} else {
+				let info = infoElement("Uploaded "+response.length+" students")
+				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
+				response.forEach(function(row) {
+					let tr = studentRow(row['fname'], row['lname']);
+					tr.dataset.id = row['id'];
+				});
+				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+			}
 		};
 		req.onerror = function() {
 			let error = document.createElement('span');
@@ -328,6 +336,16 @@ function uploadCSV(e) {
 	};
 	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
 	document.querySelector('label[for="csvfile"]').classList.remove('active');
-	if (!file.type.includes('csv')) alert('This file isn\'t a CSV!');
-	else reader.readAsText(file);
+	if (!file.type.includes('csv')) {
+		let error = infoElement("This file isn't a CSV!", 'error');
+		csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+	} else reader.readAsText(file);
+}
+
+function infoElement(message, classname, tag) {
+	let info = document.createElement(tag || 'p');
+	info.classList.add('info');
+	if (classname) info.classList.add(classname);
+	info.textContent = message;
+	return info;
 }

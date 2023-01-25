@@ -132,3 +132,16 @@ label[for="csvfile"] {
 }
 label[for="csvfile"]:hover { background: rgba(0,0,0,0.05); }
 label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }
+
+.info {
+	font-size: 0.8em;
+	background: #F5F5CC;
+	border: 1px solid #CC5;
+	padding: 10px 20px;
+	border-radius: 3px;
+	display: inline-block;
+}
+.info.error {
+	background: #F5CCCC;
+	border-color: #C55;
+}
