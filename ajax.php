@@ -54,4 +54,8 @@ switch ($req) {
 	case 'deletestudent':
 		echo $sql->delete_student($_GET['id']);
 		break;
+	
+	case 'studentexcused':
+		echo $sql->student_excused($_GET['id'], $_GET['excused']);
+		break;
 }

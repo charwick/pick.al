@@ -29,6 +29,53 @@ document.addEventListener('DOMContentLoaded', function() {
 			};
 			req.onerror = function() {  };
 			req.send();
+		} else if (e.target.classList.contains('excuses')) {
+			let popup = document.createElement('div'),
+				inp = document.createElement('input'),
+				erect = e.target.getBoundingClientRect();
+			
+			clearPopups();
+			tr.classList.add('editing');
+			popup.textContent = 'Excused until ';
+			popup.classList.add('popup');
+			inp.type = 'date';
+			inp.value = tr.dataset.excused;
+			inp.oldValue = inp.value;
+			popup.appendChild(inp);
+			popup.style.top = (erect.top+window.pageYOffset-42)+'px';
+			document.body.appendChild(popup);
+			popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
+			inp.focus();
+			
+			inp.addEventListener('keydown', function(e) {
+				if (e.key == "Enter") {
+					e.preventDefault();
+					if (inp.value == inp.oldValue) {
+						popup.remove();
+						return;
+					}
+					
+					let req = new XMLHttpRequest();
+					req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
+					req.onload = function() {
+						if (parseInt(this.response) != 1) inp.classList.add('error');
+						else {
+							let exc = new Date(inp.value),
+								now = new Date(),
+								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*60*60*1000); //Be inclusive of the set day. Also timezone offset.
+							if (modDate > now) tr.dataset.excused = inp.value;
+							else delete tr.dataset.excused;
+							popup.remove();
+						}
+					};
+					req.onerror = function() { inp.classList.add('error'); };
+					req.send();
+				} else if (e.key == "Escape") {
+					e.preventDefault();
+					tr.classList.remove('editing')
+					popup.remove();
+				}
+			});
 		}
 	});
 	
@@ -36,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	let addStudent = document.querySelector('#addnew a');
 	if (addStudent) addStudent.addEventListener('click', function(e) {
 		e.preventDefault();
+		clearPopups();
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
@@ -212,6 +260,13 @@ function solidify(el) {
 			del.classList.remove('cancel');
 			del.textContent="🗑	";
 		}
+		if (!el.querySelector('.excuses')) {
+			let excuses = edit.cloneNode();
+			excuses.classList.add('excuses');
+			excuses.classList.remove('edit');
+			excuses.textContent = '☽';
+			edit.parentNode.insertBefore(excuses, edit.parentNode.lastElementChild);
+		}
 	}
 }
 
@@ -253,4 +308,11 @@ function studentRow(col1, col2) {
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"><a href="#" class="edit">✎</a><a href="#" class="delete">🗑</a></td><td class="nullscore">—</td>';
 	stable.append(tr);
 	return tr;
+}
+
+function clearPopups() {
+	document.querySelectorAll('.popup').forEach(function(pp) { pp.remove(); });
+	document.querySelectorAll('#roster tr').forEach(function(tr) {
+		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing');
+	});
 }

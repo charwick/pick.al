@@ -67,7 +67,7 @@ if (isset($_POST['name'])) {
 	</form>
 	
 	<?php if ($classid) {
-		$roster = $sql->get_roster($classid); ?>
+		$roster = $sql->get_roster($classid, true); ?>
 		<h2>Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)</h2>
 		
 		<table id="roster">
@@ -81,10 +81,11 @@ if (isset($_POST['name'])) {
 			<tbody>
 				<?php $row=0;
 				foreach ($roster as $student) {
-					echo "<tr class='".($row?'odd':'')."' data-id='{$student->id}'>";
+					if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
+					echo "<tr class='".($row ? 'odd':'')."' data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
 						echo "<td class='fname'>{$student->fname}</td>";
 						echo "<td class='lname'>{$student->lname}</td>";
-						echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="delete">🗑</a></td>';
+						echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="excuses">☽</a><a href="#" class="delete">🗑</a></td>';
 						echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
 							if ($student->score===null) echo '—';
 							else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";

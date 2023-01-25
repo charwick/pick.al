@@ -46,11 +46,12 @@ class chooser_query extends mysqli {
 	}
 
 	//Get the roster for a class. Returns an array of objects
-	function get_roster($classid) {
+	function get_roster($classid, $all=false) {
+		$wand = $all ? '' : " AND (excuseduntil IS NULL OR NOW() > DATE_ADD(excuseduntil, INTERVAL 1 DAY))";
 		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
 			FROM students
 			LEFT JOIN events ON events.student=students.id
-			WHERE class=? AND user=?
+			WHERE class=? AND user=? $wand
 			GROUP BY students.id
 			ORDER BY students.lname";
 		$pq = $this->prepare($q);
@@ -92,6 +93,11 @@ class chooser_query extends mysqli {
 		$pq = $this->prepare("DELETE FROM students WHERE id=? AND user=?");
 		$pq->bind_param('ii', $id, self::$user);
 		$pq->execute();
+		if ($pq->affected_rows) {
+			$pq2 = $this->prepare("DELETE FROM events WHERE student=?");
+			$pq2->bind_param('i', $id);
+			$pq2->execute();
+		}
 		
 		return $pq->affected_rows;
 	}
@@ -102,6 +108,14 @@ class chooser_query extends mysqli {
 		
 		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
 		$pq->bind_param('sii', $val, $class, self::$user);
+		$pq->execute();
+		return $pq->affected_rows;
+	}
+	
+	function student_excused($id, $excused) {
+		$pq = $this->prepare("UPDATE students SET excuseduntil=? WHERE id=? AND user=?");
+		if (!$excused) $excused = null;
+		$pq->bind_param('sii', $excused, $id, self::$user);
 		$pq->execute();
 		return $pq->affected_rows;
 	}
