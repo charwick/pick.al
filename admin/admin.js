@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				inp.value = tr.dataset.excused;
 				inp.oldValue = inp.value;
 				popup.appendChild(inp);
-				popup.style.top = (erect.top+window.pageYOffset-34)+'px';
+				popup.style.top = (erect.top+window.pageYOffset-40)+'px';
 				document.body.appendChild(popup);
 				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
 				inp.focus();
@@ -349,11 +349,11 @@ function studentRow(col1, col2, actions=[]) {
 
 function actionButtons(list) {
 	buttons = {
-		'edit': {icon: '✎', title: 'Edit'},
-		'save': {icon: '✓', title: 'Save'},
-		'delete': {icon: '🗑', title: 'Delete'},
-		'cancel': {icon: '×', title: 'Cancel'},
-		'excuses': {icon: '☽', title: 'Set excused absences'}
+		'edit': {title: 'Edit'},
+		'save': {title: 'Save'},
+		'delete': {title: 'Delete'},
+		'cancel': {title: 'Cancel'},
+		'excuses': {title: 'Set excused absences'}
 	}
 	
 	let actions = [];
@@ -362,7 +362,6 @@ function actionButtons(list) {
 		a.classList.add(item);
 		a.href = '#';
 		a.title = buttons[item].title;
-		a.textContent = buttons[item].icon;
 		actions.push(a);
 	});
 	return actions;

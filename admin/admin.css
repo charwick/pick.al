@@ -11,19 +11,18 @@ h1 {
 }
 
 #backlink {
-  text-decoration: none;
   color: #999;
   font-size: 0.8em;
   display: inline-block;
 }
 #backlink:hover { color: #777; }
+a { text-decoration: none; }
 
 a.button, button, input[type='submit'] {
 	display: inline-block;
 	background: #369;
 	padding: 8px 16px;
 	color: rgba(255,255,255,0.85);
-	text-decoration: none;
 	border-radius: 20px;
 	margin-top: 1em;
 	cursor: pointer;
@@ -38,67 +37,6 @@ a.button:hover, button:hover, input[type='submit']:hover {
 input#name {
 	font-size: 1.25em;
 	padding: 10px 25px;
-}
-
-.edit, .actions a {
-	text-decoration: none;
-	color: #AAA;
-	display: inline-block;
-	margin: 0 0.6em;
-	font-size: 0.75em;
-	position: relative;
-}
-.edit { transform: scaleX(-1); } /* Flip the pencil */
-.edit:hover, .actions a:hover { color: #888; }
-.delete { opacity: 0.75; }
-.delete:hover { opacity: 1; } /* Since the trash emoji doesn't take a color */
-#roster .actions {
-	border-left-color: transparent;
-	padding: 0 5px;
-	font-size: 1em;
-}
-#roster .actions a { visibility: hidden; }
-#roster tr:hover .actions, #roster tr.editing .actions { border-left-color: #CCC; }
-#roster tr:hover .actions a, #roster tr.editing .actions a { visibility: visible; }
-#roster [data-excused] .actions a.excuses { visibility: visible; }
-
-tr:not(.nottip) .actions a:hover::after {
-	content: attr(title);
-	display: block;
-	position: absolute;
-	top: -24px; left: -2px;
-	height: 24px;
-	background: rgba(0,0,0,0.8);
-	border-radius: 3px;
-	padding: 0px 10px;
-	font-size: 0.9em;
-	color: #CCC;
-	white-space: nowrap;
-	pointer-events: none;
-}
-.actions a.edit:hover::after { transform: scaleX(-1); } /* Flip the tooltip back */
-tr:not(.nottip) .actions a:hover::before, .popup::after {
-	content: '';
-	display: block;
-	position: absolute;
-	border-color: rgba(0,0,0,0.8) transparent transparent;
-	border-style: solid;
-	border-width: 5px;
-	pointer-events: none;
-}
-.popup {
-	background: rgba(0,0,0,0.8);
-	text-align: center;
-	display: inline-block;
-	padding: 5px 10px;
-	border-radius: 4px;
-	color: #CCC;
-	font-size: 0.75em;
-	position: absolute;
-}
-.popup::after {
-	left: 50%; bottom: -10px;
-	margin-left: -6px;
 }
 
 #roster { border-collapse: collapse; }
@@ -124,7 +62,6 @@ tr.odd { background: rgba(0,0,0,0.05); }
 	display: block;
 	font-size: 1.5em;
 	font-weight: bold;
-	text-decoration: none;
 	color: #777;
 	padding: 5px 0;
 	border-top: 1px solid rgba(0,0,0,0.1);
@@ -162,4 +99,83 @@ label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }
 .info.error {
 	background: #F5CCCC;
 	border-color: #C55;
+}
+
+/* ==============
+   Action buttons
+   ============== */
+
+/* https://icons.getbootstrap.com */
+.edit { background: url('../icon/pencil-fill.svg') center no-repeat; }
+.save { background: url('../icon/check-lg.svg') center no-repeat; }
+.cancel { background: url('../icon/x-lg.svg') center no-repeat; }
+.delete { background: url('../icon/trash3-fill.svg') center no-repeat; }
+.excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
+
+.edit, .actions a {
+	color: #AAA;
+	display: inline-block;
+	padding: 0 0.6em;
+	position: relative;
+	height: 12px; width: 12px;
+	background-size: 12px 12px;
+	opacity: 0.25;
+	font-size: 0.75em;
+}
+h1 .edit {
+	height: 16px; width: 16px;
+	background-size: 16px 16px;
+}
+
+
+.edit:hover, .actions a:hover { opacity: 0.75; }
+#roster .actions {
+	border-left-color: transparent;
+	padding: 0 5px;
+	font-size: 1em;
+}
+#roster .actions a { visibility: hidden; }
+#roster tr:hover .actions, #roster tr.editing .actions { border-left-color: #CCC; }
+#roster tr:hover .actions a, #roster tr.editing .actions a { visibility: visible; }
+#roster [data-excused] .actions a.excuses { visibility: visible; }
+
+tr:not(.nottip) .actions a:hover::after {
+	content: attr(title);
+	display: block;
+	position: absolute;
+	top: -30px; left: -2px;
+	height: 24px;
+	background: #000;
+	border-radius: 3px;
+	padding: 0px 10px;
+	font-size: 0.9em;
+	color: #CCC;
+	white-space: nowrap;
+	pointer-events: none;
+}
+tr:not(.nottip) .actions a:hover::before, .popup::after {
+	content: '';
+	display: block;
+	position: absolute;
+	border-color: #000 transparent transparent;
+	border-style: solid;
+	border-width: 5px;
+	pointer-events: none;
+	top: -6px;
+}
+.popup {
+	background: rgba(0,0,0,0.8);
+	text-align: center;
+	display: inline-block;
+	padding: 5px 10px;
+	border-radius: 4px;
+	color: #CCC;
+	font-size: 0.75em;
+	position: absolute;
+}
+.popup::after {
+	left: 50%; bottom: -10px;
+	top: auto;
+	margin-left: -6px;
+	border-top-color: rgba(0,0,0,0.8);
 }

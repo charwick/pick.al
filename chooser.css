@@ -46,15 +46,28 @@ button.picked:disabled { opacity: 1; }
 	font-size: 4em;
 	padding: 10px 0;
 	height: 1.5em;
+	text-indent: -9999px;
+	background-size: 1em 1em;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 #actions li:first-child button { border-radius: 0 0 0 10px; }
 #actions li:last-child button { border-radius: 0 0 10px 0; }
-#good { background: #393; }
-#meh { background: #C92; }
-#bad { background: #C33; }
-#good:hover { background: #282; }
-#meh:hover { background: #B81; }
-#bad:hover { background: #B22; }
+#good {
+	background-color: #393;
+	background-image: url('icon/svg.php?icon=check-lg&color=FFF');
+}
+#meh {
+	background-color: #C92;
+	background-image: url('icon/svg.php?icon=question-lg&color=FFF');
+}
+#bad {
+	background-color: #C33;
+	background-image: url('icon/svg.php?icon=x-lg&color=FFF');
+}
+#good:hover { background-color: #282; }
+#meh:hover { background-color: #B81; }
+#bad:hover { background-color: #B22; }
 
 #pickwrap {
 	position: absolute;
