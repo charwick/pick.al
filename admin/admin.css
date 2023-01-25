@@ -46,6 +46,7 @@ input#name {
 	display: inline-block;
 	margin: 0 0.6em;
 	font-size: 0.75em;
+	position: relative;
 }
 .edit { transform: scaleX(-1); } /* Flip the pencil */
 .edit:hover, .actions a:hover { color: #888; }
@@ -60,6 +61,45 @@ input#name {
 #roster tr:hover .actions, #roster tr.editing .actions { border-left-color: #CCC; }
 #roster tr:hover .actions a, #roster tr.editing .actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
+
+tr:not(.nottip) .actions a:hover::after {
+	content: attr(title);
+	display: block;
+	position: absolute;
+	top: -24px; left: -2px;
+	height: 24px;
+	background: rgba(0,0,0,0.8);
+	border-radius: 3px;
+	padding: 0px 10px;
+	font-size: 0.9em;
+	color: #CCC;
+	white-space: nowrap;
+	pointer-events: none;
+}
+.actions a.edit:hover::after { transform: scaleX(-1); } /* Flip the tooltip back */
+tr:not(.nottip) .actions a:hover::before, .popup::after {
+	content: '';
+	display: block;
+	position: absolute;
+	border-color: rgba(0,0,0,0.8) transparent transparent;
+	border-style: solid;
+	border-width: 5px;
+	pointer-events: none;
+}
+.popup {
+	background: rgba(0,0,0,0.8);
+	text-align: center;
+	display: inline-block;
+	padding: 5px 10px;
+	border-radius: 4px;
+	color: #CCC;
+	font-size: 0.75em;
+	position: absolute;
+}
+.popup::after {
+	left: 50%; bottom: -10px;
+	margin-left: -6px;
+}
 
 #roster { border-collapse: collapse; }
 #roster td { font-size: 0.85em; }
@@ -99,28 +139,6 @@ tr.odd { background: rgba(0,0,0,0.05); }
 }
 #roster tfoot a.disabled:hover { background: none; }
 input.error { box-shadow: 0 0 3px 1px #D22; }
-
-.popup {
-	background: rgba(0,0,0,0.8);
-	text-align: center;
-	display: inline-block;
-	padding: 5px 10px;
-	border-radius: 4px;
-	color: #CCC;
-	font-size: 0.75em;
-	position: absolute;
-}
-.popup::after {
-	content: '';
-	display: block;
-	position: absolute;
-	left: 50%; bottom: -30px;
-	margin-left: -10px;
-	border-width: 15px 10px;
-	border-style: solid;
-	border-color: rgba(0,0,0,0.8) transparent transparent;
-	pointer-events: none;
-}
 
 #csvfile { display: none; }
 label[for="csvfile"] {

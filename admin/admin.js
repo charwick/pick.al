@@ -1,83 +1,97 @@
 document.addEventListener('DOMContentLoaded', function() {
 	
 	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
+	
+	//Action buttons
 	let roster = document.querySelector('#roster tbody');
-	if (roster) roster.addEventListener('click', function(e) {
-		if (!e.target.matches('.actions a')) return;
-		e.preventDefault();
-		let tr = e.target.parentNode.parentNode;
-		if (e.target.classList.contains('edit')) makeInput(tr);
-		else if (e.target.classList.contains('save')) tr.save();
-		else if (e.target.classList.contains('delete')) {
-			if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
-			let req = new XMLHttpRequest();
-			req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
-			req.onload = function() {
-				if (parseInt(this.response) != 1) req.onerror();
-				else {
-					//Re-stripe the table
-					let subsequent = tr;
-					while (subsequent.nextElementSibling) {
-						if (subsequent.nextElementSibling.classList.contains('odd')) subsequent.nextElementSibling.classList.remove('odd');
-						else subsequent.nextElementSibling.classList.add('odd');
-						subsequent = subsequent.nextElementSibling;
-					}
-					tr.remove();
-					let snum = document.getElementById('num_students');
-					snum.textContent = parseInt(snum.textContent)-1;
-				}
-			};
-			req.onerror = function() {  };
-			req.send();
-		} else if (e.target.classList.contains('excuses')) {
-			let popup = document.createElement('div'),
-				inp = document.createElement('input'),
-				erect = e.target.getBoundingClientRect();
-			
-			clearPopups();
-			tr.classList.add('editing');
-			popup.textContent = 'Excused until ';
-			popup.classList.add('popup');
-			inp.type = 'date';
-			inp.value = tr.dataset.excused;
-			inp.oldValue = inp.value;
-			popup.appendChild(inp);
-			popup.style.top = (erect.top+window.pageYOffset-42)+'px';
-			document.body.appendChild(popup);
-			popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
-			inp.focus();
-			
-			inp.addEventListener('keydown', function(e) {
-				if (e.key == "Enter") {
-					e.preventDefault();
-					if (inp.value == inp.oldValue) {
-						popup.remove();
-						return;
-					}
-					
-					let req = new XMLHttpRequest();
-					req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
-					req.onload = function() {
-						if (parseInt(this.response) != 1) inp.classList.add('error');
-						else {
-							let exc = new Date(inp.value),
-								now = new Date(),
-								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*60*60*1000); //Be inclusive of the set day. Also timezone offset.
-							if (modDate > now) tr.dataset.excused = inp.value;
-							else delete tr.dataset.excused;
-							popup.remove();
+	if (roster) {
+		roster.querySelectorAll('.actions').forEach(function(td) {
+			td.append(...actionButtons(['edit', 'excuses', 'delete']));
+		});
+		
+		roster.addEventListener('click', function(e) {
+			if (!e.target.matches('.actions a')) return;
+			e.preventDefault();
+			let tr = e.target.parentNode.parentNode;
+			if (e.target.classList.contains('edit')) makeInput(tr);
+			else if (e.target.classList.contains('save')) tr.save();
+			else if (e.target.classList.contains('cancel')) tr.cancel();
+			else if (e.target.classList.contains('delete')) {
+				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
+				let req = new XMLHttpRequest();
+				req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
+				req.onload = function() {
+					if (parseInt(this.response) != 1) req.onerror();
+					else {
+						//Re-stripe the table
+						let subsequent = tr;
+						while (subsequent.nextElementSibling) {
+							if (subsequent.nextElementSibling.classList.contains('odd')) subsequent.nextElementSibling.classList.remove('odd');
+							else subsequent.nextElementSibling.classList.add('odd');
+							subsequent = subsequent.nextElementSibling;
 						}
-					};
-					req.onerror = function() { inp.classList.add('error'); };
-					req.send();
-				} else if (e.key == "Escape") {
-					e.preventDefault();
-					tr.classList.remove('editing')
-					popup.remove();
+						tr.remove();
+						let snum = document.getElementById('num_students');
+						snum.textContent = parseInt(snum.textContent)-1;
+					}
+				};
+				req.onerror = function() {  };
+				req.send();
+			} else if (e.target.classList.contains('excuses')) {
+				if (tr.classList.contains('editing')) {
+					clearPopups();
+					return;
 				}
-			});
-		}
-	});
+				
+				clearPopups();
+				let popup = document.createElement('div'),
+					inp = document.createElement('input'),
+					erect = e.target.getBoundingClientRect();
+			
+				tr.classList.add('editing', 'nottip');
+				popup.textContent = 'Excused until ';
+				popup.classList.add('popup');
+				inp.type = 'date';
+				inp.value = tr.dataset.excused;
+				inp.oldValue = inp.value;
+				popup.appendChild(inp);
+				popup.style.top = (erect.top+window.pageYOffset-34)+'px';
+				document.body.appendChild(popup);
+				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
+				inp.focus();
+			
+				inp.addEventListener('keydown', function(e) {
+					if (e.key == "Enter") {
+						e.preventDefault();
+						if (inp.value == inp.oldValue) {
+							popup.remove();
+							return;
+						}
+					
+						let req = new XMLHttpRequest();
+						req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
+						req.onload = function() {
+							if (parseInt(this.response) != 1) inp.classList.add('error');
+							else {
+								let exc = new Date(inp.value),
+									now = new Date(),
+									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*60*60*1000); //Be inclusive of the set day. Also timezone offset.
+								if (modDate > now) tr.dataset.excused = inp.value;
+								else delete tr.dataset.excused;
+								popup.remove();
+							}
+						};
+						req.onerror = function() { inp.classList.add('error'); };
+						req.send();
+					} else if (e.key == "Escape") {
+						e.preventDefault();
+						tr.classList.remove('editing', 'nottip')
+						popup.remove();
+					}
+				});
+			}
+		});
+	}
 	
 	//Add new student
 	let addStudent = document.querySelector('#addnew a');
@@ -87,20 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
-		let tr = studentRow('',''),
-			cancel = tr.querySelector('.delete');
+		let tr = studentRow('','', ['cancel', 'save']);
 		makeInput(tr);
-		cancel.classList.add('cancel');
-		cancel.classList.remove('delete')
-		cancel.textContent="×";
 		tr.cancel = function() {
 			tr.remove();
 			document.querySelector('#addnew a').classList.remove('disabled');
 		}
-		cancel.addEventListener('click', function(e) {
-			e.preventDefault();
-			tr.cancel();
-		});
 		tr.save = function() {
 			let after = function(response) {
 				tr.dataset.id = response;
@@ -125,10 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function addEditIcon(element) {
-	let edit = document.createElement('a');
-	edit.classList.add('edit');
-	edit.textContent="✎";
-	edit.href='#';
+	let edit = actionButtons(['edit'])[0];
 	edit.addEventListener('click', function(e) {
 		e.preventDefault();
 		makeInput(element);
@@ -158,10 +161,9 @@ function makeInput(element) {
 		inp2.placeholder = 'First Name';
 	
 		element.save = function() { sendInfo(element, 'editstudent', ['student='+element.dataset.id, 'fname='+inp2.value, 'lname='+inp.value]); }
-		let save = element.querySelector('.edit');
-		save.classList.add('save');
-		save.classList.remove('edit');
-		save.textContent="✓";
+		let actions = element.querySelector('.actions');
+		actions.textContent = '';
+		actions.append(...actionButtons(['save', 'cancel']));
 	
 		ftd.textContent = ''; ltd.textContent = '';
 		ftd.append(inp2); ltd.append(inp);
@@ -227,26 +229,23 @@ function solidify(el) {
 		else inp.parentNode.textContent = inp.value;
 	});
 	if (el.tagName.toLowerCase() != 'tr') addEditIcon(el);
-	else { //Turn buttons back
-		let edit = el.querySelector('.save'),
-			del = el.querySelector('.cancel');
-		edit.classList.add('edit');
-		edit.classList.remove('save');
-		edit.textContent="✎";
-		if (del) {
-			del.classList.add('delete');
-			del.classList.remove('cancel');
-			del.textContent="🗑	";
-		}
-		if (!el.querySelector('.excuses')) {
-			let excuses = edit.cloneNode();
-			excuses.classList.add('excuses');
-			excuses.classList.remove('edit');
-			excuses.textContent = '☽';
-			edit.parentNode.insertBefore(excuses, edit.parentNode.lastElementChild);
-		}
+	else {
+		let actions = el.querySelector('.actions');
+		actions.textContent = '';
+		actions.append(...actionButtons(['edit', 'excuses', 'delete']));
 	}
 }
+
+function clearPopups() {
+	document.querySelectorAll('.popup').forEach(function(pp) { pp.remove(); });
+	document.querySelectorAll('#roster tr').forEach(function(tr) {
+		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing', 'nottip');
+	});
+}
+
+//============================
+// Communicate with the server
+//============================
 
 function sendInfo(element, command, data, after) {
 	let inputs = element.querySelectorAll('input,select'), blank, changed;
@@ -279,22 +278,6 @@ function sendInfo(element, command, data, after) {
 	} else solidify(element);
 }
 
-function studentRow(col1, col2) {
-	let stable = document.getElementById('roster').querySelector('tbody'),
-		tr = document.createElement('tr');
-	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"><a href="#" class="edit">✎</a><a href="#" class="delete">🗑</a></td><td class="nullscore">—</td>';
-	stable.append(tr);
-	return tr;
-}
-
-function clearPopups() {
-	document.querySelectorAll('.popup').forEach(function(pp) { pp.remove(); });
-	document.querySelectorAll('#roster tr').forEach(function(tr) {
-		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing');
-	});
-}
-
 function uploadCSV(e) {
 	e.preventDefault();
 	let files = this.files || e.dataTransfer.items,
@@ -321,7 +304,7 @@ function uploadCSV(e) {
 				let info = infoElement("Uploaded "+response.length+" students")
 				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
 				response.forEach(function(row) {
-					let tr = studentRow(row['fname'], row['lname']);
+					let tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
 					tr.dataset.id = row['id'];
 				});
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
@@ -342,10 +325,45 @@ function uploadCSV(e) {
 	} else reader.readAsText(file);
 }
 
+//===================================
+// Generate boilerplate HTML elements
+//===================================
+
 function infoElement(message, classname, tag) {
 	let info = document.createElement(tag || 'p');
 	info.classList.add('info');
 	if (classname) info.classList.add(classname);
 	info.textContent = message;
 	return info;
+}
+
+function studentRow(col1, col2, actions=[]) {
+	let stable = document.getElementById('roster').querySelector('tbody'),
+		tr = document.createElement('tr');
+	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"></td><td class="nullscore">—</td>';
+	tr.querySelector('.actions').append(...actionButtons(actions));
+	stable.append(tr);
+	return tr;
+}
+
+function actionButtons(list) {
+	buttons = {
+		'edit': {icon: '✎', title: 'Edit'},
+		'save': {icon: '✓', title: 'Save'},
+		'delete': {icon: '🗑', title: 'Delete'},
+		'cancel': {icon: '×', title: 'Cancel'},
+		'excuses': {icon: '☽', title: 'Set excused absences'}
+	}
+	
+	let actions = [];
+	list.forEach(function(item) {
+		let a = document.createElement('a');
+		a.classList.add(item);
+		a.href = '#';
+		a.title = buttons[item].title;
+		a.textContent = buttons[item].icon;
+		actions.push(a);
+	});
+	return actions;
 }

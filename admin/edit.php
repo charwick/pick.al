@@ -86,7 +86,7 @@ if (isset($_POST['name'])) {
 						echo "<tr class='".($row ? 'odd':'')."' data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
 							echo "<td class='fname'>{$student->fname}</td>";
 							echo "<td class='lname'>{$student->lname}</td>";
-							echo '<td class="actions"><a href="#" class="edit">✎</a><a href="#" class="excuses">☽</a><a href="#" class="delete">🗑</a></td>';
+							echo '<td class="actions"></td>';
 							echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
 								if ($student->score===null) echo '—';
 								else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";

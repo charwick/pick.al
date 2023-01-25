@@ -4,9 +4,9 @@ A simple app to pick a random student and record participation.
 
 The frontend (to be used on a phone in class) randomly selects a student from the roster to be called upon, and allows the result to be recorded:
 
-* ✅: Solid effort answering
-* ❓: Not paying attention
-* ❌: Not present
+* ✅ Solid effort answering
+* ❓ Not paying attention
+* ❌ Not present
 
 [See how it works here](https://twitter.com/C_Harwick/status/1615481096161861632).
 
