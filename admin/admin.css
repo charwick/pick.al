@@ -121,3 +121,14 @@ input.error { box-shadow: 0 0 3px 1px #D22; }
 	border-color: rgba(0,0,0,0.8) transparent transparent;
 	pointer-events: none;
 }
+
+#csvfile { display: none; }
+label[for="csvfile"] {
+	cursor: pointer;
+	border: 3px dashed rgba(0,0,0,0.15);
+	padding: 20px 40px;
+	display: inline-block;
+	color: #555;
+}
+label[for="csvfile"]:hover { background: rgba(0,0,0,0.05); }
+label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }

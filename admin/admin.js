@@ -114,36 +114,14 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	//Handle CSV
 	let csvElement = document.getElementById('csvfile');
-	if (csvElement) csvElement.addEventListener('change', function(e) {
-		if (this.files.length == 0) return;
-		let reader = new FileReader();
-		
-		reader.onload = function(e) {
-			let formData = new FormData(),
-				req = new XMLHttpRequest();
-			
-			formData.append("csv", e.target.result);
-			formData.append("req", "uploadroster");
-			formData.append("class", ''+classid);
-			req.open("POST", "../ajax.php", true);
-			req.onload = function() {
-				response = JSON.parse(this.response);
-				csvElement.parentNode.innerHTML = "Uploaded "+response.length+" students";
-				response.forEach(function(row) {
-					let tr = studentRow(row['fname'], row['lname']);
-					tr.dataset.id = row['id'];
-				});
-				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
-			};
-			req.onerror = function() {
-				let error = document.createElement('span');
-				error.textContent = 'There was an error uploading this CSV.';
-				csvElement.parentNode.insertBefore(error, csvElement);
-			}
-			req.send(formData);
-		};
-		reader.readAsText(this.files[0]);
-	});
+	if (csvElement) {
+		let label = document.querySelector('label[for="csvfile"]');
+		label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
+		label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
+		label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
+		label.addEventListener('drop', uploadCSV);
+		csvElement.addEventListener('change', uploadCSV);
+	}
 });
 
 function addEditIcon(element) {
@@ -315,4 +293,41 @@ function clearPopups() {
 	document.querySelectorAll('#roster tr').forEach(function(tr) {
 		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing');
 	});
+}
+
+function uploadCSV(e) {
+	e.preventDefault();
+	let files = this.files || e.dataTransfer.items,
+		reader = new FileReader(),
+		csvElement = document.getElementById('csvfile');
+	if (files.length == 0) return;
+	
+	reader.onload = function(e) {
+		let formData = new FormData(),
+			req = new XMLHttpRequest(); file
+		
+		formData.append("csv", e.target.result);
+		formData.append("req", "uploadroster");
+		formData.append("class", ''+classid);
+		req.open("POST", "../ajax.php", true);
+		req.onload = function() {
+			response = JSON.parse(this.response);
+			csvElement.parentNode.innerHTML = "Uploaded "+response.length+" students";
+			response.forEach(function(row) {
+				let tr = studentRow(row['fname'], row['lname']);
+				tr.dataset.id = row['id'];
+			});
+			document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+		};
+		req.onerror = function() {
+			let error = document.createElement('span');
+			error.textContent = 'There was an error uploading this CSV.';
+			csvElement.parentNode.insertBefore(error, csvElement);
+		}
+		req.send(formData);
+	};
+	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
+	document.querySelector('label[for="csvfile"]').classList.remove('active');
+	if (!file.type.includes('csv')) alert('This file isn\'t a CSV!');
+	else reader.readAsText(file);
 }

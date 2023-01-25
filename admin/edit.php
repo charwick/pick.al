@@ -102,7 +102,10 @@ if (isset($_POST['name'])) {
 		<h2>Upload Students</h2>
 		<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
 		
-		<p><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>
+		<p>
+			<label for="csvfile">Click here or drag a CSV file to upload</label>
+			<input type="file" id="csvfile" name="csvfile" accept="text/csv">
+		</p>
 	<?php } ?>
 </body>
 </html>
