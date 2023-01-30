@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (roster) {
 		roster.querySelectorAll('.actions').forEach(function(td) {
 			td.append(...actionButtons(['edit', 'excuses', 'delete']));
+			if ('excused' in td.parentNode.dataset) {
+				let exc = new Date(td.parentNode.dataset.excused),
+					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*360*1000 - 1);
+				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+			}
 		});
 		
 		roster.addEventListener('click', function(e) {
@@ -75,9 +80,12 @@ document.addEventListener('DOMContentLoaded', function() {
 							else {
 								let exc = new Date(inp.value),
 									now = new Date(),
-									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*60*60*1000); //Be inclusive of the set day. Also timezone offset.
-								if (modDate > now) tr.dataset.excused = inp.value;
-								else delete tr.dataset.excused;
+									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*360*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+								if (modDate > now) {
+									tr.dataset.excused = inp.value;
+									e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+								} else delete tr.dataset.excused;
+								tr.classList.remove('editing', 'nottip');
 								popup.remove();
 							}
 						};
