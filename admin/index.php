@@ -1,5 +1,24 @@
 <?php require_once('../query.php');
-$sql = new chooser_query(); ?>
+$sql = new chooser_query();
+
+$active = []; $inactive = [];
+foreach ($sql->get_classes() as $class) {
+	if (strtotime($class->activeuntil) + 24*3600 >= time()) $active[] = $class;
+	else $inactive[] = $class;
+}
+
+function classlist($classes, $title) {
+	echo "<h2>{$title}</h2>";
+	echo '<ul class="classes">';
+		foreach ($classes as $class) {
+			echo "<li>";
+				echo "<a href='edit.php?class={$class->id}'>{$class->name}</a> — ";
+				echo "<span class='semester'>".ucwords($class->semester)." {$class->year}</span> / ";
+				echo "<span class='students'>{$class->students} students</span>";
+			echo "</li>";
+		}
+	echo "</ul>";
+} ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
@@ -12,16 +31,9 @@ $sql = new chooser_query(); ?>
 <body>
 	<a href="../" id="backlink">← Back to Chooser</a>
 	<h1>Student Chooser Admin</h1>
-	<h2>Classes</h2>
-	<ul id="classes">
-		<?php foreach ($sql->get_classes() as $class) {
-			echo "<li>";
-				echo "<a href='edit.php?class={$class->id}'>{$class->name}</a> — ";
-				echo "<span class='semester'>".ucwords($class->semester)." {$class->year}</span> / ";
-				echo "<span class='students'>{$class->students} students</span>";
-			echo "</li>";
-		} ?>
-	</ul>
+	
+	<?php if ($active) classlist($active, 'Active Classes');
+	if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
 	
 	<p><a class="button" href="edit.php">New class</a></p>
 </body>

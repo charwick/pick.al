@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			td.append(...actionButtons(['edit', 'excuses', 'delete']));
 			if ('excused' in td.parentNode.dataset) {
 				let exc = new Date(td.parentNode.dataset.excused),
-					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*360*1000 - 1);
+					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
 				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 			}
 		});
@@ -65,9 +65,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
 				inp.focus();
 			
-				inp.addEventListener('keydown', function(e) {
-					if (e.key == "Enter") {
-						e.preventDefault();
+				inp.addEventListener('keydown', function(e2) {
+					if (e2.key == "Enter") {
+						e2.preventDefault();
 						if (inp.value == inp.oldValue) {
 							popup.remove();
 							return;
@@ -80,19 +80,22 @@ document.addEventListener('DOMContentLoaded', function() {
 							else {
 								let exc = new Date(inp.value),
 									now = new Date(),
-									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*360*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
 								if (modDate > now) {
 									tr.dataset.excused = inp.value;
 									e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-								} else delete tr.dataset.excused;
+								} else {
+									delete tr.dataset.excused;
+									e.target.title = "Set excused absences";
+								}
 								tr.classList.remove('editing', 'nottip');
 								popup.remove();
 							}
 						};
 						req.onerror = function() { inp.classList.add('error'); };
 						req.send();
-					} else if (e.key == "Escape") {
-						e.preventDefault();
+					} else if (e2.key == "Escape") {
+						e2.preventDefault();
 						tr.classList.remove('editing', 'nottip')
 						popup.remove();
 					}
