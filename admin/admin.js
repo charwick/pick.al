@@ -1,29 +1,29 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
 	
 	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
 	
 	//Action buttons
-	let roster = document.querySelector('#roster tbody');
+	const roster = document.querySelector('#roster tbody');
 	if (roster) {
-		roster.querySelectorAll('.actions').forEach(function(td) {
+		for (const td of roster.querySelectorAll('.actions')) {
 			td.append(...actionButtons(['edit', 'excuses', 'delete']));
 			if ('excused' in td.parentNode.dataset) {
-				let exc = new Date(td.parentNode.dataset.excused),
+				const exc = new Date(td.parentNode.dataset.excused),
 					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
 				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 			}
-		});
+		}
 		
 		roster.addEventListener('click', function(e) {
 			if (!e.target.matches('.actions a')) return;
 			e.preventDefault();
-			let tr = e.target.parentNode.parentNode;
+			const tr = e.target.parentNode.parentNode;
 			if (e.target.classList.contains('edit')) makeInput(tr);
 			else if (e.target.classList.contains('save')) tr.save();
 			else if (e.target.classList.contains('cancel')) tr.cancel();
 			else if (e.target.classList.contains('delete')) {
 				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
-				let req = new XMLHttpRequest();
+				const req = new XMLHttpRequest();
 				req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
 				req.onload = function() {
 					if (parseInt(this.response) != 1) req.onerror();
@@ -36,11 +36,11 @@ document.addEventListener('DOMContentLoaded', function() {
 							subsequent = subsequent.nextElementSibling;
 						}
 						tr.remove();
-						let snum = document.getElementById('num_students');
+						const snum = document.getElementById('num_students');
 						snum.textContent = parseInt(snum.textContent)-1;
 					}
 				};
-				req.onerror = function() {  };
+				req.onerror = () => {  };
 				req.send();
 			} else if (e.target.classList.contains('excuses')) {
 				if (tr.classList.contains('editing')) {
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 				
 				clearPopups();
-				let popup = document.createElement('div'),
+				const popup = document.createElement('div'),
 					inp = document.createElement('input'),
 					erect = e.target.getBoundingClientRect();
 			
@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
 							return;
 						}
 					
-						let req = new XMLHttpRequest();
+						const req = new XMLHttpRequest();
 						req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
 						req.onload = function() {
 							if (parseInt(this.response) != 1) inp.classList.add('error');
 							else {
-								let exc = new Date(inp.value),
+								const exc = new Date(inp.value),
 									now = new Date(),
 									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
 								if (modDate > now) {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								popup.remove();
 							}
 						};
-						req.onerror = function() { inp.classList.add('error'); };
+						req.onerror = () => { inp.classList.add('error'); };
 						req.send();
 					} else if (e2.key == "Escape") {
 						e2.preventDefault();
@@ -105,23 +105,23 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	
 	//Add new student
-	let addStudent = document.querySelector('#addnew a');
+	const addStudent = document.querySelector('#addnew a');
 	if (addStudent) addStudent.addEventListener('click', function(e) {
 		e.preventDefault();
 		clearPopups();
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
-		let tr = studentRow('','', ['cancel', 'save']);
+		const tr = studentRow('','', ['cancel', 'save']);
 		makeInput(tr);
 		tr.cancel = function() {
 			tr.remove();
 			document.querySelector('#addnew a').classList.remove('disabled');
 		}
 		tr.save = function() {
-			let after = function(response) {
+			const after = (response) => {
 				tr.dataset.id = response;
-				let snum = document.getElementById('num_students');
+				const snum = document.getElementById('num_students');
 				snum.textContent = parseInt(snum.textContent)+1;
 				document.querySelector('#addnew a').classList.remove('disabled');
 			}
@@ -130,9 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 	
 	//Handle CSV
-	let csvElement = document.getElementById('csvfile');
+	const csvElement = document.getElementById('csvfile');
 	if (csvElement) {
-		let label = document.querySelector('label[for="csvfile"]');
+		const label = document.querySelector('label[for="csvfile"]');
 		label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
 		label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
 		label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	
 	//Selector function change
-	let selector = document.getElementById('selector');
+	const selector = document.getElementById('selector');
 	selector.oldValue = selector.value;
 	selector.addEventListener('change', function(e) {
 		if (document.body.classList.contains('admin-edit'))
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	selectorDesc();
 	
 	//Delete button
-	let delform = document.getElementById('deleteform');
+	const delform = document.getElementById('deleteform');
 	if (delform) delform.addEventListener('submit', function(e) {
 		if (!confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?'))
 			e.preventDefault();
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 //=====================
 
 function addEditIcon(element) {
-	let edit = actionButtons(['edit'])[0];
+	const edit = actionButtons(['edit'])[0];
 	edit.addEventListener('click', function(e) {
 		e.preventDefault();
 		makeInput(element);
@@ -184,7 +184,7 @@ function makeInput(element) {
 	//Edit students
 	if (element.tagName.toLowerCase() == 'tr') {
 		inp = document.createElement('input');
-		let inp2 = document.createElement('input'),
+		const inp2 = document.createElement('input'),
 			ftd = element.querySelector('.fname'),
 			ltd = element.querySelector('.lname');
 		inp.value = ltd.textContent;
@@ -193,7 +193,7 @@ function makeInput(element) {
 		inp2.placeholder = 'First Name';
 	
 		element.save = function() { sendInfo(element, 'editstudent', ['student='+element.dataset.id, 'fname='+inp2.value, 'lname='+inp.value]); }
-		let actions = element.querySelector('.actions');
+		const actions = element.querySelector('.actions');
 		actions.textContent = '';
 		actions.append(...actionButtons(['save', 'cancel']));
 	
@@ -203,11 +203,11 @@ function makeInput(element) {
 	
 	//Edit class info
 	} else {
-		let item = element.id;
+		const item = element.id;
 		if (element.dataset.inputtype=='select') {
 			inp = document.createElement('select');
 			let html = '', seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
-			seasons.forEach(function(s) { html += '<option value="'+s.toLowerCase()+'">'+s+'</option>'; })
+			for (const s of seasons) html += '<option value="'+s.toLowerCase()+'">'+s+'</option>';
 			inp.innerHTML = html;
 			inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
 		} else {
@@ -232,11 +232,11 @@ function makeInput(element) {
 	
 	//Revert any changes
 	element.cancel = function() {
-		element.querySelectorAll('input,select').forEach(function(input) { input.value = input.oldValue; });
+		for (const input of element.querySelectorAll('input,select')) input.value = input.oldValue;
 		solidify(element);
 	}
 	
-	element.querySelectorAll('input,select').forEach(function(input) {
+	for (const input of element.querySelectorAll('input,select')) {
 		input.oldValue = input.value;
 		input.addEventListener('keydown', function(e) {
 			if (e.key == "Enter") {
@@ -247,7 +247,7 @@ function makeInput(element) {
 				element.cancel();
 			}
 		});
-	});
+	}
 	
 	return inp;
 }
@@ -256,28 +256,27 @@ function makeInput(element) {
 function solidify(el) {
 	if (el.querySelector('#selector')) return;
 	el.classList.remove('editing');
-	let inps = el.querySelectorAll('input, select');
-	inps.forEach(function(inp) {
+	for (const inp of el.querySelectorAll('input, select')) {
 		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
 		else inp.parentNode.textContent = inp.value;
-	});
+	}
 	if (el.tagName.toLowerCase() != 'tr') addEditIcon(el);
 	else {
-		let actions = el.querySelector('.actions');
+		const actions = el.querySelector('.actions');
 		actions.textContent = '';
 		actions.append(...actionButtons(['edit', 'excuses', 'delete']));
 	}
 }
 
 function clearPopups() {
-	document.querySelectorAll('.popup').forEach(function(pp) { pp.remove(); });
-	document.querySelectorAll('#roster tr').forEach(function(tr) {
-		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing', 'nottip');
-	});
+	for (const pp of document.querySelectorAll('.popup')) pp.remove();
+	for (const tr of document.querySelectorAll('#roster tr'))
+		if (tr.classList.contains('editing') && !tr.querySelector('input'))
+			tr.classList.remove('editing', 'nottip');
 }
 
 function selectorDesc() {
-	let val = document.getElementById('selector').value,
+	const val = document.getElementById('selector').value,
 		descs = {
 			rand: 'Random with replacement',
 			even: 'Preferentially choose students that have been called on the least so far',
@@ -294,20 +293,20 @@ function sendInfo(element, command, data, after) {
 	let inputs = element.querySelectorAll('input,select'), blank, changed;
 	
 	//Check for blank values
-	inputs.forEach(function(inp) {
+	for (const inp of inputs) {
 		inp.classList.remove('error');
 		if (inp.value == '') {
 			inp.classList.add('error');
 			inp.focus();
-			blank = true; //Can't return since it would only return from this inner forEach function
+			blank = true; //Don't return quite yet, so we can check all our inputs
 		}
 		if (inp.value != inp.oldValue) changed = true;
-	});
+	}
 	if (blank) return;
 		
 	//Only make a request if the value has changed
 	if (changed) {
-		let req = new XMLHttpRequest();
+		const req = new XMLHttpRequest();
 		req.open('GET', '../ajax.php?req='+command+'&'+data.join('&'), true);
 		req.onload = function() {
 			if (!parseInt(this.response)) req.onerror();
@@ -316,14 +315,14 @@ function sendInfo(element, command, data, after) {
 				if (after instanceof Function) after(parseInt(this.response));
 			}
 		};
-		req.onerror = function() { inputs.forEach(function(inp) { inp.classList.add('error'); }); };
+		req.onerror = () => { for (const inp of inputs) inp.classList.add('error'); };
 		req.send();
 	} else solidify(element);
 }
 
 function uploadCSV(e) {
 	e.preventDefault();
-	let files = this.files || e.dataTransfer.items,
+	const files = this.files || e.dataTransfer.items,
 		reader = new FileReader(),
 		csvElement = document.getElementById('csvfile'),
 		error = document.querySelector('#csvupload .info');
@@ -331,7 +330,7 @@ function uploadCSV(e) {
 	if (error) error.remove();
 	
 	reader.onload = function(e) {
-		let formData = new FormData(),
+		const formData = new FormData(),
 			req = new XMLHttpRequest();
 		
 		formData.append("csv", e.target.result);
@@ -341,20 +340,20 @@ function uploadCSV(e) {
 		req.onload = function() {
 			response = JSON.parse(this.response);
 			if (!response) {
-				let error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
+				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
 			} else {
-				let info = infoElement("Uploaded "+response.length+" students")
+				const info = infoElement("Uploaded "+response.length+" students")
 				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
-				response.forEach(function(row) {
-					let tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
+				for (const row of response) {
+					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
 					tr.dataset.id = row['id'];
-				});
+				}
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
 			}
 		};
 		req.onerror = function() {
-			let error = document.createElement('span');
+			const error = document.createElement('span');
 			error.textContent = 'There was an error uploading this CSV.';
 			csvElement.parentNode.insertBefore(error, csvElement);
 		}
@@ -363,7 +362,7 @@ function uploadCSV(e) {
 	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
 	document.querySelector('label[for="csvfile"]').classList.remove('active');
 	if (!file.type.includes('csv')) {
-		let error = infoElement("This file isn't a CSV!", 'error');
+		const error = infoElement("This file isn't a CSV!", 'error');
 		csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
 	} else reader.readAsText(file);
 }
@@ -373,7 +372,7 @@ function uploadCSV(e) {
 //===================================
 
 function infoElement(message, classname, tag) {
-	let info = document.createElement(tag || 'p');
+	const info = document.createElement(tag || 'p');
 	info.classList.add('info');
 	if (classname) info.classList.add(classname);
 	info.textContent = message;
@@ -381,7 +380,7 @@ function infoElement(message, classname, tag) {
 }
 
 function studentRow(col1, col2, actions=[]) {
-	let stable = document.getElementById('roster').querySelector('tbody'),
+	const stable = document.getElementById('roster').querySelector('tbody'),
 		tr = document.createElement('tr');
 	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"></td><td class="nullscore">—</td>';
@@ -399,13 +398,13 @@ function actionButtons(list) {
 		'excuses': {title: 'Set excused absences'}
 	}
 	
-	let actions = [];
-	list.forEach(function(item) {
-		let a = document.createElement('a');
+	const actions = [];
+	for (const item of list) {
+		const a = document.createElement('a');
 		a.classList.add(item);
 		a.href = '#';
 		a.title = buttons[item].title;
 		actions.push(a);
-	});
+	}
 	return actions;
 }
