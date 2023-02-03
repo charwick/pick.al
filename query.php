@@ -44,6 +44,24 @@ class chooser_query extends mysqli {
 		
 		return $pq->insert_id;
 	}
+	
+	function edit_class($class, $key, $val) {
+		$keys = ['name', 'semester', 'year', 'activeuntil', 'selector'];
+		if (!in_array($key, $keys)) return False;
+		
+		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
+		$pq->bind_param('sii', $val, $class, self::$user);
+		$pq->execute();
+		return $pq->affected_rows;
+	}
+	
+	function delete_class($class) {
+		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
+		$pq = $this->prepare("DELETE FROM classes WHERE id=? AND user=?");
+		$pq->bind_param('ii', $class, self::$user);
+		$pq->execute();
+		return $pq->affected_rows;
+	}
 
 	//Get the roster for a class. Returns an array of objects
 	function get_roster($classid, $all=false) {
@@ -99,16 +117,6 @@ class chooser_query extends mysqli {
 			$pq2->execute();
 		}
 		
-		return $pq->affected_rows;
-	}
-	
-	function edit_class($class, $key, $val) {
-		$keys = ['name', 'semester', 'year', 'activeuntil', 'selector'];
-		if (!in_array($key, $keys)) return False;
-		
-		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
-		$pq->bind_param('sii', $val, $class, self::$user);
-		$pq->execute();
 		return $pq->affected_rows;
 	}
 	

@@ -21,17 +21,23 @@ a { text-decoration: none; }
 a.button, button, input[type='submit'] {
 	display: inline-block;
 	background: #369;
-	padding: 8px 16px;
+	padding: 10px 20px;
 	color: rgba(255,255,255,0.85);
-	border-radius: 20px;
+	border-radius: 30px;
 	margin-top: 1em;
 	cursor: pointer;
 	border: none;
-	font-size: 1.25em;
+	font-size: 1.15em;
+    font-family: 'Lucida Grande', Calibri, sans-serif;
 }
 
-a.button:hover, button:hover, input[type='submit']:hover {
-	background: #258;
+a.button:hover, button:hover, input[type='submit']:hover { background: #258; }
+#deleteform input[type='submit'] { background: #933; }
+#deleteform input[type='submit']:hover { background: #822; }
+#deleteform {
+	border-top: 1px solid rgba(0,0,0,0.1);
+	margin-top: 2em;
+	padding-top: 1em;
 }
 
 input#name {

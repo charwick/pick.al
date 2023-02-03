@@ -71,7 +71,7 @@ if (isset($_POST['name'])) {
 		</p>
 		
 		<?php if (!$classid) { ?>
-			<p><input type="submit" name="submit" value="Submit"></p>
+			<p><input type="submit" name="submit" value="Create Class"></p>
 		<?php } ?>
 	</form>
 	
@@ -119,6 +119,13 @@ if (isset($_POST['name'])) {
 				<input type="file" id="csvfile" name="csvfile" accept="text/csv">
 			</p>
 		</section>
+		
+		<form id="deleteform" action="." method="post">
+			<input type="hidden" name="action" value="delete" />
+			<input type="hidden" name="class" value="<?php echo $classid; ?>" />
+			<input type="submit" value="Delete class" />
+		</form>
+			
 	<?php } ?>
 </body>
 </html>

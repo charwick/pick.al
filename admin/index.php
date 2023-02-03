@@ -1,6 +1,13 @@
 <?php require_once('../query.php');
 $sql = new chooser_query();
 
+//Handle deleting classes
+if (isset($_POST['action']) && $_POST['action']=='delete') {
+	$deleted = $sql->delete_class($_POST['class']);
+	if ($deleted) $message = '<div class="info">Class successfully deleted.</div>';
+	else $message = '<div class="info error">Failed to delete class '.$_POST['class'].'.</div>';
+}
+
 $active = []; $inactive = [];
 foreach ($sql->get_classes() as $class) {
 	if (strtotime($class->activeuntil) + 24*3600 >= time()) $active[] = $class;
@@ -32,7 +39,9 @@ function classlist($classes, $title) {
 	<a href="../" id="backlink">← Back to Chooser</a>
 	<h1>Student Chooser Admin</h1>
 	
-	<?php if ($active) classlist($active, 'Active Classes');
+	<?php if (isset($message)) echo $message;
+	
+	if ($active) classlist($active, 'Active Classes');
 	if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
 	
 	<p><a class="button" href="edit.php">New class</a></p>

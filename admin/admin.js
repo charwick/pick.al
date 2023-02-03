@@ -149,6 +149,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		else selectorDesc();
 	});
 	selectorDesc();
+	
+	//Delete button
+	let delform = document.getElementById('deleteform');
+	if (delform) delform.addEventListener('submit', function(e) {
+		if (!confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?'))
+			e.preventDefault();
+	});
 });
 
 //=====================
