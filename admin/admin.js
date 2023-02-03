@@ -139,7 +139,21 @@ document.addEventListener('DOMContentLoaded', function() {
 		label.addEventListener('drop', uploadCSV);
 		csvElement.addEventListener('change', uploadCSV);
 	}
+	
+	//Selector function change
+	let selector = document.getElementById('selector');
+	selector.oldValue = selector.value;
+	selector.addEventListener('change', function(e) {
+		if (document.body.classList.contains('admin-edit'))
+			sendInfo(this.parentNode, 'updateclassinfo', ['class='+classid, 'k=selector', 'v='+this.value], selectorDesc);
+		else selectorDesc();
+	});
+	selectorDesc();
 });
+
+//=====================
+// Modify HTML elements
+//=====================
 
 function addEditIcon(element) {
 	let edit = actionButtons(['edit'])[0];
@@ -233,6 +247,7 @@ function makeInput(element) {
 
 //Turns an input back into an element
 function solidify(el) {
+	if (el.querySelector('#selector')) return;
 	el.classList.remove('editing');
 	let inps = el.querySelectorAll('input, select');
 	inps.forEach(function(inp) {
@@ -252,6 +267,16 @@ function clearPopups() {
 	document.querySelectorAll('#roster tr').forEach(function(tr) {
 		if (tr.classList.contains('editing') && !tr.querySelector('input')) tr.classList.remove('editing', 'nottip');
 	});
+}
+
+function selectorDesc() {
+	let val = document.getElementById('selector').value,
+		descs = {
+			rand: 'Random with replacement',
+			even: 'Preferentially choose students that have been called on the least so far',
+			order: 'Rotate through the class in order (your place is saved across sessions)'
+		};
+	document.getElementById('selector-desc').textContent = descs[val];
 }
 
 //============================

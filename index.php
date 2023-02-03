@@ -17,7 +17,8 @@ if ($classid) {
 		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Student Chooser</title>
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
-				roster = <?php echo json_encode($sql->get_roster($classid)); ?>;
+				roster = <?php echo json_encode($sql->get_roster($classid)); ?>,
+				selector = '<?php echo $class->selector; ?>';
 		</script>
 	<?php } else { ?>
 		<title>Available Classes | Student Chooser</title>

@@ -11,7 +11,7 @@ if ($classid) {
 $error = false;
 
 if (isset($_POST['name'])) {
-	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil']);
+	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['selector']);
 	if ($id) {
 		$url = "edit.php?class={$id}";
 		header("Location: {$url}");
@@ -29,7 +29,7 @@ if (isset($_POST['name'])) {
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
-<body>
+<body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
 	<a href="." id="backlink">← Back to Admin</a>
 	<form id="classinfo" action="" method="post">
 		<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
@@ -59,6 +59,15 @@ if (isset($_POST['name'])) {
 				<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>">
 				Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>">
 			<?php } ?>
+		</p>
+		
+		<p>
+			Selector:
+			<select id="selector" name="selector">
+				<?php foreach (['even' => 'Even', 'rand' => 'Random', 'order' => 'In order'] as $opt => $title)
+					echo "<option value='{$opt}'".($class->selector==$opt ? ' selected' : '').">{$title}</option>"; ?>
+			</select>
+			<span id="selector-desc"></span>
 		</p>
 		
 		<?php if (!$classid) { ?>

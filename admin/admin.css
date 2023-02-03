@@ -38,6 +38,12 @@ input#name {
 	font-size: 1.25em;
 	padding: 10px 25px;
 }
+#selector-desc {
+	color: #777;
+	font-size: smaller;
+	font-style: italic;
+	margin-left: 15px;
+}
 
 #roster { border-collapse: collapse; }
 #roster td { font-size: 0.85em; }

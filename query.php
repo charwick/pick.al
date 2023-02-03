@@ -37,9 +37,9 @@ class chooser_query extends mysqli {
 		return $result->fetch_object();
 	}
 	
-	function new_class($name, $semester, $year, $activeuntil) {
-		$pq = $this->prepare("INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)");
-		$pq->bind_param('ssisi', $name, $semester, $year, $activeuntil, self::$user);
+	function new_class($name, $semester, $year, $activeuntil, $selector='even') {
+		$pq = $this->prepare("INSERT INTO classes (name, semester, year, activeuntil, user, selector) VALUES (?, ?, ?, ?, ?, ?)");
+		$pq->bind_param('ssisis', $name, $semester, $year, $activeuntil, self::$user, $selector);
 		$pq->execute();
 		
 		return $pq->insert_id;
@@ -103,7 +103,7 @@ class chooser_query extends mysqli {
 	}
 	
 	function edit_class($class, $key, $val) {
-		$keys = ['name', 'semester', 'year', 'activeuntil'];
+		$keys = ['name', 'semester', 'year', 'activeuntil', 'selector'];
 		if (!in_array($key, $keys)) return False;
 		
 		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
