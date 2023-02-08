@@ -1,3 +1,4 @@
+"use strict";
 document.addEventListener('DOMContentLoaded', () => {
 	
 	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
@@ -390,15 +391,13 @@ function studentRow(col1, col2, actions=[]) {
 }
 
 function actionButtons(list) {
-	buttons = {
-		'edit': {title: 'Edit'},
-		'save': {title: 'Save'},
-		'delete': {title: 'Delete'},
-		'cancel': {title: 'Cancel'},
-		'excuses': {title: 'Set excused absences'}
-	}
-	
-	const actions = [];
+	const buttons = {
+		edit: {title: 'Edit'},
+		save: {title: 'Save'},
+		delete: {title: 'Delete'},
+		cancel: {title: 'Cancel'},
+		excuses: {title: 'Set excused absences'}
+	}, actions = [];
 	for (const item of list) {
 		const a = document.createElement('a');
 		a.classList.add(item);

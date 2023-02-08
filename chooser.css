@@ -27,12 +27,13 @@ button:disabled { opacity: 0.25; }
 button.picked:disabled { opacity: 1; }
 
 #sinfo {
-	margin-top: 100px;
+	margin: 100px auto 0;
 	background: rgba(255,255,255,0.15);
 	padding: 20px 0 0;
 	border-radius: 10px;
 	visibility: hidden;
 }
+#sinfo, #pick, #classlist a { max-width: 800px; }
 
 #actions {
 	padding: 0; margin: 0;
@@ -99,6 +100,7 @@ button.picked:disabled { opacity: 1; }
 	padding: 0.75em 0;
 	width: 100%;
 	border-top: 1px solid rgba(255,255,255,0.2);
+	margin-left: auto; margin-right: auto;
 }
 #classlist a:hover {
 	background: rgba(255,255,255,0.05);

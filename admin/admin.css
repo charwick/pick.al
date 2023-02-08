@@ -10,12 +10,13 @@ h1 {
 	line-height: 150%;
 }
 
-#backlink {
-  color: #999;
-  font-size: 0.8em;
+.deemph-link {
+  color: #666;
+  opacity: 0.75;
+  font-size: 0.8rem;
   display: inline-block;
 }
-#backlink:hover { color: #777; }
+.deemph-link:hover { opacity: 1; }
 a { text-decoration: none; }
 
 a.button, button, input[type='submit'] {
@@ -23,15 +24,21 @@ a.button, button, input[type='submit'] {
 	background: #369;
 	padding: 10px 20px;
 	color: rgba(255,255,255,0.85);
+	border: none;
+	border-bottom: 3px solid rgba(0,0,0,0.25);
 	border-radius: 30px;
 	margin-top: 1em;
 	cursor: pointer;
-	border: none;
 	font-size: 1.15em;
-    font-family: 'Lucida Grande', Calibri, sans-serif;
+	font-family: 'Lucida Grande', Calibri, sans-serif;
 }
 
 a.button:hover, button:hover, input[type='submit']:hover { background: #258; }
+a.button.small {
+	font-size: .55em;
+	padding: 3px 13px 1px;
+	border-bottom-width: 2px;
+}
 #deleteform input[type='submit'] { background: #933; }
 #deleteform input[type='submit']:hover { background: #822; }
 #deleteform {
@@ -49,6 +56,19 @@ input#name {
 	font-size: smaller;
 	font-style: italic;
 	margin-left: 15px;
+}
+#csvdown {
+	margin-left: 10px;
+	font-weight: normal;
+	vertical-align: middle;
+}
+#csvdown::before {
+	content: '';
+	display: inline-block;
+	height: 14px; width: 14px;
+	background-image: url("../icon/svg.php?icon=download&color=777");
+	background-size: 14px 14px;
+	margin: 0px 6px -2px 0;
 }
 
 #roster { border-collapse: collapse; }

@@ -30,7 +30,7 @@ if (isset($_POST['name'])) {
 </head>
 
 <body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
-	<a href="." id="backlink">← Back to Admin</a>
+	<a href="." id="backlink" class="deemph-link">← Back to Admin</a>
 	<form id="classinfo" action="" method="post">
 		<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
 		
@@ -78,7 +78,10 @@ if (isset($_POST['name'])) {
 	<?php if ($classid) {
 		$roster = $sql->get_roster($classid, true); ?>
 		<section id="students">
-			<h2>Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)</h2>
+			<h2>
+				Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)
+				<?php if ($roster) echo '<a href="csv.php?class='.$classid.'" class="deemph-link" id="csvdown">CSV</a>'; ?>
+			</h2>
 		
 			<table id="roster">
 				<thead>

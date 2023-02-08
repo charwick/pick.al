@@ -36,7 +36,7 @@ function classlist($classes, $title) {
 </head>
 
 <body>
-	<a href="../" id="backlink">← Back to Chooser</a>
+	<a href="../" id="backlink" class="deemph-link">← Back to Chooser</a>
 	<h1>Student Chooser Admin</h1>
 	
 	<?php if (isset($message)) echo $message;

@@ -1,3 +1,4 @@
+"use strict";
 var currentStudent = null,
 	weights = {good: 1, meh: 0.5, bad: 0 };
 
