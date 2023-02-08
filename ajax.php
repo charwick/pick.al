@@ -58,4 +58,8 @@ switch ($req) {
 	case 'studentexcused':
 		echo $sql->student_excused($_GET['id'], $_GET['excused']);
 		break;
+	
+	case 'events';
+		echo json_encode($sql->get_events($_GET['student']));
+		break;
 }

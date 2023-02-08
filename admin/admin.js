@@ -16,12 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		
 		roster.addEventListener('click', function(e) {
-			if (!e.target.matches('.actions a')) return;
+			if (!e.target.matches('.actions a, .score')) return;
 			e.preventDefault();
-			const tr = e.target.parentNode.parentNode;
+			let tr = e.target.parentNode.parentNode;
 			if (e.target.classList.contains('edit')) makeInput(tr);
 			else if (e.target.classList.contains('save')) tr.save();
 			else if (e.target.classList.contains('cancel')) tr.cancel();
+			
 			else if (e.target.classList.contains('delete')) {
 				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
 				const req = new XMLHttpRequest();
@@ -29,13 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				req.onload = function() {
 					if (parseInt(this.response) != 1) req.onerror();
 					else {
-						//Re-stripe the table
-						let subsequent = tr;
-						while (subsequent.nextElementSibling) {
-							if (subsequent.nextElementSibling.classList.contains('odd')) subsequent.nextElementSibling.classList.remove('odd');
-							else subsequent.nextElementSibling.classList.add('odd');
-							subsequent = subsequent.nextElementSibling;
-						}
 						tr.remove();
 						const snum = document.getElementById('num_students');
 						snum.textContent = parseInt(snum.textContent)-1;
@@ -43,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				};
 				req.onerror = () => {  };
 				req.send();
+			
 			} else if (e.target.classList.contains('excuses')) {
 				if (tr.classList.contains('editing')) {
 					clearPopups();
@@ -101,6 +96,36 @@ document.addEventListener('DOMContentLoaded', () => {
 						popup.remove();
 					}
 				});
+				
+			} else if (e.target.classList.contains('score') && !e.target.classList.contains('nullscore')) {
+				tr = e.target.parentNode;
+				const req = new XMLHttpRequest();
+				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
+				req.onload = function() {
+					const events = JSON.parse(this.response),
+						table = document.createElement('table'),
+						tbody = document.createElement('tbody'),
+						tfoot = document.createElement('tfoot');
+					table.innerHTML = '<thead><tr><th>Date</th><th>Result</th></tr></thead>';
+					table.id = 'events';
+					let num=0, den=0;
+					for (const event of events) {
+						const evtr = document.createElement('tr'),
+							exc = new Date(event.date),
+							modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000);
+						evtr.studentid = event.id;
+						evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td><td>'+event.result+'</td>';
+						tbody.append(evtr);
+						num += event.result;
+						den++;
+					}
+					
+					tfoot.innerHTML = '<tr><td>Total</td><td>'+Math.round(num/den*100)+'%</td></tr>';
+					table.append(tbody, tfoot);
+					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' ('+events.length+')', table);
+				};
+				req.onerror = () => {  };
+				req.send();
 			}
 		});
 	}
@@ -158,6 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 	});
 });
+
+Date.prototype.clockTime = function() {
+	let mins = this.getMinutes();
+	if (mins < 10) mins = '0'+mins;
+	return this.getHours()+':'+mins;
+}
 
 //=====================
 // Modify HTML elements
@@ -383,7 +414,6 @@ function infoElement(message, classname, tag) {
 function studentRow(col1, col2, actions=[]) {
 	const stable = document.getElementById('roster').querySelector('tbody'),
 		tr = document.createElement('tr');
-	if (stable.childElementCount>1 && !stable.lastElementChild.classList.contains('odd')) tr.classList.add('odd');
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"></td><td class="nullscore">—</td>';
 	tr.querySelector('.actions').append(...actionButtons(actions));
 	stable.append(tr);
@@ -406,4 +436,23 @@ function actionButtons(list) {
 		actions.push(a);
 	}
 	return actions;
+}
+
+function modal(title, content) {
+	const modalbg = document.createElement('div'),
+		modal = document.createElement('div'),
+		h2 = document.createElement('h2');
+	modalbg.id = 'modalbg';
+	modal.id = 'modal';
+	h2.textContent = title;
+	modal.append(h2, content);
+	modalbg.addEventListener('click', function(e) {
+		modal.remove();
+		modalbg.remove();
+		document.body.classList.remove('modal-active');
+	});
+	document.body.classList.add('modal-active');
+	document.body.append(modalbg);
+	document.body.append(modal);
+	return modal;
 }

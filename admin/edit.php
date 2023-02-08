@@ -95,11 +95,11 @@ if (isset($_POST['name'])) {
 					<?php $row=0;
 					foreach ($roster as $student) {
 						if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
-						echo "<tr class='".($row ? 'odd':'')."' data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
+						echo "<tr data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
 							echo "<td class='fname'>{$student->fname}</td>";
 							echo "<td class='lname'>{$student->lname}</td>";
 							echo '<td class="actions"></td>';
-							echo "<td".($student->score===null ? ' class="nullscore"' : '').">";
+							echo '<td class="score'.($student->score===null ? ' nullscore' : '').'">';
 								if ($student->score===null) echo '—';
 								else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
 							echo "</td>";

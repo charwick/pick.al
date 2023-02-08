@@ -26,7 +26,7 @@ if ($classid) {
 	
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	<link rel="stylesheet" href="chooser.css" type="text/css" media="all">
-	<script type="text/javascript" src="ajax.js"></script>
+	<script type="text/javascript" src="chooser.js"></script>
 </head>
 
 <body>

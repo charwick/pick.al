@@ -90,6 +90,22 @@ class chooser_query extends mysqli {
 		return $pq->insert_id;
 	}
 	
+	function get_events($student) {
+		$q = "SELECT events.id, date, result
+			FROM events
+			LEFT JOIN students ON students.id=events.student
+			WHERE student=? and user=?
+			ORDER BY date DESC";
+		$pq = $this->prepare($q);
+		$pq->bind_param('ii', $student, self::$user);
+		$pq->execute();
+		$events = $pq->get_result();
+
+		$result = [];
+		while ($event = $events->fetch_object()) $result[] = $event;
+		return $result;
+	}
+	
 	function add_student($fname, $lname, $class) {
 		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
 		$pq = $this->prepare($q);

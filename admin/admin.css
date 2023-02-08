@@ -71,21 +71,22 @@ input#name {
 	margin: 0px 6px -2px 0;
 }
 
-#roster { border-collapse: collapse; }
-#roster td { font-size: 0.85em; }
-#roster td, #roster th {
+table { border-collapse: collapse; }
+table td { font-size: 0.85em; }
+table td, table th {
 	padding: 0 20px;
 	border-left: 1px solid #CCC;
 }
-#roster tr th:first-child, #roster tr td:first-child {
+table tr th:first-child, table tr td:first-child {
 	padding-left: 0;
 	border-left: 0;
 }
-#roster th {
+table th {
 	border-bottom: 1px solid #CCC;
 	padding-bottom: 10px;
+	text-align: left;
 }
-tr.odd { background: rgba(0,0,0,0.05); }
+table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
 .nullscore { color: #AAA; }
 
 #roster tfoot td { padding: 0; }
@@ -108,6 +109,20 @@ tr.odd { background: rgba(0,0,0,0.05); }
 }
 #roster tfoot a.disabled:hover { background: none; }
 input.error { box-shadow: 0 0 3px 1px #D22; }
+
+td.score:not(.nullscore):hover {
+	cursor: pointer;
+	background: rgba(0,0,0,0.05);
+}
+
+#events tfoot {
+	font-weight: bold;
+	border-top: 1px solid #CCC;
+}
+#events tfoot td {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+}
 
 #csvfile { display: none; }
 label[for="csvfile"] {
@@ -210,4 +225,28 @@ tr:not(.nottip) .actions a:hover::before, .popup::after {
 	top: auto;
 	margin-left: -6px;
 	border-top-color: rgba(0,0,0,0.8);
+}
+
+/* ============
+   Events modal
+   ============ */
+
+#modalbg {
+	position: fixed;
+	height: 100%; width: 100%;
+	top: 0; left: 0;
+	background: rgba(0,0,0,0.1);
+	backdrop-filter: blur(1px);
+	cursor: pointer;
+}
+
+#modal {
+	width: 740px;
+	padding: 15px 30px;
+	position: fixed;
+	background: #FFF;
+	top: 100px; left: 50%;
+	margin-left: -400px;
+	border-radius: 12px;
+	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 }
