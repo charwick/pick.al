@@ -23,8 +23,8 @@ a.button, button, input[type='submit'] {
 	border: none;
 	text-decoration: none;
 }
-button:disabled { opacity: 0.25; }
-button.picked:disabled { opacity: 1; }
+button:disabled, .picked button { opacity: 0.25; }
+button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #sinfo {
 	margin: 100px auto 0;

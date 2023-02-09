@@ -90,6 +90,22 @@ class chooser_query extends mysqli {
 		return $pq->insert_id;
 	}
 	
+	function edit_event($id, $result) {
+		$q1="SELECT events.*
+			FROM events
+			LEFT JOIN students ON students.id=events.student
+			WHERE events.id=? AND students.user=?";
+		$pq = $this->prepare($q1);
+		$pq->bind_param('ii', $id, self::$user);
+		$pq->execute();
+		if ($pq->get_result()->num_rows) {
+			$pq2 = $this->prepare("UPDATE events SET result=? WHERE id=?");
+			$pq2->bind_param('di', $result, $id);
+			$pq2->execute();
+			return $pq2->affected_rows;
+		} else return 0;
+	}
+	
 	function get_events($student) {
 		$q = "SELECT events.id, date, result
 			FROM events

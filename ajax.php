@@ -62,4 +62,8 @@ switch ($req) {
 	case 'events';
 		echo json_encode($sql->get_events($_GET['student']));
 		break;
+	
+	case 'updateevent';
+		echo $sql->edit_event($_GET['event'], $_GET['result']);
+		break;
 }

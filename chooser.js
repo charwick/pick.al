@@ -1,5 +1,6 @@
 "use strict";
 var currentStudent = null,
+	lastEvent = null,
 	weights = {good: 1, meh: 0.5, bad: 0 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,24 +13,37 @@ document.addEventListener('DOMContentLoaded', () => {
 		sinfo = document.getElementById('sinfo');
 		sinfo.style.visibility = 'visible';
 		document.getElementById('sname').innerHTML = currentStudent.fname+' '+currentStudent.lname;
-		for (const btn of actions) {
-			btn.disabled = false;
-			btn.classList.remove('picked');
-		}
+		for (const btn of actions) btn.classList.remove('picked');
+		document.getElementById('actions').classList.remove('picked');
 	});
 
 	//Result buttons
 	for (const btn of actions) btn.addEventListener('click', function(e) {
-		for (const btn2 of actions)  btn2.disabled = true;
-		this.classList.add('picked');
+		for (const btn2 of actions) {
+			btn2.disabled = true;
+			btn2.classList.remove('picked');
+		}
 		const req = new XMLHttpRequest();
-		req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+weights[this.id], true);
 		
-		req.onload = () => {
-			if (currentStudent.score == null) currentStudent.score = 0;
-			currentStudent.score += weights[this.id];
-			currentStudent.denominator++;
-		};
+		if (btn.parentNode.parentNode.classList.contains('picked')) {
+			req.open('GET', 'ajax.php?req=updateevent&event='+lastEvent+'&result='+weights[this.id], true);
+			req.onload = function() {
+				for (const btn2 of actions) btn2.disabled = false;
+				btn.classList.add('picked');
+			}
+		} else {
+			req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+weights[this.id], true);
+			req.onload = function() {
+				btn.parentNode.parentNode.classList.add('picked');
+				for (const btn2 of actions) btn2.disabled = false;
+				btn.classList.add('picked');
+				btn.parentNode.parentNode.classList.add('picked');
+				lastEvent = parseInt(this.response);
+				if (currentStudent.score == null) currentStudent.score = 0;
+				currentStudent.score += weights[btn.id];
+				currentStudent.denominator++;
+			};
+		}
 		req.onerror = () => { console.log('There was an error'); };
 		req.send();
 	});
