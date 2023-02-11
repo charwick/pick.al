@@ -176,14 +176,14 @@ h1 .edit {
 
 
 .edit:hover, .actions a:hover { opacity: 0.75; }
-#roster .actions {
+table .actions {
 	border-left-color: transparent;
 	padding: 0 5px;
 	font-size: 1em;
 }
-#roster .actions a { visibility: hidden; }
-#roster tr:hover .actions, #roster tr.editing .actions { border-left-color: #CCC; }
-#roster tr:hover .actions a, #roster tr.editing .actions a { visibility: visible; }
+table .actions a { visibility: hidden; }
+table tr:hover .actions, table tr.editing .actions { border-left-color: #CCC; }
+table tr:hover .actions a, table tr.editing .actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
 
 tr:not(.nottip) .actions a:hover::after {
@@ -249,4 +249,42 @@ tr:not(.nottip) .actions a:hover::before, .popup::after {
 	margin-left: -400px;
 	border-radius: 12px;
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+
+.result-button {
+	height: 16px; width: 16px;
+	display: inline-block;
+	vertical-align: middle;
+	margin-top: -3px;
+	background-size: 13px 13px;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+.result-button:first-of-type {
+	border-top-left-radius: 2px;
+	border-bottom-left-radius: 2px;
+}
+.result-button:last-of-type {
+	margin-right: 1em;
+	border-top-right-radius: 2px;
+	border-bottom-right-radius: 2px;
+}
+.result-button.unselected {
+	opacity: 0.25;
+	cursor: pointer;
+}
+.result-button.unselected:hover {
+	opacity: 0.5;
+}
+.good {
+	background-color: #393;
+	background-image: url('../icon/svg.php?icon=check-lg&color=FFF');
+}
+.meh {
+	background-color: #C92;
+	background-image: url('../icon/svg.php?icon=question-lg&color=FFF');
+}
+.bad {
+	background-color: #C33;
+	background-image: url('../icon/svg.php?icon=x-lg&color=FFF');
 }

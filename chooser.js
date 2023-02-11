@@ -25,12 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		const req = new XMLHttpRequest();
 		
+		//Re-do button press (edit event)
 		if (btn.parentNode.parentNode.classList.contains('picked')) {
 			req.open('GET', 'ajax.php?req=updateevent&event='+lastEvent+'&result='+weights[this.id], true);
 			req.onload = function() {
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
 			}
+		
+		//Send event (create new)
 		} else {
 			req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+weights[this.id], true);
 			req.onload = function() {
@@ -52,10 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 Array.prototype.random = function () { return this[Math.floor((Math.random()*this.length))]; }
 const selectorFuncs = {
-	//Unbiased random with replacement.
+	//Unbiased random with replacement
 	rand: (list) => list.random(),
 	
-	//Random choice among students that have been called on the least so far.
+	//Random choice among students that have been called on the least so far
 	even: (list) => {
 		list.sort((a,b) => { return a.denominator > b.denominator });
 		const smallerList = [];

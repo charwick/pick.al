@@ -66,4 +66,8 @@ switch ($req) {
 	case 'updateevent';
 		echo $sql->edit_event($_GET['event'], $_GET['result']);
 		break;
+	
+	case 'deleteevent';
+		echo $sql->delete_event($_GET['event']);
+		break;
 }

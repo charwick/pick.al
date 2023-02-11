@@ -1,4 +1,6 @@
 "use strict";
+
+var weights = {good: 1, meh: 0.5, bad: 0 }
 document.addEventListener('DOMContentLoaded', () => {
 	
 	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
@@ -96,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						popup.remove();
 					}
 				});
-				
+			
+			//Event detail modal
 			} else if (e.target.classList.contains('score') && !e.target.classList.contains('nullscore')) {
 				tr = e.target.parentNode;
 				const req = new XMLHttpRequest();
@@ -106,21 +109,95 @@ document.addEventListener('DOMContentLoaded', () => {
 						table = document.createElement('table'),
 						tbody = document.createElement('tbody'),
 						tfoot = document.createElement('tfoot');
-					table.innerHTML = '<thead><tr><th>Date</th><th>Result</th></tr></thead>';
+					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
 					table.id = 'events';
 					let num=0, den=0;
 					for (const event of events) {
 						const evtr = document.createElement('tr'),
 							exc = new Date(event.date),
-							modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000);
-						evtr.studentid = event.id;
-						evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td><td>'+event.result+'</td>';
+							modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
+							res = {2:'good', 1:'meh', 0:'bad'}[event.result*2];
+						evtr.eventid = event.id;
+						evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
+							+'<td data-result="'+res+'"><div class="result-button '+res+'"></div><span class="numspan">'+event.result+'</span></td>'
+							+'<td class="actions"></td>';
+						evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
 						tbody.append(evtr);
 						num += event.result;
 						den++;
 					}
 					
-					tfoot.innerHTML = '<tr><td>Total</td><td>'+Math.round(num/den*100)+'%</td></tr>';
+					//Event action buttons
+					tbody.addEventListener('click', function(e) {
+						if (!e.target.matches('.actions a')) return;
+						e.preventDefault();
+						
+						const evrow = e.target.parentNode.parentNode,
+							acttd = e.target.parentNode,
+							restd = acttd.previousElementSibling,
+							numspan = restd.querySelector('.numspan');
+						
+						//Edit event
+						if (e.target.classList.contains('edit')) {
+							evrow.classList.add('editing');
+							acttd.textContent = '';
+							acttd.append(...actionButtons(['cancel']));
+							restd.querySelector('.result-button').remove();
+							for (const i of ['bad', 'meh', 'good']) {
+								const a = document.createElement('a');
+								a.name = i;
+								a.classList.add('result-button', i);
+								if (i!=restd.dataset.result) a.classList.add('unselected');
+								restd.prepend(a);
+								
+								//Save event edits
+								a.addEventListener('click', function(e) {
+									const req = new XMLHttpRequest(),
+										result = this.name;
+									req.open('GET', '../ajax.php?req=updateevent&event='+evrow.eventid+'&result='+weights[result], true);
+									req.onload = function() {
+										for (const b of restd.querySelectorAll('.result-button')) {
+											if (b.name == result) b.classList.remove('unselected');
+											else b.remove();
+										}
+										numspan.textContent = weights[i];
+										acttd.textContent = '';
+										acttd.append(...actionButtons(['edit', 'delete']));
+										restd.dataset.result = result;
+										evrow.classList.remove('editing');
+										updateScore(tr, table);
+									};
+									req.onerror = () => {  };
+									req.send();
+								});
+							}
+							numspan.textContent = weights[restd.dataset.result];
+							restd.append(numspan);
+						
+						//Delete event
+						} else if (e.target.classList.contains('delete')) {
+							if (confirm('Are you sure you want to delete this event?')) {
+								const req = new XMLHttpRequest();
+								req.open('GET', '../ajax.php?req=deleteevent&event='+evrow.eventid, true);
+								req.onload = function() {
+									evrow.remove();
+									updateScore(tr, table);
+								}
+								req.onerror = () => {  };
+								req.send();
+							}
+						
+						//Cancel event edits
+						} else if (e.target.classList.contains('cancel')) {
+							for (const b of restd.querySelectorAll('.unselected')) b.remove();
+							evrow.classList.remove('editing');
+							acttd.textContent = '';
+							numspan.textContent = weights[restd.dataset.result];
+							acttd.append(...actionButtons(['edit', 'delete']));
+						}
+					});
+					
+					tfoot.innerHTML = '<tr><td>Total</td><td colspan="2" class="numtotal">'+Math.round(num/den*100)+'%</td></tr>';
 					table.append(tbody, tfoot);
 					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' ('+events.length+')', table);
 				};
@@ -282,6 +359,14 @@ function makeInput(element) {
 	}
 	
 	return inp;
+}
+
+function updateScore(rostertr, evtable) {
+	const results = [];
+	for (const n of evtable.querySelectorAll('.numspan')) results.push(parseFloat(n.textContent));
+	const sum = results.reduce((a,b) => a+b);
+	evtable.querySelector('.numtotal').textContent = Math.round(sum/results.length*100)+'%';
+	rostertr.querySelector('.score').textContent = sum+'/'+results.length+' ('+Math.round(sum/results.length*100)+'%)';
 }
 
 //Turns an input back into an element

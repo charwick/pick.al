@@ -19,8 +19,7 @@ class chooser_query extends mysqli {
 			GROUP BY id
 			ORDER BY year DESC";
 		$pq = $this->prepare($q);
-		$pq->bind_param('i', self::$user);
-		$pq->execute();
+		if ($pq->bind_param('i', self::$user)) $pq->execute();
 		$result = $pq->get_result();
 		
 		$classes = [];
@@ -31,16 +30,14 @@ class chooser_query extends mysqli {
 	//Get info on one class. Returns a single row by ID
 	function get_class($id) {
 		$pq = $this->prepare("SELECT * FROM classes WHERE id=? and user=?");
-		$pq->bind_param('ii', $id, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $id, self::$user)) $pq->execute();
 		$result = $pq->get_result();
 		return $result->fetch_object();
 	}
 	
 	function new_class($name, $semester, $year, $activeuntil, $selector='even') {
 		$pq = $this->prepare("INSERT INTO classes (name, semester, year, activeuntil, user, selector) VALUES (?, ?, ?, ?, ?, ?)");
-		$pq->bind_param('ssisis', $name, $semester, $year, $activeuntil, self::$user, $selector);
-		$pq->execute();
+		if ($pq->bind_param('ssisis', $name, $semester, $year, $activeuntil, self::$user, $selector)) $pq->execute();
 		
 		return $pq->insert_id;
 	}
@@ -50,16 +47,14 @@ class chooser_query extends mysqli {
 		if (!in_array($key, $keys)) return False;
 		
 		$pq = $this->prepare("UPDATE classes SET {$key}=? WHERE id=? AND user=?");
-		$pq->bind_param('sii', $val, $class, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('sii', $val, $class, self::$user)) $pq->execute();
 		return $pq->affected_rows;
 	}
 	
 	function delete_class($class) {
 		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
 		$pq = $this->prepare("DELETE FROM classes WHERE id=? AND user=?");
-		$pq->bind_param('ii', $class, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $class, self::$user)) $pq->execute();
 		return $pq->affected_rows;
 	}
 
@@ -73,8 +68,7 @@ class chooser_query extends mysqli {
 			GROUP BY students.id
 			ORDER BY students.lname";
 		$pq = $this->prepare($q);
-		$pq->bind_param('ii', $classid, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $classid, self::$user)) $pq->execute();
 		$students = $pq->get_result();
 
 		$result = [];
@@ -84,8 +78,7 @@ class chooser_query extends mysqli {
 
 	function new_event($rosterid, $result) {
 		$pq = $this->prepare("INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)");
-		$pq->bind_param('id', $rosterid, $result);
-		$pq->execute();
+		if ($pq->bind_param('id', $rosterid, $result)) $pq->execute();
 		
 		return $pq->insert_id;
 	}
@@ -96,12 +89,25 @@ class chooser_query extends mysqli {
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
 		$pq = $this->prepare($q1);
-		$pq->bind_param('ii', $id, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $id, self::$user)) $pq->execute();
 		if ($pq->get_result()->num_rows) {
 			$pq2 = $this->prepare("UPDATE events SET result=? WHERE id=?");
 			$pq2->bind_param('di', $result, $id);
 			$pq2->execute();
+			return $pq2->affected_rows;
+		} else return 0;
+	}
+	
+	function delete_event($id) {
+		$q1="SELECT events.*
+			FROM events
+			LEFT JOIN students ON students.id=events.student
+			WHERE events.id=? AND students.user=?";
+		$pq = $this->prepare($q1);
+		if ($pq->bind_param('ii', $id, self::$user)) $pq->execute();
+		if ($pq->get_result()->num_rows) {
+			$pq2 = $this->prepare("DELETE FROM events WHERE id=?");
+			if ($pq2->bind_param('i', $id)) $pq2->execute();
 			return $pq2->affected_rows;
 		} else return 0;
 	}
@@ -113,8 +119,7 @@ class chooser_query extends mysqli {
 			WHERE student=? and user=?
 			ORDER BY date DESC";
 		$pq = $this->prepare($q);
-		$pq->bind_param('ii', $student, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $student, self::$user)) $pq->execute();
 		$events = $pq->get_result();
 
 		$result = [];
@@ -125,24 +130,21 @@ class chooser_query extends mysqli {
 	function add_student($fname, $lname, $class) {
 		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
 		$pq = $this->prepare($q);
-		$pq->bind_param('ssii', $fname, $lname, $class, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ssii', $fname, $lname, $class, self::$user)) $pq->execute();
 		
 		return $pq->insert_id;
 	}
 	
 	function edit_student($id, $fname, $lname) {
 		$pq = $this->prepare("UPDATE students SET fname=?, lname=? WHERE id=? AND user=?");
-		$pq->bind_param('ssii', $fname, $lname, $id, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ssii', $fname, $lname, $id, self::$user)) $pq->execute();
 		
 		return $pq->affected_rows;
 	}
 	
 	function delete_student($id) {
 		$pq = $this->prepare("DELETE FROM students WHERE id=? AND user=?");
-		$pq->bind_param('ii', $id, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('ii', $id, self::$user)) $pq->execute();
 		if ($pq->affected_rows) {
 			$pq2 = $this->prepare("DELETE FROM events WHERE student=?");
 			$pq2->bind_param('i', $id);
@@ -155,8 +157,7 @@ class chooser_query extends mysqli {
 	function student_excused($id, $excused) {
 		$pq = $this->prepare("UPDATE students SET excuseduntil=? WHERE id=? AND user=?");
 		if (!$excused) $excused = null;
-		$pq->bind_param('sii', $excused, $id, self::$user);
-		$pq->execute();
+		if ($pq->bind_param('sii', $excused, $id, self::$user)) $pq->execute();
 		return $pq->affected_rows;
 	}
 }
