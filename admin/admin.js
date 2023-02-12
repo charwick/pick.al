@@ -1,6 +1,4 @@
 "use strict";
-
-var weights = {good: 1, meh: 0.5, bad: 0 }
 document.addEventListener('DOMContentLoaded', () => {
 	
 	document.querySelectorAll('.editable').forEach(addEditIcon); //Make items editable
@@ -138,44 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
 							numspan = restd.querySelector('.numspan');
 						
 						//Edit event
-						if (e.target.classList.contains('edit')) {
-							evrow.classList.add('editing');
-							acttd.textContent = '';
-							acttd.append(...actionButtons(['cancel']));
-							restd.querySelector('.result-button').remove();
-							for (const i of ['bad', 'meh', 'good']) {
-								const a = document.createElement('a');
-								a.name = i;
-								a.classList.add('result-button', i);
-								if (i!=restd.dataset.result) a.classList.add('unselected');
-								restd.prepend(a);
-								
-								//Save event edits
-								a.addEventListener('click', function(e) {
-									const req = new XMLHttpRequest(),
-										result = this.name;
-									req.open('GET', '../ajax.php?req=updateevent&event='+evrow.eventid+'&result='+weights[result], true);
-									req.onload = function() {
-										for (const b of restd.querySelectorAll('.result-button')) {
-											if (b.name == result) b.classList.remove('unselected');
-											else b.remove();
-										}
-										numspan.textContent = weights[i];
-										acttd.textContent = '';
-										acttd.append(...actionButtons(['edit', 'delete']));
-										restd.dataset.result = result;
-										evrow.classList.remove('editing');
-										updateScore(tr, table);
-									};
-									req.onerror = () => {  };
-									req.send();
-								});
-							}
-							numspan.textContent = weights[restd.dataset.result];
-							restd.append(numspan);
+						if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.result);
 						
 						//Delete event
-						} else if (e.target.classList.contains('delete')) {
+						else if (e.target.classList.contains('delete')) {
 							if (confirm('Are you sure you want to delete this event?')) {
 								const req = new XMLHttpRequest();
 								req.open('GET', '../ajax.php?req=deleteevent&event='+evrow.eventid, true);
@@ -189,17 +153,36 @@ document.addEventListener('DOMContentLoaded', () => {
 						
 						//Cancel event edits
 						} else if (e.target.classList.contains('cancel')) {
-							for (const b of restd.querySelectorAll('.unselected')) b.remove();
-							evrow.classList.remove('editing');
-							acttd.textContent = '';
-							numspan.textContent = weights[restd.dataset.result];
-							acttd.append(...actionButtons(['edit', 'delete']));
+							if (evrow.eventid) {
+								for (const b of restd.querySelectorAll('.unselected')) b.remove();
+								evrow.classList.remove('editing');
+								acttd.textContent = '';
+								numspan.textContent = weights[restd.dataset.result];
+								acttd.append(...actionButtons(['edit', 'delete']));
+							} else {
+								evrow.remove();
+								tfoot.querySelector('.addnew a').classList.remove('disabled');
+							}
 						}
 					});
 					
-					tfoot.innerHTML = '<tr><td>Total</td><td colspan="2" class="numtotal">'+Math.round(num/den*100)+'%</td></tr>';
+					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+Math.round(num/den*100)+'%</td><td class="addnew"><a href="#">+</a></td></tr>';
 					table.append(tbody, tfoot);
-					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' ('+events.length+')', table);
+					
+					//Add new event
+					tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
+						e.preventDefault();
+						if (this.classList.contains('disabled')) return;
+						this.classList.add('disabled');
+						
+						const tr = document.createElement('tr'),
+							date = new Date();
+						tr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+						editEvent(tr);
+						tbody.append(tr);
+					});
+					
+					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' ('+events.length+')', table).student = tr.dataset.id;
 				};
 				req.onerror = () => {  };
 				req.send();
@@ -208,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	//Add new student
-	const addStudent = document.querySelector('#addnew a');
+	const addStudent = document.querySelector('#roster .addnew a');
 	if (addStudent) addStudent.addEventListener('click', function(e) {
 		e.preventDefault();
 		clearPopups();
@@ -219,14 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		makeInput(tr);
 		tr.cancel = function() {
 			tr.remove();
-			document.querySelector('#addnew a').classList.remove('disabled');
+			document.querySelector('#roster .addnew a').classList.remove('disabled');
 		}
 		tr.save = function() {
 			const after = (response) => {
 				tr.dataset.id = response;
 				const snum = document.getElementById('num_students');
 				snum.textContent = parseInt(snum.textContent)+1;
-				document.querySelector('#addnew a').classList.remove('disabled');
+				document.querySelector('#roster .addnew a').classList.remove('disabled');
 			}
 			sendInfo(tr, 'addstudent', ['classid='+classid, 'fname='+tr.querySelector('.fname input').value, 'lname='+tr.querySelector('.lname input').value], after)
 		}
@@ -281,9 +264,10 @@ function addEditIcon(element) {
 }
 
 var editables = {
-	name: {placeholder: 'Class Name'},
-	year: {min: 2023, max: 2100, placeholder: 'year'},
-}
+		name: {placeholder: 'Class Name'},
+		year: {min: 2023, max: 2100, placeholder: 'year'},
+	},
+	weights = {good: 1, meh: 0.5, bad: 0 };
 
 //Turns an element into an input
 function makeInput(element) {
@@ -343,6 +327,7 @@ function makeInput(element) {
 	element.cancel = function() {
 		for (const input of element.querySelectorAll('input,select')) input.value = input.oldValue;
 		solidify(element);
+		document.querySelector('#roster .addnew a').classList.remove('disabled');
 	}
 	
 	for (const input of element.querySelectorAll('input,select')) {
@@ -540,4 +525,55 @@ function modal(title, content) {
 	document.body.append(modalbg);
 	document.body.append(modal);
 	return modal;
+}
+
+function editEvent(row, selected) {
+	const actionsCell = row.querySelector('.actions'),
+		resultsCell = actionsCell.previousElementSibling;
+	
+	row.classList.add('editing');
+	actionsCell.textContent = '';
+	resultsCell.textContent = '';
+	actionsCell.append(...actionButtons(['cancel']));
+	const numspan = document.createElement('span');
+	numspan.classList.add('numspan');
+	if (selected) numspan.textContent = weights[selected];
+	
+	for (const i of ['good', 'meh', 'bad']) {
+		const a = document.createElement('a');
+		a.name = i;
+		a.classList.add('result-button', i);
+		if (i!=selected) a.classList.add('unselected');
+		resultsCell.append(a);
+		
+		a.addEventListener('click', function(e) {
+			const req = new XMLHttpRequest(),
+				result = this.name;
+			
+			//Save event edits
+			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.eventid+'&result='+weights[result], true);
+			
+			//Save new event
+			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+weights[result], true);
+			
+			req.onload = function() {
+				for (const b of resultsCell.querySelectorAll('.result-button')) {
+					if (b.name == result) b.classList.remove('unselected');
+					else b.remove();
+				}
+				numspan.textContent = weights[i];
+				actionsCell.textContent = '';
+				actionsCell.append(...actionButtons(['edit', 'delete']));
+				resultsCell.dataset.result = result;
+				row.classList.remove('editing');
+				if (!selected) row.eventid = parseInt(this.response); //Save new event ID if necessary
+				row.parentNode.parentNode.querySelector('.addnew a').classList.remove('disabled');
+				updateScore(document.querySelector('#roster tr[data-id="'+document.getElementById('modal').student+'"]'), row.parentNode.parentNode);
+			};
+			
+			req.onerror = () => {  };
+			req.send();
+		});
+	}
+	resultsCell.append(numspan);
 }

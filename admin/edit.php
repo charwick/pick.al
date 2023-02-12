@@ -108,7 +108,7 @@ if (isset($_POST['name'])) {
 					} ?>
 				</tbody>
 				<tfoot>
-					<tr id="addnew"><td colspan="4"><a href="#">+</a></td></tr>
+					<tr><td colspan="4" class="addnew"><a href="#">+</a></td></tr>
 				</tfoot>
 			</table>
 		</section>

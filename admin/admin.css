@@ -89,25 +89,30 @@ table th {
 table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
 .nullscore { color: #AAA; }
 
-#roster tfoot td { padding: 0; }
-#roster tfoot a {
+td.addnew { padding: 0 !important; }
+.addnew a {
 	text-align: center;
 	display: block;
 	font-size: 1.5em;
 	font-weight: bold;
 	color: #777;
-	padding: 5px 0;
-	border-top: 1px solid rgba(0,0,0,0.1);
+	padding: 0.5rem 0;
 }
-#roster tfoot a:hover {
+#roster .addnew a {
+	border-top: 1px solid rgba(0,0,0,0.1);
+	padding: 5px 0;
+}
+.addnew a:hover {
 	background: rgba(0,0,0,0.1);
 	color: #555;
 }
-#roster tfoot a.disabled {
+.addnew a.disabled {
 	color: #CCC;
 	cursor: default;
 }
-#roster tfoot a.disabled:hover { background: none; }
+.addnew a.disabled:hover { background: none; }
+#events .addnew { border-left: none; }
+
 input.error { box-shadow: 0 0 3px 1px #D22; }
 
 td.score:not(.nullscore):hover {
@@ -120,8 +125,8 @@ td.score:not(.nullscore):hover {
 	border-top: 1px solid #CCC;
 }
 #events tfoot td {
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
 }
 
 #csvfile { display: none; }
