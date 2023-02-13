@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				});
 			
 			//Event detail modal
-			} else if (e.target.classList.contains('score') && !e.target.classList.contains('nullscore')) {
+			} else if (e.target.classList.contains('score')) {
 				tr = e.target.parentNode;
 				const req = new XMLHttpRequest();
 				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						}
 					});
 					
-					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+Math.round(num/den*100)+'%</td><td class="addnew"><a href="#">+</a></td></tr>';
+					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 					table.append(tbody, tfoot);
 					
 					//Add new event
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						tbody.append(tr);
 					});
 					
-					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' ('+events.length+')', table).student = tr.dataset.id;
+					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
 				};
 				req.onerror = () => {  };
 				req.send();
@@ -347,11 +347,21 @@ function makeInput(element) {
 }
 
 function updateScore(rostertr, evtable) {
-	const results = [];
+	const results = [],
+		evcell = evtable.querySelector('.numtotal'),
+		rostercell = rostertr.querySelector('.score');
 	for (const n of evtable.querySelectorAll('.numspan')) results.push(parseFloat(n.textContent));
-	const sum = results.reduce((a,b) => a+b);
-	evtable.querySelector('.numtotal').textContent = Math.round(sum/results.length*100)+'%';
-	rostertr.querySelector('.score').textContent = sum+'/'+results.length+' ('+Math.round(sum/results.length*100)+'%)';
+	if (results.length) {
+		const sum = results.reduce((a,b) => a+b);
+		evcell.textContent = Math.round(sum/results.length*100)+'%';
+		rostercell.textContent = sum+'/'+results.length+' ('+Math.round(sum/results.length*100)+'%)';
+		rostercell.classList.remove('nullscore');
+	} else {
+		evcell.textContent = '—';
+		rostercell.textContent = '—';
+		rostercell.classList.add('nullscore');
+	}
+	document.querySelector('#modal span.num').textContent = results.length;
 }
 
 //Turns an input back into an element
@@ -514,7 +524,7 @@ function modal(title, content) {
 		h2 = document.createElement('h2');
 	modalbg.id = 'modalbg';
 	modal.id = 'modal';
-	h2.textContent = title;
+	h2.innerHTML = title;
 	modal.append(h2, content);
 	modalbg.addEventListener('click', function(e) {
 		modal.remove();

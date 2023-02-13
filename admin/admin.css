@@ -97,6 +97,7 @@ td.addnew { padding: 0 !important; }
 	font-weight: bold;
 	color: #777;
 	padding: 0.5rem 0;
+	min-width: 1.75em;
 }
 #roster .addnew a {
 	border-top: 1px solid rgba(0,0,0,0.1);
@@ -113,9 +114,18 @@ td.addnew { padding: 0 !important; }
 .addnew a.disabled:hover { background: none; }
 #events .addnew { border-left: none; }
 
+#events tbody:empty::before {
+	content: 'No events yet';
+	padding: 10px 0;
+	display: table-cell;
+	font-size: 0.8em;
+	font-style: italic;
+	color: #999;
+}
+
 input.error { box-shadow: 0 0 3px 1px #D22; }
 
-td.score:not(.nullscore):hover {
+td.score:hover {
 	cursor: pointer;
 	background: rgba(0,0,0,0.05);
 }
@@ -152,6 +162,12 @@ label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }
 	background: #F5CCCC;
 	border-color: #C55;
 }
+
+span.num {
+  color: #999;
+  font-weight: normal;
+}
+span.num::before { content: ' / '; }
 
 /* ==============
    Action buttons

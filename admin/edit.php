@@ -79,7 +79,7 @@ if (isset($_POST['name'])) {
 		$roster = $sql->get_roster($classid, true); ?>
 		<section id="students">
 			<h2>
-				Student Roster (<span id="num_students"><?php echo count($roster); ?></span>)
+				Student Roster <span class="num" id="num_students"><?php echo count($roster); ?></span>
 				<?php if ($roster) echo '<a href="csv.php?class='.$classid.'" class="deemph-link" id="csvdown">CSV</a>'; ?>
 			</h2>
 		
