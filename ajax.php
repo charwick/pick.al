@@ -59,15 +59,15 @@ switch ($req) {
 		echo $sql->student_excused($_GET['id'], $_GET['excused']);
 		break;
 	
-	case 'events';
+	case 'events':
 		echo json_encode($sql->get_events($_GET['student']));
 		break;
 	
-	case 'updateevent';
+	case 'updateevent':
 		echo $sql->edit_event($_GET['event'], $_GET['result']);
 		break;
 	
-	case 'deleteevent';
+	case 'deleteevent':
 		echo $sql->delete_event($_GET['event']);
 		break;
 }
