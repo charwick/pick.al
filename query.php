@@ -154,4 +154,19 @@ class chooser_query extends mysqli {
 		$pq = $this->run_query($q, [$excused, $id, self::$user]);
 		return $pq->affected_rows;
 	}
+	
+	function user_exists($field, $val) {
+		$fields = ['username', 'email'];
+		if (!in_array($field, $fields)) return False;
+		
+		$q = "SELECT id FROM users WHERE {$field}=?";
+		$pq = $this->run_query($q, [trim($val)]);
+		return $pq->get_result()->num_rows;
+	}
+	
+	function new_user($username, $email, $password) {
+		$q = "INSERT INTO users (username, email, password, registered) VALUES (?, ?, ?, NOW())";
+		$pq = $this->run_query($q, [$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
+		return $pq->insert_id;
+	}
 }

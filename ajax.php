@@ -70,4 +70,11 @@ switch ($req) {
 	case 'deleteevent':
 		echo $sql->delete_event($_GET['event']);
 		break;
+	
+	case 'userexists':
+		$fields = [];
+		if (isset($_GET['username'])) $fields['username'] = $sql->user_exists('username', $_GET['username']);
+		if (isset($_GET['email'])) $fields['email'] = $sql->user_exists('email', $_GET['email']);
+		echo json_encode($fields);
+		break;
 }

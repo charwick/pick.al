@@ -1,0 +1,44 @@
+form {
+	width: 400px;
+	margin: 0 auto;
+}
+#tabs {
+	display: flex;
+	list-style: none;
+	margin: 0; padding: 0;
+	margin-bottom: -1px;
+}
+#tabs li { flex: 1; }
+#tabs input { display: none; }
+#tabs label {
+	display: block;
+	padding: 10px 15px;
+	border-width: 3px 1px 0;
+	border-style: solid;
+	border-color: transparent;
+}
+#tabs input:checked + label {
+	background: #FFF;
+	border-color: #369 #CCC transparent;
+}
+#tabs input:not(:checked) + label { cursor: pointer; }
+#tabs input:not(:checked) + label:hover { background: rgba(0,0,0,0.05); }
+
+#formbody {
+	background: #FFF;
+	border: 1px solid #CCC;
+	padding: 20px 15px;
+}
+
+#entries {
+	margin: 0; padding: 0;
+	list-style: none;
+}
+
+#entries input {
+	font-size: 1.5em;
+	width: 100%;
+	display: block;
+	padding: 10px 20px;
+	box-sizing: border-box;
+}
