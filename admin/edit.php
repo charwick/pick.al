@@ -1,5 +1,13 @@
 <?php require_once('../query.php');
 $sql = new chooser_query();
+
+//Login-wall
+if (!$sql->current_user()) {
+	header("Location: ../");
+	exit;
+}
+
+//In case of no class
 $classid = isset($_GET['class']) ? $_GET['class'] : null;
 if ($classid) {
 	$class = $sql->get_class($classid);
@@ -10,6 +18,7 @@ if ($classid) {
 }
 $error = false;
 
+//Create new class
 if (isset($_POST['name'])) {
 	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['selector']);
 	if ($id) {

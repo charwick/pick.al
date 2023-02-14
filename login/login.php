@@ -1,8 +1,8 @@
-<?php $message = null;
+<?php
+if (!isset($sql)) exit; //Only run from the front page
+
+$message = null;
 if (isset($_POST['action'])) {
-	require_once('../query.php');
-	$sql = new chooser_query();
-	
 	if ($_POST['action']=='register') {
 		//Some server-side validation just in case
 		//Should have already checked all of these client-side
@@ -17,7 +17,7 @@ if (isset($_POST['action'])) {
 			print_r($result);
 			if ($result) {
 				echo "Ran the result";
-				header("Location: ../admin/");
+				header("Location: admin/");
 				exit;
 			} else $message = 'There was an error registering.';
 		}
@@ -26,21 +26,27 @@ if (isset($_POST['action'])) {
 		if (!$_POST['password'] || !$_POST['username']) $message = 'All fields are required.';
 		$loginby = str_contains($_POST['username'], '@') ? 'email' : 'username';
 		
-	}	
+		$user = $sql->get_user_by($loginby, $_POST['username']);
+		if (password_verify($_POST['password'], $user->password)) {
+			session_start();
+			$_SESSION['user'] = $user->id;
+			header("Location: .");
+		} else $message = "The password was incorrect.";
+	}
 } ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
 	<title>Student Chooser Login</title>
-	<link rel="stylesheet" href="../admin/admin.css" type="text/css" media="all">
-	<link rel="stylesheet" href="login.css" type="text/css" media="all">
-	<script type="text/javascript" src="login.js"></script>
+	<link rel="stylesheet" href="admin/admin.css" type="text/css" media="all">
+	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
+	<script type="text/javascript" src="login/login.js"></script>
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
 <body>
-	<form action="login.php" method="post">		
+	<form action="" method="post">		
 		<ul id="tabs">
 			<li>
 				<input type="radio" name="action" value="register" id="tab_register" checked />

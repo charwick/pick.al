@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			un = inpContainer.querySelector('input[name="username"]');
 		let data = [(un.value.includes('@') ? 'email' : 'username')+'='+un.value]
 		if (tab == 'register') data.push('email='+inpContainer.querySelector('input[name="email"]').value);
-		req.open('GET', '../ajax.php?req=userexists&'+data.join('&'), true);
+		req.open('GET', 'ajax.php?req=userexists&'+data.join('&'), true);
 		req.onload = function() {
 			const result = JSON.parse(this.response);
 			let pass = true;

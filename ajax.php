@@ -73,8 +73,8 @@ switch ($req) {
 	
 	case 'userexists':
 		$fields = [];
-		if (isset($_GET['username'])) $fields['username'] = $sql->user_exists('username', $_GET['username']);
-		if (isset($_GET['email'])) $fields['email'] = $sql->user_exists('email', $_GET['email']);
+		if (isset($_GET['username'])) $fields['username'] = ($sql->get_user_by('username', $_GET['username']) ? 1 : 0);
+		if (isset($_GET['email'])) $fields['email'] = ($sql->get_user_by('email', $_GET['email']) ? 1 : 0);
 		echo json_encode($fields);
 		break;
 }

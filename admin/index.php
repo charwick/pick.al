@@ -1,6 +1,12 @@
 <?php require_once('../query.php');
 $sql = new chooser_query();
 
+//Login-wall
+if (!$sql->current_user()) {
+	header("Location: ../");
+	exit;
+}
+
 //Handle deleting classes
 if (isset($_POST['action']) && $_POST['action']=='delete') {
 	$deleted = $sql->delete_class($_POST['class']);

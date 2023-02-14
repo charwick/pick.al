@@ -1,9 +1,8 @@
 <?php require_once('connect.php'); //Not included in git, but contains the vars to pass to __construct()
+session_start();
 
 //Returns the SQL object
 class chooser_query extends mysqli {
-	private static $user = 1; //Replace with login system later
-	
 	function __construct() {
 		parent::__construct(...connectionvars());
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -34,7 +33,7 @@ class chooser_query extends mysqli {
 			WHERE classes.user=? {$aw}
 			GROUP BY id
 			ORDER BY year DESC";
-		$result = $this->run_query($q, [self::$user])->get_result();
+		$result = $this->run_query($q, [$_SESSION['user']])->get_result();
 		
 		$classes = [];
 		while ($class = $result->fetch_object()) $classes[] = $class;
@@ -44,13 +43,13 @@ class chooser_query extends mysqli {
 	//Get info on one class. Returns a single row by ID
 	function get_class($id) {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
-		$pq = $this->run_query($q, [$id, self::$user])->get_result();
+		$pq = $this->run_query($q, [$id, $_SESSION['user']])->get_result();
 		return $pq->fetch_object();
 	}
 	
 	function new_class($name, $semester, $year, $activeuntil, $selector='even') {
 		$q = "INSERT INTO classes (name, semester, year, activeuntil, user, selector) VALUES (?, ?, ?, ?, ?, ?)";
-		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, self::$user, $selector]);
+		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user'], $selector]);
 		return $pq->insert_id;
 	}
 	
@@ -59,14 +58,14 @@ class chooser_query extends mysqli {
 		if (!in_array($key, $keys)) return False;
 		
 		$q = "UPDATE classes SET {$key}=? WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [trim($val), $class, self::$user]);
+		$pq = $this->run_query($q, [trim($val), $class, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 	
 	function delete_class($class) {
 		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
 		$q = "DELETE FROM classes WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [$class, self::$user]);
+		$pq = $this->run_query($q, [$class, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 
@@ -79,7 +78,7 @@ class chooser_query extends mysqli {
 			WHERE class=? AND user=? $wand
 			GROUP BY students.id
 			ORDER BY students.lname";
-		$students = $this->run_query($q, [$classid, self::$user])->get_result();
+		$students = $this->run_query($q, [$classid, $_SESSION['user']])->get_result();
 
 		$result = [];
 		while ($student = $students->fetch_object()) $result[] = $student;
@@ -96,7 +95,7 @@ class chooser_query extends mysqli {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
-		if ($this->run_query($q1, [$id, self::$user])->get_result()->num_rows) {
+		if ($this->run_query($q1, [$id, $_SESSION['user']])->get_result()->num_rows) {
 			$q2 = "UPDATE events SET result=? WHERE id=?";
 			$pq2 = $this->run_query($q2, [$result, $id]);
 			return $pq2->affected_rows;
@@ -107,7 +106,7 @@ class chooser_query extends mysqli {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
-		if ($this->run_query($q1, [$id, self::$user])->get_result()->num_rows) {
+		if ($this->run_query($q1, [$id, $_SESSION['user']])->get_result()->num_rows) {
 			$q2 = "DELETE FROM events WHERE id=?";
 			$pq2 = $this->run_query($q2, [$id]);
 			return $pq2->affected_rows;
@@ -119,7 +118,7 @@ class chooser_query extends mysqli {
 			LEFT JOIN students ON students.id=events.student
 			WHERE student=? and user=?
 			ORDER BY date DESC";
-		$events = $this->run_query($q, [$student, self::$user])->get_result();
+		$events = $this->run_query($q, [$student, $_SESSION['user']])->get_result();
 
 		$result = [];
 		while ($event = $events->fetch_object()) $result[] = $event;
@@ -128,19 +127,19 @@ class chooser_query extends mysqli {
 	
 	function add_student($fname, $lname, $class) {
 		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
-		$pq = $this->run_query($q, [trim($fname), trim($lname), $class, self::$user]);
+		$pq = $this->run_query($q, [trim($fname), trim($lname), $class, $_SESSION['user']]);
 		return $pq->insert_id;
 	}
 	
 	function edit_student($id, $fname, $lname) {
 		$q = "UPDATE students SET fname=?, lname=? WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [trim($fname), trim($lname), $id, self::$user]);
+		$pq = $this->run_query($q, [trim($fname), trim($lname), $id, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 	
 	function delete_student($id) {
 		$q1 = "DELETE FROM students WHERE id=? AND user=?";
-		$pq = $this->run_query($q1, [$id, self::$user]);
+		$pq = $this->run_query($q1, [$id, $_SESSION['user']]);
 		if ($pq->affected_rows) {
 			$q2 = "DELETE FROM events WHERE student=?";
 			$pq2 = $this->run_query($q2, [$id]);
@@ -151,17 +150,22 @@ class chooser_query extends mysqli {
 	function student_excused($id, $excused) {
 		$q = "UPDATE students SET excuseduntil=? WHERE id=? AND user=?";
 		if (!$excused) $excused = null;
-		$pq = $this->run_query($q, [$excused, $id, self::$user]);
+		$pq = $this->run_query($q, [$excused, $id, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 	
-	function user_exists($field, $val) {
-		$fields = ['username', 'email'];
+	function get_user_by($field, $val) {
+		$fields = ['username', 'email', 'id'];
 		if (!in_array($field, $fields)) return False;
 		
-		$q = "SELECT id FROM users WHERE {$field}=?";
+		$q = "SELECT * FROM users WHERE {$field}=?";
 		$pq = $this->run_query($q, [trim($val)]);
-		return $pq->get_result()->num_rows;
+		return $pq->get_result()->fetch_object();
+	}
+	
+	function current_user() {
+		if (!isset($_SESSION['user'])) return false;
+		return $this->get_user_by('id', $_SESSION['user']);
 	}
 	
 	function new_user($username, $email, $password) {

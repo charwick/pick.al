@@ -1,7 +1,12 @@
 <?php require_once('query.php');
 $sql = new chooser_query();
-$classid = isset($_GET['class']) ? $_GET['class'] : null;
 
+if (!$sql->current_user()) {
+	require_once('login/login.php');
+	exit;
+}
+
+$classid = isset($_GET['class']) ? $_GET['class'] : null;
 if ($classid) {
 	$class = $sql->get_class($classid);
 	if (!$class) {
