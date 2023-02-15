@@ -2,6 +2,12 @@
 $sql = new chooser_query();
 header('Content-Type: application/json; charset=utf-8');
 
+//Disable caching
+$now = gmdate("D, d M Y H:i:s");
+header("Expires: Tue, 03 Jul 2001 06:00:00 GMT");
+header("Cache-Control: max-age=0, no-cache, must-revalidate, proxy-revalidate");
+header("Last-Modified: {$now} GMT");
+
 $req = isset($_POST['req']) ? $_POST['req'] : $_GET['req'];
 
 switch ($req) {
