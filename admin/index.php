@@ -1,4 +1,5 @@
 <?php require_once('../query.php');
+require_once('userbar.php');
 $sql = new chooser_query();
 
 //Login-wall
@@ -42,7 +43,7 @@ function classlist($classes, $title) {
 </head>
 
 <body>
-	<a href="../" id="backlink" class="deemph-link">← Back to Chooser</a>
+	<?php userbar($sql, '../', 'Back to Chooser'); ?>
 	<h1>Student Chooser Admin</h1>
 	
 	<?php if (isset($message)) echo $message;

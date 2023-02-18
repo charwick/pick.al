@@ -1,4 +1,5 @@
 <?php require_once('../query.php');
+require_once('userbar.php');
 $sql = new chooser_query();
 
 //Login-wall
@@ -39,7 +40,7 @@ if (isset($_POST['name'])) {
 </head>
 
 <body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
-	<a href="." id="backlink" class="deemph-link">← Back to Admin</a>
+	<?php userbar($sql, '.', 'Back to Admin'); ?>
 	<form id="classinfo" action="" method="post">
 		<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
 		

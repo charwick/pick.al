@@ -14,10 +14,9 @@ The frontend (to be used on a phone in class) randomly selects a student from th
 * In order (with the current student saved across sessions)
 * Random among the students who have been called on the least so far (default)
 
-The admin backend, in progress, allows class and roster management. Students can be added to classes either one-by-one or by uploading a CSV, and excused absences can be set so a student's name doesn't come up until a set date.
+The admin backend allows class and roster management. Students can be added to classes either one-by-one or by uploading a CSV, and excused absences can be set so a student's name doesn't come up until a set date.
 
 ## To do
 
-* View and edit individual participation events
-* Registration and login (OrcId or email)
+* Register and login with OrcId
 * Undo and resubmit

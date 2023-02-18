@@ -1,8 +1,16 @@
-<?php
-if (!isset($sql)) exit; //Only run from the front page
+<?php $message = null;
 
-$message = null;
-if (isset($_POST['action'])) {
+if (isset($_GET['action']) && $_GET['action']=='logout') {
+	session_start();
+	$_SESSION = [];
+	session_destroy();
+	header("Location: ../"); //This script is called directly and not included
+	exit;
+}
+
+elseif (!isset($sql)) exit; //Only run from the front page
+
+elseif (isset($_POST['action'])) {
 	if ($_POST['action']=='register') {
 		//Some server-side validation just in case
 		//Should have already checked all of these client-side
@@ -16,7 +24,6 @@ if (isset($_POST['action'])) {
 			$result = $sql->new_user($_POST['username'], $_POST['email'], $_POST['password']);
 			print_r($result);
 			if ($result) {
-				echo "Ran the result";
 				header("Location: admin/");
 				exit;
 			} else $message = 'There was an error registering.';
