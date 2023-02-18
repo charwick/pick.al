@@ -59,7 +59,9 @@ if ($classid) {
 		<a href="admin/" id="adminbutton" class="button hollow">Admin</a>
 		
 		<ul id="classlist">
-			<?php foreach ($sql->get_classes(true) as $class) {
+			<?php $classes = $sql->get_classes(true);
+			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/edit.php" class="button" id="pick">New Class</a></li>';
+			else foreach ($classes as $class) {
 				echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
 			} ?>
 		</ul>

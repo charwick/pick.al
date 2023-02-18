@@ -242,6 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?'))
 			e.preventDefault();
 	});
+	
+	//Validate new class
+	const newform = document.querySelector('.admin-new #classinfo');
+	if (newform) newform.addEventListener('submit', function (e) {
+		let pass = true;
+		for (const i of this.querySelectorAll('input')) {
+			i.classList.remove('error');
+			if (!i.value) {
+				i.classList.add('error');
+				pass = false;
+			}
+		}
+		if (!pass) e.preventDefault();
+	});
 });
 
 Date.prototype.clockTime = function() {

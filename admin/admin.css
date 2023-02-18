@@ -85,6 +85,10 @@ input#name {
 	font-size: 1.25em;
 	padding: 10px 25px;
 }
+#year, input[name="year"] {
+	width: 4.5em;
+	display: inline-block;
+}
 #selector-desc {
 	color: #777;
 	font-size: smaller;

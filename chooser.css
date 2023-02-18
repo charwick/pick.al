@@ -92,7 +92,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	bottom: 40px;
 }
 
-#classlist a {
+#classlist a:not(#pick) {
 	display: block;
 	font-size: 2em;
 	color: #CCC;
@@ -102,16 +102,25 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	border-top: 1px solid rgba(255,255,255,0.2);
 	margin-left: auto; margin-right: auto;
 }
-#classlist a:hover {
+#classlist a:not(#pick):hover {
 	background: rgba(255,255,255,0.05);
 	color: #DDD;
 }
-#classlist li:last-child a { border-bottom: 1px solid rgba(255,255,255,0.2); }
+#classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgba(255,255,255,0.2); }
 #classlist a span {
 	display: block;
 	font-size: 0.5em;
 	margin-top: 0.25em;
 	color: #999;
+}
+.noclasses {
+	font-size: 2.25em;
+	color: #777;
+}
+.noclasses #pick {
+	display: block;
+	margin: 2em auto;
+	width: auto;
 }
 
 #adminbutton {
