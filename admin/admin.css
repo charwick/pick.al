@@ -34,6 +34,7 @@ h1 {
 	color: #BBB;
 	font-size: 0.8em;
 	padding: 8px;
+	margin-bottom: -1px;
 }
 #userbar a:hover {
 	background: rgba(255,255,255,0.1);

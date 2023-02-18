@@ -81,28 +81,34 @@ function whichTab() {
 
 //Change inputs on tab
 function switchInputs(clearInfo=true) {
-	const val = whichTab();
+	const val = whichTab(),
+		inpContainer = document.getElementById('entries');
 	if (clearInfo) for (const box of document.querySelectorAll('.info')) box.remove();
 	
-	entries.textContent = '';
-	if (val=='login') entries.append(...drawInputs(['uoremail', 'password']));
-	else if (val=='register') entries.append(...drawInputs(['username', 'email', 'password', 'confirm']));
+	if (val=='login') drawInputs(inpContainer, ['uoremail', 'password']);
+	else if (val=='register') drawInputs(inpContainer, ['username', 'email', 'password', 'confirm']);
 
-	const submit = document.querySelector('input[type="submit"]');
-	submit.value = (val=='login' ? 'Log in' : 'Register');
+	document.querySelector('input[type="submit"]').value = (val=='login' ? 'Log in' : 'Register');
 }
 
-function drawInputs(list) {
+function drawInputs(container, list) {
 	const inps = [];
 	for (const inp of list) {
-		const el = document.createElement('input'),
+		const inpname = ('name' in inputs[inp] ? inputs[inp].name : inp);
+		let el = container.querySelector('input[name="'+inpname+'"]'), li;
+		
+		if (el) li = el.parentNode;
+		else {
+			el = document.createElement('input');
 			li = document.createElement('li');
-		el.name = ('name' in inputs[inp] ? inputs[inp].name : inp);
+			el.name = inpname;
+			li.append(el);
+		}
 		for (const [attr, val] of Object.entries(inputs[inp])) el[attr] = val;
-		li.append(el);
 		inps.push(li);
 	}
-	return inps;
+	container.textContent = '';
+	container.append(...inps);
 }
 
 function infoElement(message, classname, tag) {
