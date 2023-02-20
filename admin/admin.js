@@ -290,6 +290,7 @@ function makeInput(element) {
 	
 	//Edit students
 	if (element.tagName.toLowerCase() == 'tr') {
+		clearPopups();
 		inp = document.createElement('input');
 		const inp2 = document.createElement('input'),
 			ftd = element.querySelector('.fname'),

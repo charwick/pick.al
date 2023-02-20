@@ -54,24 +54,29 @@ elseif (isset($_POST['action'])) {
 </head>
 
 <body>
-	<form action="" method="post">		
-		<ul id="tabs">
-			<li>
-				<input type="radio" name="action" value="register" id="tab_register" checked />
-				<label for="tab_register">Register</label>
-			</li>
-			<li>
-				<input type="radio" name="action" value="login" id="tab_login" />
-				<label for="tab_login">Log in</label>
-			</li>
-		</ul>
-		
-		<div id="formbody">
-			<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
-			<ul id="entries"><!--Filled by JS--></ul>
+	<main>
+		<form action="" method="post">		
+			<ul id="tabs">
+				<li>
+					<input type="radio" name="action" value="register" id="tab_register" checked />
+					<label for="tab_register">Register</label>
+				</li>
+				<li>
+					<input type="radio" name="action" value="login" id="tab_login" />
+					<label for="tab_login">Log in</label>
+				</li>
+			</ul>
 			
-			<input type="submit" value="Register" />
-		</div>
-	</form>
+			<div id="formbody">
+				<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
+				<ul id="entries"><!--Filled by JS--></ul>
+				
+				<input type="submit" value="Register" />
+			</div>
+		</form>
+	</main>
+
+	<?php require_once('admin/parts.php');
+	footer(); ?>
 </body>
 </html>

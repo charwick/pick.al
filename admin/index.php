@@ -1,5 +1,5 @@
 <?php require_once('../query.php');
-require_once('userbar.php');
+require_once('parts.php');
 $sql = new chooser_query();
 
 //Login-wall
@@ -37,20 +37,24 @@ function classlist($classes, $title) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title>Student-Chooser Admin</title>
+	<title>Pick.al Admin</title>
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
 <body>
 	<?php userbar($sql, '../', 'Back to Chooser'); ?>
-	<h1>Student Chooser Admin</h1>
-	
-	<?php if (isset($message)) echo $message;
-	
-	if ($active) classlist($active, 'Active Classes');
-	if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
-	
-	<p><a class="button" href="edit.php">New class</a></p>
+	<main>
+		<h1>Student Chooser Admin</h1>
+		
+		<?php if (isset($message)) echo $message;
+		
+		if ($active) classlist($active, 'Active Classes');
+		if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
+		
+		<p><a class="button" href="edit.php">New class</a></p>
+	</main>
+
+	<?php footer(); ?>
 </body>
 </html>

@@ -19,14 +19,14 @@ if ($classid) {
 <html lang="en-US">
 <head>
 	<?php if ($classid) { ?>
-		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Student Chooser</title>
+		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
 				roster = <?php echo json_encode($sql->get_roster($classid)); ?>,
 				selector = '<?php echo $class->selector; ?>';
 		</script>
 	<?php } else { ?>
-		<title>Available Classes | Student Chooser</title>
+		<title>Available Classes | Pick.al</title>
 	<?php } ?>
 	
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />

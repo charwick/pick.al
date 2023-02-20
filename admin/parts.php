@@ -10,4 +10,11 @@
 			<a href="../login/login.php?action=logout">Log out</a>
 		</div>
 	</div>
-<?php } ?>
+<?php }
+
+function footer() { ?>
+	<footer id="footer">
+		<span>Pick.al is developed and maintained by <a href="https://cameronharwick.com">Cameron Harwick.</a></span>
+		<span><a href="https://github.com/charwick/student-chooser/issues">Report a bug / Suggest a feature</a></span>
+	</footer>
+<?php }
