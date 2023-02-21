@@ -24,39 +24,6 @@ h1 {
 }
 .deemph-link:hover { opacity: 1; }
 
-#userbar {
-	background: #555;
-	margin: 0 -40px 1.5em;
-	border-bottom: 1px solid #333;
-	padding: 0 40px;
-}
-#userbar::after {
-	content: '';
-	display: block;
-	clear: both;
-}
-#userbar a {
-	display: block;
-	color: #BBB;
-	font-size: 0.8em;
-	padding: 8px;
-	margin-bottom: -1px;
-}
-#userbar a:hover {
-	background: rgba(255,255,255,0.1);
-	color: #CCC;
-}
-#backlink { float: left; }
-#userbar #rightside {
-	float: right;
-	display: flex;
-}
-#userbar .gravatar {
-	height: 20px; width: 20px;
-	margin: 0 4px -6px 0;
-	border: 1px solid #999;
-}
-
 a { text-decoration: none; }
 
 a.button, button, input[type='submit'] {
@@ -354,6 +321,54 @@ tr:not(.nottip) .actions a:hover::before, .popup::after {
 	background-image: url('../icon/svg.php?icon=x-lg&color=FFF');
 }
 
+/* =================
+   Header and Footer
+   ================= */
+
+#userbar {
+	background: #555;
+	margin: 0 -40px 1.5em;
+	border-bottom: 1px solid #333;
+	padding: 0 40px;
+	text-align: center;
+}
+#userbar::after {
+	content: '';
+	display: block;
+	clear: both;
+}
+#userbar a {
+	display: block;
+	color: #BBB;
+	font-size: 0.8em;
+	padding: 8px;
+	margin-bottom: -1px;
+}
+#userbar a:hover {
+	background: rgba(255,255,255,0.1);
+	color: #CCC;
+}
+#backlink { float: left; }
+#userbar #rightside {
+	float: right;
+	display: flex;
+}
+#userbar .gravatar {
+	height: 20px; width: 20px;
+	margin: 0 4px -6px 0;
+	border: 1px solid #999;
+}
+
+#userbar #logo {
+	width: 100px;
+	display: inline-block;
+	text-indent: -9999px;
+	background: url("../icon/svg.php?icon=logo&color=FFF") center 8px no-repeat;
+	background-size: 75px;
+	opacity: 0.75;
+}
+#userbar #logo:hover { opacity: 1; }
+
 #footer {
 	padding: 10px 0;
 	font-size: 0.8em;
@@ -361,10 +376,10 @@ tr:not(.nottip) .actions a:hover::before, .popup::after {
 	color: #999;
 	border-top: 1px solid rgba(0,0,0,0.1);
 	margin-top: 20px;
-  }
-  footer span + span::before {
+}
+footer span + span::before {
 	content: '•';
 	margin: 0 1.5em;
 	color: #555;
 	font-style: normal;
-  }
+}

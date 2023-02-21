@@ -2,13 +2,13 @@ body {
 	background: #333;
 	text-align: center;
 	color: #EEE;
-	font: 1em/150% 'Lucida Grande', Calibri, sans-serif;
+	font: 1em/1.5em 'Lucida Grande', Calibri, sans-serif;
 	margin: 40px 20px;
 }
 
 h1 {
 	font-weight: normal;
-	margin: 12vh 0 0;
+	margin: 8vh 0 0;
 	font-size: 2.5em;
 }
 p.subtitle {
@@ -94,10 +94,10 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #classlist a:not(#pick) {
 	display: block;
-	font-size: 2em;
+	font-size: 1.8em;
 	color: #CCC;
 	text-decoration: none;
-	padding: 0.75em 0;
+	padding: 0.7em 0;
 	width: 100%;
 	border-top: 1px solid rgba(255,255,255,0.2);
 	margin-left: auto; margin-right: auto;
@@ -109,9 +109,18 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgba(255,255,255,0.2); }
 #classlist a span {
 	display: block;
-	font-size: 0.5em;
+	font-size: 1rem;
 	margin-top: 0.25em;
 	color: #999;
+}
+#classlist h2 {
+	font-size: 1em;
+	text-transform: uppercase;
+}
+#classlist h2 span {
+	color: #999;
+	font-weight: normal;
+	text-transform: none;
 }
 .noclasses {
 	font-size: 2.25em;
@@ -122,6 +131,13 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	margin: 2em auto;
 	width: auto;
 }
+
+#logo {
+	background: url("icon/svg.php?icon=logo&color=FFF") center no-repeat;
+	text-indent: -9999px;
+	opacity: 0.8;
+}
+h1#logo { height: 60px; }
 
 #adminbutton {
 	display: inline-block;

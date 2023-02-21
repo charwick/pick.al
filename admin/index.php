@@ -45,7 +45,7 @@ function classlist($classes, $title) {
 <body>
 	<?php userbar($sql, '../', 'Back to Chooser'); ?>
 	<main>
-		<h1>Student Chooser Admin</h1>
+		<h1>Pick.al Admin Panel</h1>
 		
 		<?php if (isset($message)) echo $message;
 		

@@ -1,7 +1,8 @@
 <?php require_once('query.php');
 $sql = new chooser_query();
 
-if (!$sql->current_user()) {
+$user = $sql->current_user();
+if (!$user) {
 	require_once('login/login.php');
 	exit;
 }
@@ -36,6 +37,7 @@ if ($classid) {
 
 <body>
 	<?php if ($classid) { ?>
+		<div id="logo">Pick.al</div>
 		<h1 id="classname"><?php echo $class->name; ?></h1>
 		<a href="." title="Back" id="backbutton">←</a>
 		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
@@ -55,14 +57,17 @@ if ($classid) {
 		</div>
 
 	<?php } else { ?>
-		<h1>Available Classes</h1>
 		<a href="admin/" id="adminbutton" class="button hollow">Admin</a>
+
+		<h1 id="logo">Pick.al</h1>
 		
 		<ul id="classlist">
 			<?php $classes = $sql->get_classes(true);
 			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/edit.php" class="button" id="pick">New Class</a></li>';
-			else foreach ($classes as $class) {
-				echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
+			else {
+				echo "<li><h2>Active Classes <span>/ {$user->username}</span></h2></li>";
+				foreach ($classes as $class)
+					echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
 			} ?>
 		</ul>
 	<?php }?>

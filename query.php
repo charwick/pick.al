@@ -1,4 +1,7 @@
 <?php require_once('connect.php'); //Not included in git, but contains the vars to pass to __construct()
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 
 //Returns the SQL object

@@ -1,6 +1,14 @@
-form {
+#logo {
 	width: 400px;
 	margin: 40px auto 0;
+	background: url("../icon/logo.svg") left center no-repeat;
+	text-indent: -9999px;
+	opacity: 0.8;
+}
+
+form {
+	width: 400px;
+	margin: 20px auto 0;
 }
 #tabs {
 	display: flex;

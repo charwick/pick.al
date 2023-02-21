@@ -19,11 +19,10 @@ elseif (isset($_POST['action'])) {
 		elseif ($sql->get_user_by('username', $_POST['username'])) $message = "The user {$_POST['username']} already exists. Please choose another.";
 		elseif ($sql->get_user_by('email', $_POST['email'])) $message = "The email address {$_POST['email']} is already registered. Did you mean to log in?";
 		elseif (str_contains($_POST['username'], '@')) $message = 'Username cannot contain \'@\'.';
-					
+		
 		if (!$message) {
 			$result = $sql->new_user($_POST['username'], $_POST['email'], $_POST['password']);
 			if ($result) {
-				session_start();
 				$_SESSION['user'] = $result;
 				header("Location: admin/");
 				exit;
@@ -36,7 +35,6 @@ elseif (isset($_POST['action'])) {
 		
 		$user = $sql->get_user_by($loginby, $_POST['username']);
 		if (password_verify($_POST['password'], $user->password)) {
-			session_start();
 			$_SESSION['user'] = $user->id;
 			header("Location: .");
 		} else $message = "The password was incorrect.";
@@ -55,6 +53,7 @@ elseif (isset($_POST['action'])) {
 
 <body>
 	<main>
+		<h1 id="logo">Pick.al</h1>
 		<form action="" method="post">		
 			<ul id="tabs">
 				<li>
