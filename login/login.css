@@ -1,14 +1,26 @@
+main {
+	width: 920px;
+	margin: 0 auto;
+}
+
 #logo {
-	width: 400px;
-	margin: 40px auto 0;
+	margin: 40px 0 0;
 	background: url("../icon/logo.svg") left center no-repeat;
 	text-indent: -9999px;
 	opacity: 0.8;
 }
 
-form {
-	width: 400px;
-	margin: 20px auto 0;
+#split {
+	display: flex;
+	padding-top: 20px;
+}
+form { width: 400px; }
+#desc {
+	font-size: 2.5em;
+	line-height: 1.5em;
+	color: #999;
+	padding-right: 50px;
+	width: 470px;
 }
 #tabs {
 	display: flex;
@@ -49,4 +61,20 @@ form {
 	display: block;
 	padding: 10px 20px;
 	box-sizing: border-box;
+}
+
+@media only screen and (max-width : 975px) {
+	#split { display: block; }
+	main { width: auto; }
+	#desc {
+		width: auto;
+		font-size: 2em;
+		margin-bottom: 1em;
+		padding-right: 0;
+	}
+}
+
+@media only screen and (max-width : 600px) {
+	#desc { font-size: 1.5em; }
+	form { width: auto; }
 }
