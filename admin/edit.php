@@ -51,7 +51,7 @@ if (isset($_POST['name'])) {
 				echo "<h1 id='name'>{$class->name}</h1>";
 			} else {
 				echo '<h1>New class</h1>';
-				echo '<p><input type="text" id="name" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
+				echo '<p id="name"><input type="text" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
 			} ?>
 			
 			<p>

@@ -54,7 +54,7 @@ a.button.small {
 	padding-top: 1em;
 }
 
-input#name {
+#name input {
 	font-size: 1.25em;
 	padding: 10px 25px;
 }

@@ -4,11 +4,13 @@ var weights = {good: 1, meh: 0.5, bad: 0 };
 document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
-	makeEditable(document.getElementById('name'), {placeholder: 'Class Name'})
-	makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer']})
-	makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year'})
-	makeEditable(document.getElementById('activeuntil'), {type: 'date'})
-		
+	if (document.body.classList.contains('admin-edit')) {
+		makeEditable(document.getElementById('name'), {placeholder: 'Class Name', request: 'updateclassinfo'})
+		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], request: 'updateclassinfo'})
+		makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year', request: 'updateclassinfo'})
+		makeEditable(document.getElementById('activeuntil'), {type: 'date', request: 'updateclassinfo'})
+	}
+
 	//Action buttons
 	const roster = document.querySelector('#roster tbody');
 	if (roster) {
@@ -24,10 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		roster.addEventListener('click', function(e) {
 			if (!e.target.matches('.actions a, .score')) return;
 			e.preventDefault();
-			let tr = e.target.parentNode.parentNode;
-			if (e.target.classList.contains('edit')) makeInput(tr);
-			else if (e.target.classList.contains('save')) tr.save();
-			else if (e.target.classList.contains('cancel')) tr.cancel();
+			let tr = e.target.parentNode.parentNode,
+				td_fn = tr.querySelector('.fname'),
+				td_ln = tr.querySelector('.lname');
+			if (e.target.classList.contains('edit'))
+				makeInput([td_fn, td_ln], {request: 'editstudent', placeholder: ['First Name', 'Last Name']});
+			else if (e.target.classList.contains('save')) td_fn.save();
+			else if (e.target.classList.contains('cancel')) td_fn.cancel();
 			
 			else if (e.target.classList.contains('delete')) {
 				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
@@ -204,20 +209,24 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
-		const tr = studentRow('','', ['cancel', 'save']);
-		makeInput(tr);
-		tr.cancel = function() {
-			tr.remove();
-			document.querySelector('#roster .addnew a').classList.remove('disabled');
-		}
-		tr.save = function() {
-			const after = (response) => {
-				tr.dataset.id = response;
-				const snum = document.getElementById('num_students');
-				snum.textContent = parseInt(snum.textContent)+1;
+		const tr = studentRow('','', ['cancel', 'save']),
+			tds = [tr.querySelector('.fname'), tr.querySelector('.lname')];
+		makeInput(tds, {placeholder: ['First Name', 'Last Name']});
+		for (const td of tds) {
+			td.cancel = function() {
+				tr.remove();
 				document.querySelector('#roster .addnew a').classList.remove('disabled');
 			}
-			sendInfo(tr, 'addstudent', ['classid='+classid, 'fname='+tr.querySelector('.fname input').value, 'lname='+tr.querySelector('.lname input').value], after)
+			td.save = function() {
+				const after = (response) => {
+					tr.dataset.id = response;
+					const snum = document.getElementById('num_students');
+					snum.textContent = parseInt(snum.textContent)+1;
+					document.querySelector('#roster .addnew a').classList.remove('disabled');
+					tr.querySelector('.nullscore').classList.add('score');
+				}
+				sendInfo(tds, 'addstudent', ['classid='+classid, 'fname='+tr.querySelector('.fname input').value, 'lname='+tr.querySelector('.lname input').value], after);
+			}
 		}
 	});
 	
@@ -379,4 +388,61 @@ function editEvent(row, selected) {
 		});
 	}
 	resultsCell.append(numspan);
+}
+
+function selectorDesc() {
+	const val = document.getElementById('selector').value,
+		descs = {
+			rand: 'Random with replacement',
+			even: 'Preferentially choose students that have been called on the least so far',
+			order: 'Rotate through the class in order (your place is saved across sessions)'
+		};
+	document.getElementById('selector-desc').textContent = descs[val];
+}
+
+function uploadCSV(e) {
+	e.preventDefault();
+	const files = this.files || e.dataTransfer.items,
+		reader = new FileReader(),
+		csvElement = document.getElementById('csvfile'),
+		error = document.querySelector('#csvupload .info');
+	if (files.length == 0) return;
+	if (error) error.remove();
+	
+	reader.onload = function(e) {
+		const formData = new FormData(),
+			req = new XMLHttpRequest();
+		
+		formData.append("csv", e.target.result);
+		formData.append("req", "uploadroster");
+		formData.append("class", ''+classid);
+		req.open("POST", "../ajax.php", true);
+		req.onload = function() {
+			response = JSON.parse(this.response);
+			if (!response) {
+				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
+				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+			} else {
+				const info = infoElement("Uploaded "+response.length+" students")
+				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
+				for (const row of response) {
+					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
+					tr.dataset.id = row['id'];
+				}
+				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+			}
+		};
+		req.onerror = function() {
+			const error = document.createElement('span');
+			error.textContent = 'There was an error uploading this CSV.';
+			csvElement.parentNode.insertBefore(error, csvElement);
+		}
+		req.send(formData);
+	};
+	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
+	document.querySelector('label[for="csvfile"]').classList.remove('active');
+	if (!file.type.includes('csv')) {
+		const error = infoElement("This file isn't a CSV!", 'error');
+		csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+	} else reader.readAsText(file);
 }

@@ -1,79 +1,43 @@
 function makeEditable(element, attrs) {
+    if (!element) return;
 	const edit = actionButtons(['edit'])[0];
 	edit.addEventListener('click', function(e) {
 		e.preventDefault();
-		makeInput(element);
+		makeInput(element, attrs);
 	});
 	element.appendChild(edit);
-    element.pickalAttrs = attrs;
 }
 
-//Turns an element into an input
-function makeInput(element) {
-	element.classList.add('editing');
-	let inp;
-	
-	//Edit students
-	if (element.tagName.toLowerCase() == 'tr') {
-		clearPopups();
-		inp = document.createElement('input');
-		const inp2 = document.createElement('input'),
-			ftd = element.querySelector('.fname'),
-			ltd = element.querySelector('.lname');
-		inp.value = ltd.textContent;
-		inp2.value = ftd.textContent;
-		inp.placeholder = 'Last Name';
-		inp2.placeholder = 'First Name';
-	
-		element.save = function() { sendInfo(element, 'editstudent', ['student='+element.dataset.id, 'fname='+inp2.value, 'lname='+inp.value]); }
-		const actions = element.querySelector('.actions');
-		actions.textContent = '';
-		actions.append(...actionButtons(['save', 'cancel']));
-	
-		ftd.textContent = ''; ltd.textContent = '';
-		ftd.append(inp2); ltd.append(inp);
-		inp2.focus();
-	
-	//Edit class info
-	} else {
-		const item = element.id;
-		if (element.pickalAttrs.type=='select') {
-			inp = document.createElement('select');
-			let html = '';
-			for (const s of element.pickalAttrs.opts) html += '<option value="'+s.toLowerCase()+'">'+s+'</option>';
-			inp.innerHTML = html;
-			inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
-		} else {
-			inp = document.createElement('input');
-			inp.type = element.pickalAttrs.type || 'text';
-			inp.value = element.textContent.replace('✎','');
+//Turns a set of elements into inputs
+function makeInput(elements, attrs) {
+	let inps = [], i=0;
+    if (!(elements instanceof Array)) elements = [elements]
+
+    clearPopups();
+    for (const element of elements) {
+        element.classList.add('editing');
+        let inp;
+        if (attrs.type=='select') {
+            inp = document.createElement('select');
+            let html = '';
+            for (const s of attrs.opts) html += '<option value="'+s.toLowerCase()+'">'+s+'</option>';
+            inp.innerHTML = html;
+            inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
+        } else {
+            inp = document.createElement('input');
+            inp.type = attrs.type || 'text';
+            inp.value = element.textContent.replace('✎','');
             for (const attr of ['min', 'max', 'placeholder'])
-                if (attr in element.pickalAttrs)
-                    element.setAttribute(attr, element.pickalAttrs[attr])
-		}
-		
-		inp.name = item;
-		if (item) inp.id = item;
-		inp.classList.add('submittable');
-        inp.pickalAttrs = element.pickalAttrs
-		
-		element.save = function() { sendInfo(element, 'updateclassinfo', ['class='+classid, 'k='+inp.name, 'v='+inp.value]); };
-		inp.addEventListener('blur', element.save);
-		element.textContent = '';
-		element.append(inp);
-		inp.focus();
-	}
-	
-	//Revert any changes
-	element.cancel = function() {
-		for (const input of element.querySelectorAll('input,select')) input.value = input.oldValue;
-		solidify(element);
-		document.querySelector('#roster .addnew a').classList.remove('disabled');
-	}
-	
-	for (const input of element.querySelectorAll('input,select')) {
-		input.oldValue = input.value;
-		input.addEventListener('keydown', function(e) {
+                if (attr in attrs)
+                    inp.setAttribute(attr, attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr])
+        }
+
+        inp.name = element.id;
+        element.pickalAttrs = attrs
+		inp.oldValue = inp.value;
+
+        //Saving and cancelling
+		inp.addEventListener('keydown', function(e) {
 			if (e.key == "Enter") {
 				e.preventDefault();
 				element.save();
@@ -82,9 +46,32 @@ function makeInput(element) {
 				element.cancel();
 			}
 		});
-	}
-	
-	return inp;
+        element.cancel = function() {
+            for (const input of inps) input.value = input.oldValue;
+            solidify(elements);
+            document.querySelector('#roster .addnew a').classList.remove('disabled');
+        }
+
+        //Hackish, fix eventually
+        if (elements.length==1){
+            element.save = function() { sendInfo(elements, attrs.request, ['class='+classid, 'k='+inp.name, 'v='+inp.value]); };
+            inp.addEventListener('blur', elements[0].save);
+        } else {
+            element.save = function() { sendInfo(elements, attrs.request, ['student='+elements[0].parentNode.dataset.id, 'fname='+inps[0].value, 'lname='+inps[1].value]); }
+            const actions = element.parentNode.querySelector('.actions');
+            actions.textContent = '';
+            actions.append(...actionButtons(['save', 'cancel']));
+        }
+
+        //Draw the input
+        element.textContent = '';
+        element.append(inp)
+        inps.push(inp);
+        i++;
+    }
+
+    inps[0].focus();
+	return inps;
 }
 
 function updateScore(rostertr, evtable) {
@@ -105,20 +92,22 @@ function updateScore(rostertr, evtable) {
 	document.querySelector('#modal span.num').textContent = results.length;
 }
 
-//Turns an input back into an element
-function solidify(el) {
-	if (el.querySelector('#selector')) return;
-	el.classList.remove('editing');
-	for (const inp of el.querySelectorAll('input, select')) {
-		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
-		else inp.parentNode.textContent = inp.value;
-	}
-	if (el.tagName.toLowerCase() != 'tr') makeEditable(el, el.pickalAttrs);
-	else {
-		const actions = el.querySelector('.actions');
-		actions.textContent = '';
-		actions.append(...actionButtons(['edit', 'excuses', 'delete']));
-	}
+//Turns a set of inputs back into elements
+function solidify(els) {
+    if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
+    for (const el of els) {
+        el.classList.remove('editing');
+        const inp = el.querySelector('input, select');
+        if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
+        else inp.parentNode.textContent = inp.value;
+    }
+
+    if (els.length == 1) makeEditable(els[0], els[0].pickalAttrs);
+    else {
+        const actions = els[0].parentNode.querySelector('.actions');
+        actions.textContent = '';
+        actions.append(...actionButtons(['edit', 'excuses', 'delete']));
+    }
 }
 
 function clearPopups() {
@@ -128,25 +117,17 @@ function clearPopups() {
 			tr.classList.remove('editing', 'nottip');
 }
 
-function selectorDesc() {
-	const val = document.getElementById('selector').value,
-		descs = {
-			rand: 'Random with replacement',
-			even: 'Preferentially choose students that have been called on the least so far',
-			order: 'Rotate through the class in order (your place is saved across sessions)'
-		};
-	document.getElementById('selector-desc').textContent = descs[val];
-}
-
 //============================
 // Communicate with the server
 //============================
 
-function sendInfo(element, command, data, after) {
-	let inputs = element.querySelectorAll('input,select'), blank, changed;
+function sendInfo(elements, command, data, after) {
+	let blank, changed, inputs=[];
+    if (!(elements instanceof Array)) elements = [elements]
 	
 	//Check for blank values
-	for (const inp of inputs) {
+	for (const element of elements) {
+        const inp = element.querySelector('input,select');
 		inp.classList.remove('error');
 		if (inp.value == '') {
 			inp.classList.add('error');
@@ -154,6 +135,7 @@ function sendInfo(element, command, data, after) {
 			blank = true; //Don't return quite yet, so we can check all our inputs
 		}
 		if (inp.value != inp.oldValue) changed = true;
+        inputs.push(inp);
 	}
 	if (blank) return;
 		
@@ -164,58 +146,11 @@ function sendInfo(element, command, data, after) {
 		req.onload = function() {
 			if (!parseInt(this.response)) req.onerror();
 			else {
-				solidify(element);
+				solidify(elements);
 				if (after instanceof Function) after(parseInt(this.response));
 			}
 		};
 		req.onerror = () => { for (const inp of inputs) inp.classList.add('error'); };
 		req.send();
-	} else solidify(element);
-}
-
-function uploadCSV(e) {
-	e.preventDefault();
-	const files = this.files || e.dataTransfer.items,
-		reader = new FileReader(),
-		csvElement = document.getElementById('csvfile'),
-		error = document.querySelector('#csvupload .info');
-	if (files.length == 0) return;
-	if (error) error.remove();
-	
-	reader.onload = function(e) {
-		const formData = new FormData(),
-			req = new XMLHttpRequest();
-		
-		formData.append("csv", e.target.result);
-		formData.append("req", "uploadroster");
-		formData.append("class", ''+classid);
-		req.open("POST", "../ajax.php", true);
-		req.onload = function() {
-			response = JSON.parse(this.response);
-			if (!response) {
-				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
-				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
-			} else {
-				const info = infoElement("Uploaded "+response.length+" students")
-				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
-				for (const row of response) {
-					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
-					tr.dataset.id = row['id'];
-				}
-				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
-			}
-		};
-		req.onerror = function() {
-			const error = document.createElement('span');
-			error.textContent = 'There was an error uploading this CSV.';
-			csvElement.parentNode.insertBefore(error, csvElement);
-		}
-		req.send(formData);
-	};
-	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
-	document.querySelector('label[for="csvfile"]').classList.remove('active');
-	if (!file.type.includes('csv')) {
-		const error = infoElement("This file isn't a CSV!", 'error');
-		csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
-	} else reader.readAsText(file);
+	} else solidify(elements);
 }
