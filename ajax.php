@@ -83,4 +83,12 @@ switch ($req) {
 		if (isset($_GET['email'])) $fields['email'] = ($sql->get_user_by('email', $_GET['email']) ? 1 : 0);
 		echo json_encode($fields);
 		break;
+	
+	case 'edituser':
+		if (!in_array($_GET['k'], ['email'])) $response = False;
+		else $response = $sql->edit_user($_GET['k'], $_GET['v']);
+
+		if ($response) echo json_encode($response);
+		if (!$response || !is_numeric($response)) http_response_code(403);
+		break;
 }

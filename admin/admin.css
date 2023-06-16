@@ -383,3 +383,31 @@ footer span + span::before {
 	color: #555;
 	font-style: normal;
 }
+
+/* =========
+   User page
+   ========= */
+
+#gravatar-link {
+	float: left;
+	margin: -1.5em 15px 0 0;
+	display: inline-block;
+	position: relative;
+}
+#gravatar-link::after {
+	border: 1px solid rgba(0,0,0,0.2);
+	border-top: none;
+	position: absolute;
+	content: '';
+	height: 100%; width: 100%;
+	left: 0; top: 0;
+	box-sizing: border-box;
+	pointer-events: none;
+	border-radius: 0 0 5px 5px;
+}
+#gravatar-link:hover { opacity: 0.85; }
+main .gravatar {
+	width: 5em;
+	display: block;
+	border-radius: 0 0 5px 5px;
+}

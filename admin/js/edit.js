@@ -5,10 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
 	if (document.body.classList.contains('admin-edit')) {
-		makeEditable(document.getElementById('name'), {placeholder: 'Class Name', request: 'updateclassinfo'})
-		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], request: 'updateclassinfo'})
-		makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year', request: 'updateclassinfo'})
-		makeEditable(document.getElementById('activeuntil'), {type: 'date', request: 'updateclassinfo'})
+		function infoData(inps) { return ['req=updateclassinfo', 'class='+classid, 'k='+inps[0].name, 'v='+inps[0].value]; };
+
+		makeEditable(document.getElementById('name'), {placeholder: 'Class Name', data: infoData})
+		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], data: infoData})
+		makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year', data: infoData})
+		makeEditable(document.getElementById('activeuntil'), {type: 'date', data: infoData})
 	}
 
 	//Action buttons
@@ -22,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 			}
 		}
+
+		function studentData(inputs) { return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value] }
 		
 		roster.addEventListener('click', function(e) {
 			if (!e.target.matches('.actions a, .score')) return;
@@ -30,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				td_fn = tr.querySelector('.fname'),
 				td_ln = tr.querySelector('.lname');
 			if (e.target.classList.contains('edit'))
-				makeInput([td_fn, td_ln], {request: 'editstudent', placeholder: ['First Name', 'Last Name']});
+				makeInput([td_fn, td_ln], {placeholder: ['First Name', 'Last Name'], data: studentData});
 			else if (e.target.classList.contains('save')) td_fn.save();
 			else if (e.target.classList.contains('cancel')) td_fn.cancel();
 			
@@ -210,22 +214,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		this.classList.add('disabled');
 		
 		const tr = studentRow('','', ['cancel', 'save']),
-			tds = [tr.querySelector('.fname'), tr.querySelector('.lname')];
-		makeInput(tds, {placeholder: ['First Name', 'Last Name']});
+			tds = [tr.querySelector('.fname'), tr.querySelector('.lname')],
+			after = (response) => {
+				tr.dataset.id = response;
+				const snum = document.getElementById('num_students');
+				snum.textContent = parseInt(snum.textContent)+1;
+				document.querySelector('#roster .addnew a').classList.remove('disabled');
+				tr.querySelector('.nullscore').classList.add('score');
+			}
+		makeInput(tds, {placeholder: ['First Name', 'Last Name'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value]; }});
 		for (const td of tds) {
 			td.cancel = function() {
 				tr.remove();
 				document.querySelector('#roster .addnew a').classList.remove('disabled');
-			}
-			td.save = function() {
-				const after = (response) => {
-					tr.dataset.id = response;
-					const snum = document.getElementById('num_students');
-					snum.textContent = parseInt(snum.textContent)+1;
-					document.querySelector('#roster .addnew a').classList.remove('disabled');
-					tr.querySelector('.nullscore').classList.add('score');
-				}
-				sendInfo(tds, 'addstudent', ['classid='+classid, 'fname='+tr.querySelector('.fname input').value, 'lname='+tr.querySelector('.lname input').value], after);
 			}
 		}
 	});
@@ -300,24 +301,6 @@ function studentRow(col1, col2, actions=[]) {
 	tr.querySelector('.actions').append(...actionButtons(actions));
 	stable.append(tr);
 	return tr;
-}
-
-function actionButtons(list) {
-	const buttons = {
-		edit: {title: 'Edit'},
-		save: {title: 'Save'},
-		delete: {title: 'Delete'},
-		cancel: {title: 'Cancel'},
-		excuses: {title: 'Set excused absences'}
-	}, actions = [];
-	for (const item of list) {
-		const a = document.createElement('a');
-		a.classList.add(item);
-		a.href = '#';
-		a.title = buttons[item].title;
-		actions.push(a);
-	}
-	return actions;
 }
 
 function modal(title, content) {

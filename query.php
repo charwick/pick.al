@@ -176,4 +176,14 @@ class chooser_query extends mysqli {
 		$pq = $this->run_query($q, [$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
 		return $pq->insert_id;
 	}
+
+	function edit_user($key, $val) {
+		$keys = ['email', 'orcid'];
+		if (!in_array($key, $keys)) return False;
+		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";
+		
+		$q = "UPDATE users SET {$key}=? WHERE id=?";
+		$pq = $this->run_query($q, [trim($val), $_SESSION['user']]);
+		return $pq->affected_rows;
+	}
 }
