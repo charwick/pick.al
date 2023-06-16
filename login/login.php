@@ -44,7 +44,7 @@ elseif (isset($_POST['action'])) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title>Student Chooser Login</title>
+	<title>Pick.al | Login</title>
 	<link rel="stylesheet" href="admin/admin.css" type="text/css" media="all">
 	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
 	<script type="text/javascript" src="login/login.js"></script>

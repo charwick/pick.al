@@ -35,7 +35,8 @@ if (isset($_POST['name'])) {
 	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New class"; ?> | Pick.al</title>
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">var classid = <?php echo $classid ? $classid : 'null'; ?>;</script>
-	<script type="text/javascript" src="admin.js"></script>
+	<script type="text/javascript" src="js/ajax.js"></script>
+	<script type="text/javascript" src="js/edit.js"></script>
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
@@ -47,18 +48,18 @@ if (isset($_POST['name'])) {
 			
 			if ($classid) {
 				echo "<input type='hidden' name='classid' value='{$classid}'>";
-				echo "<h1 id='name' class='editable' data-inputtype='text'>{$class->name}</h1>";
+				echo "<h1 id='name'>{$class->name}</h1>";
 			} else {
 				echo '<h1>New class</h1>';
-				echo '<p><input type="text" id="name" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'"></p>';
+				echo '<p><input type="text" id="name" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
 			} ?>
 			
 			<p>
 				<?php if ($classid) { ?>
-					<span class="editable" id="semester" data-inputtype='select'> <?php echo ucwords($class->semester); ?></span>
-					<span class="editable" id="year" data-inputtype='number'><?php echo $class->year; ?></span>
+					<span id="semester"> <?php echo ucwords($class->semester); ?></span>
+					<span id="year"><?php echo $class->year; ?></span>
 					<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
-					<span class="editable" id="activeuntil" data-inputtype='date'><?php echo $class->activeuntil; ?></span>
+					<span id="activeuntil"><?php echo $class->activeuntil; ?></span>
 				<?php } else {
 					$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
 					if ($error) $selected = $_POST['semester'];
@@ -67,8 +68,8 @@ if (isset($_POST['name'])) {
 						<?php foreach ($seasons as $season)
 							echo "<option value='".strtolower($season)."'".($selected==strtolower($season) ? ' selected' : '').">{$season}</option>"; ?>
 					</select>
-					<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>">
-					Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>">
+					<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>" required="">
+					Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>" required="">
 				<?php } ?>
 			</p>
 			

@@ -20,12 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		for (const box of document.querySelectorAll('.info')) box.remove(); //Clear errors
 		
-		//Validate for blank values
 		for (const i of inpContainer.querySelectorAll('input')) {
 			i.classList.remove('error');
-			if (!i.value || (tab=='register' && i.name=='username' && i.value.includes('@'))) {
+			if (tab=='register' && i.name=='username' && i.value.includes('@')) {
 				i.classList.add('error');
-				if (i.value) infoElement('Username cannot contain \'@\'.', 'error');
+				infoElement('Username cannot contain \'@\'.', 'error');
 				pass = false;
 			}
 		}
@@ -102,6 +101,7 @@ function drawInputs(container, list) {
 			el = document.createElement('input');
 			li = document.createElement('li');
 			el.name = inpname;
+			el.required = true;
 			li.append(el);
 		}
 		for (const [attr, val] of Object.entries(inputs[inp])) el[attr] = val;
