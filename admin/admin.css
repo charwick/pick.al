@@ -417,3 +417,10 @@ main .gravatar {
 	display: block;
 	border-radius: 0 0 5px 5px;
 }
+
+#password::after {
+	content: "Last changed " attr(data-date);
+	display: block;
+	font-size: small;
+	color: #777;
+}

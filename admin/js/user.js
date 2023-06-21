@@ -22,9 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			span.textContent = i ? '' : '••••••••';
 			i++;
 		}
+		const now = new Date();
+		password.dataset.date = now.toLocaleDateString('en-us', {month: 'long', day: 'numeric', year: 'numeric'})+' at '+now.clockTime();
 	}
 
 	function pwedit(e) {
+		e.preventDefault();
 		const element = e.target.parentNode.parentNode,
 			fields = Array.from(element.querySelectorAll('.field'));
 		if (e.target.classList.contains('edit')) {

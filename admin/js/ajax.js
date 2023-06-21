@@ -92,24 +92,6 @@ function makeInput(elements, attrs) {
 	return inps;
 }
 
-function updateScore(rostertr, evtable) {
-	const results = [],
-		evcell = evtable.querySelector('.numtotal'),
-		rostercell = rostertr.querySelector('.score');
-	for (const n of evtable.querySelectorAll('.numspan')) results.push(parseFloat(n.textContent));
-	if (results.length) {
-		const sum = results.reduce((a,b) => a+b);
-		evcell.textContent = Math.round(sum/results.length*100)+'%';
-		rostercell.textContent = sum+'/'+results.length+' ('+Math.round(sum/results.length*100)+'%)';
-		rostercell.classList.remove('nullscore');
-	} else {
-		evcell.textContent = '—';
-		rostercell.textContent = '—';
-		rostercell.classList.add('nullscore');
-	}
-	document.querySelector('#modal span.num').textContent = results.length;
-}
-
 //Turns a set of inputs back into elements
 function solidify(els, actionList) {
 	if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
@@ -151,6 +133,12 @@ function actionButtons(list) {
 		actions.push(a);
 	}
 	return actions;
+}
+
+Date.prototype.clockTime = function() {
+	let mins = this.getMinutes();
+	if (mins < 10) mins = '0'+mins;
+	return this.getHours()+':'+mins;
 }
 
 //============================
