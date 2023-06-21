@@ -1,5 +1,4 @@
 "use strict";
-
 var weights = {good: 1, meh: 0.5, bad: 0 };
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -222,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				document.querySelector('#roster .addnew a').classList.remove('disabled');
 				tr.querySelector('.nullscore').classList.add('score');
 			}
-		makeInput(tds, {placeholder: ['First Name', 'Last Name'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value]; }});
+		makeInput(tds, {placeholder: ['First Name', 'Last Name'], actions: ['edit', 'excuses', 'delete'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value]; }});
 		for (const td of tds) {
 			td.cancel = function() {
 				tr.remove();

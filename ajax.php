@@ -91,4 +91,8 @@ switch ($req) {
 		if ($response) echo json_encode($response);
 		if (!$response || !is_numeric($response)) http_response_code(403);
 		break;
+	
+	case 'editpw':
+		echo json_encode($sql->edit_pw($_GET['current'], $_GET['new']));
+		break;
 }

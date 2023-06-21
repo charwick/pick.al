@@ -1,17 +1,31 @@
 function makeEditable(element, attrs) {
 	if (!element) return;
-	const edit = actionButtons(['edit'])[0];
-	edit.addEventListener('click', function(e) {
-		e.preventDefault();
-		makeInput(element, attrs);
-	});
-	element.appendChild(edit);
+	const actions = document.createElement('span'),
+		edit = actionButtons(['edit'])[0];
+	actions.classList.add('actions');
+	actions.append(edit);
+	if (!element.editable) {
+		element.addEventListener('click', function(e) {
+			if (!e.target.classList.contains('edit')) return;
+			e.preventDefault();
+			makeInput(element, attrs);
+		});
+		element.editable = true;
+	}
+	element.appendChild(actions);
 }
 
 //Turns a set of elements into inputs
 function makeInput(elements, attrs) {
 	let inps = [], i=0;
-	if (!(elements instanceof Array)) elements = [elements]
+	if (!(elements instanceof Array)) elements = [elements];
+
+	//Keep track of what actions to put back when we solidify
+	if (!('actions' in attrs)) {
+		attrs['actions'] = [];
+		for (const a of elements[0].parentNode.querySelectorAll('.actions a'))
+			attrs['actions'].push(a.getAttribute('class'));
+	}
 
 	clearPopups();
 	for (const element of elements) {
@@ -48,15 +62,20 @@ function makeInput(elements, attrs) {
 		});
 		element.cancel = function() {
 			for (const input of inps) input.value = input.oldValue;
-			solidify(elements);
-			const addnew = document.querySelector('#roster .addnew a');
+			solidify(elements, attrs['actions']);
+			const addnew = document.querySelector('#roster .addnew a'),
+				error = element.parentNode.querySelector('.inlineError');
 			if (addnew) addnew.classList.remove('disabled');
+			if (error) error.remove();
 		}
-		element.save = function() { sendInfo(elements, attrs.data(inps), 'after' in attrs ? attrs.after : null); };
+		element.save = function() {
+			const error = element.parentNode.querySelector('.inlineError');
+			if (error) error.remove();
+			sendInfo(elements, attrs.data(inps), attrs['actions'], 'after' in attrs ? attrs.after : null);
+		};
 
 		if (elements.length==1) inp.addEventListener('blur', elements[0].save);
 		else {
-			//Hackish, fix eventually
 			const actions = element.parentNode.querySelector('.actions');
 			actions.textContent = '';
 			actions.append(...actionButtons(['save', 'cancel']));
@@ -92,7 +111,7 @@ function updateScore(rostertr, evtable) {
 }
 
 //Turns a set of inputs back into elements
-function solidify(els) {
+function solidify(els, actionList) {
 	if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
 	for (const el of els) {
 		el.classList.remove('editing');
@@ -105,7 +124,7 @@ function solidify(els) {
 	else {
 		const actions = els[0].parentNode.querySelector('.actions');
 		actions.textContent = '';
-		actions.append(...actionButtons(['edit', 'excuses', 'delete']));
+		actions.append(...actionButtons(actionList));
 	}
 }
 
@@ -138,7 +157,7 @@ function actionButtons(list) {
 // Communicate with the server
 //============================
 
-function sendInfo(elements, data, after) {
+function sendInfo(elements, data, actions, after, errorfn) {
 	let blank, changed, inputs=[];
 	if (!(elements instanceof Array)) elements = [elements]
 	
@@ -163,11 +182,14 @@ function sendInfo(elements, data, after) {
 		req.onload = function() {
 			if (!parseInt(this.response)) req.onerror();
 			else {
-				solidify(elements);
+				solidify(elements, actions);
 				if (after instanceof Function) after(parseInt(this.response));
 			}
 		};
-		req.onerror = () => { for (const inp of inputs) inp.classList.add('error'); };
+		req.onerror = () => {
+			if (errorfn) errorfn(this.response, inputs);
+			else for (const inp of inputs) inp.classList.add('error');
+		};
 		req.send();
-	} else solidify(elements);
+	} else solidify(elements, actions);
 }

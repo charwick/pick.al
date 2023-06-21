@@ -186,4 +186,11 @@ class chooser_query extends mysqli {
 		$pq = $this->run_query($q, [trim($val), $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
+
+	function edit_pw($old, $new) {
+		if (!password_verify($old, $this->current_user()->password)) return false;
+		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
+		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $_SESSION['user']]);
+		return $pq->affected_rows;
+	}
 }

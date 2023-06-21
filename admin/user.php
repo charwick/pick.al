@@ -16,13 +16,18 @@ $user = $sql->current_user(); ?>
 <body class="admin-user">
 	<?php userbar($sql, '.', 'Back to Admin'); ?>
 	<main>
-        <a href="http://gravatar.com/" id="gravatar-link" target="_gravatar">
-            <img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=160&d=mp" class="gravatar" />
-        </a>
-        <h1>User profile  <span class="num"><?php echo $user->username; ?></span></h1>
+		<a href="http://gravatar.com/" id="gravatar-link" target="_gravatar">
+			<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=160&d=mp" class="gravatar" />
+		</a>
+		<h1>User profile  <span class="num"><?php echo $user->username; ?></span></h1>
 
-        <p>Email: <span class="editable" id="email" data-inputtype="email"><?php echo $user->email; ?></span></p>
-    </main>
+		<p>Email: <span id="email"><?php echo $user->email; ?></span></p>
+		<p id="password">
+			Password:
+			<span class="field" id="oldpw">••••••••</span><span class="field" id="newpw"></span><span class="field" id="confirmpw"></span>
+			<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
+		</p>
+	</main>
 	<?php footer(); ?>
 </body>
 </html>

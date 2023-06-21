@@ -173,6 +173,11 @@ label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }
 	background: #F5CCCC;
 	border-color: #C55;
 }
+.inlineError {
+	font-size: smaller;
+	font-style: italic;
+	color: #C66;
+}
 
 span.num {
   color: #999;
@@ -199,7 +204,9 @@ span.num::before { content: ' / '; }
 	height: 12px; width: 12px;
 	background-size: 12px 12px;
 	opacity: 0.25;
-	font-size: 0.75em;
+	font-size: 0.75rem;
+	line-height: 1.5rem;
+	font-weight: normal;
 }
 h1 .edit {
 	height: 16px; width: 16px;
@@ -218,7 +225,7 @@ table tr:hover .actions, table tr.editing .actions { border-left-color: #CCC; }
 table tr:hover .actions a, table tr.editing .actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
 
-tr:not(.nottip) .actions a:hover::after {
+:not(.nottip) .actions a:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -232,7 +239,7 @@ tr:not(.nottip) .actions a:hover::after {
 	white-space: nowrap;
 	pointer-events: none;
 }
-tr:not(.nottip) .actions a:hover::before, .popup::after {
+:not(.nottip) .actions a:hover::before, .popup::after {
 	content: '';
 	display: block;
 	position: absolute;
@@ -391,7 +398,6 @@ footer span + span::before {
 #gravatar-link {
 	float: left;
 	margin: -1.5em 15px 0 0;
-	display: inline-block;
 	position: relative;
 }
 #gravatar-link::after {
