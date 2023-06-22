@@ -73,14 +73,14 @@ if (isset($_POST['name'])) {
 				<?php } ?>
 			</p>
 			
-			<p>
+			<?php /*<p>
 				Selector:
 				<select id="selector" name="selector">
 					<?php foreach (['even' => 'Even', 'rand' => 'Random', 'order' => 'In order'] as $opt => $title)
 						echo "<option value='{$opt}'".($class->selector==$opt ? ' selected' : '').">{$title}</option>"; ?>
 				</select>
 				<span id="selector-desc"></span>
-			</p>
+			</p> */ ?>
 			
 			<?php if (!$classid) { ?>
 				<p><input type="submit" name="submit" value="Create Class"></p>

@@ -46,8 +46,8 @@ a.button.small {
 	padding: 3px 13px 1px;
 	border-bottom-width: 2px;
 }
-#deleteform input[type='submit'] { background: #933; }
-#deleteform input[type='submit']:hover { background: #822; }
+#deleteform input[type='submit'] { background-color: #933; }
+#deleteform input[type='submit']:hover { background-color: #822; }
 #deleteform {
 	border-top: 1px solid rgba(0,0,0,0.1);
 	margin-top: 2em;
@@ -280,12 +280,12 @@ table tr:hover .actions a, table tr.editing .actions a { visibility: visible; }
 }
 
 #modal {
-	width: 740px;
+	width: 540px;
 	padding: 15px 30px;
 	position: fixed;
 	background: #FFF;
 	top: 100px; left: 50%;
-	margin-left: -400px;
+	margin-left: -300px;
 	border-radius: 12px;
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 }
@@ -424,3 +424,13 @@ main .gravatar {
 	font-size: small;
 	color: #777;
 }
+
+#orcid .button {
+	background: #ACDA53 url("/icon/orcid.png") 10px center/12px 12px no-repeat;
+	color: #FFF;
+	font-size: small;
+	padding: 0px 13px 0px 30px;
+	border-bottom-width: 2px;
+	margin: 0 0 0 0.5em;
+}
+#orcid .actions + .button { display: none; }

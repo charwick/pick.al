@@ -14,7 +14,7 @@ class chooser_query extends mysqli {
 	function run_query($query, $vars) {
 		$q = $this->prepare($query);
 		$types = '';
-		$typemap = [ 'integer' => 'i', 'string' => 's', 'double' => 'd' ];
+		$typemap = [ 'integer' => 'i', 'string' => 's', 'double' => 'd', 'NULL' => 'i' ];
 		foreach ($vars as $var) {
 			if (is_numeric($var)) $var += 0; //GET comes in as all strings; convert to numeric if necessary
 			$types .= $typemap[gettype($var)];
@@ -158,12 +158,27 @@ class chooser_query extends mysqli {
 	}
 	
 	function get_user_by($field, $val) {
-		$fields = ['username', 'email', 'id'];
+		$fields = ['username', 'email', 'id', 'orcid'];
 		if (!in_array($field, $fields)) return False;
 		
 		$q = "SELECT * FROM users WHERE {$field}=?";
 		$pq = $this->run_query($q, [trim($val)]);
-		return $pq->get_result()->fetch_object();
+		$user = $pq->get_result()->fetch_object();
+		if ($user->options) $user->options = json_decode($user->options);
+		return $user;
+	}
+
+	//$v=null to delete an option
+	function user_add_option($k, $v) {
+		if (!isset($_SESSION['user'])) return false;
+		$q = "SELECT options FROM users WHERE id=?";
+		$options = $this->run_query($q, [$_SESSION['user']])->get_result()->fetch_object()->options;
+		$options = $options ? json_decode($options) : [];
+		if ($v != null) $options->{$k} = $v;
+		else unset($options->{$k});
+		$q2 = "UPDATE users SET options=? WHERE id=?";
+		$pq = $this->run_query($q2, [json_encode($options), $_SESSION['user']]);
+		return $pq->affected_rows;
 	}
 	
 	function current_user() {
@@ -179,16 +194,18 @@ class chooser_query extends mysqli {
 
 	function edit_user($key, $val) {
 		$keys = ['email', 'orcid'];
-		if (!in_array($key, $keys)) return False;
+		if (!in_array($key, $keys) || !isset($_SESSION['user'])) return False;
 		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";
 		
 		$q = "UPDATE users SET {$key}=? WHERE id=?";
-		$pq = $this->run_query($q, [trim($val), $_SESSION['user']]);
+		$pq = $this->run_query($q, [$val ? trim($val) : $val, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 
 	function edit_pw($old, $new) {
+		if (!isset($_SESSION['user'])) return false;
 		if (!password_verify($old, $this->current_user()->password)) return false;
+		if ($old==$new) return 1;
 		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
 		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $_SESSION['user']]);
 		return $pq->affected_rows;

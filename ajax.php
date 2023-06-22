@@ -95,4 +95,10 @@ switch ($req) {
 	case 'editpw':
 		echo json_encode($sql->edit_pw($_GET['current'], $_GET['new']));
 		break;
+	
+	case 'deleteorcid':
+		$result = $sql->edit_user('orcid', null);
+		$sql->user_add_option('orcid_data', null);
+		echo json_encode($result);
+		break;
 }

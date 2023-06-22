@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			
 			for (const inp of element.querySelectorAll('input')) {
 				inp.value = '';
-				console.log(inp.value);
+
 				inp.parentNode.save = function() {
 					const error = element.querySelector('.inlineError');
 					if (error) error.remove();
@@ -48,11 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 						inlineError(element, 'Passwords do not match.');
 						return;
 					}
-
-					if (oldpw.value == newpw.value) {
-						fields[0].cancel();
-						return;
-					}
 					sendInfo(fields, ['req=editpw', 'current='+oldpw.value, 'new='+newpw.value], ['edit'], pwafter, pwerror);
 				}
 			}
@@ -61,4 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		else if (e.target.classList.contains('save')) element.querySelector('.field').save();
 	}
 	password.addEventListener('click', pwedit);
+
+	const oid = document.querySelector('#orcid');
+	oid.addEventListener('click', function(e) {
+		if (!e.target.classList.contains('cancel')) return;
+		e.preventDefault();
+		if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
+
+		sendInfo(null, ['req=deleteorcid'], null, function() {
+			oid.querySelector('span').remove();
+			oid.querySelector('.actions').remove();
+		});
+	});
 });

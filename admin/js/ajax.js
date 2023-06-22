@@ -94,7 +94,7 @@ function makeInput(elements, attrs) {
 
 //Turns a set of inputs back into elements
 function solidify(els, actionList) {
-	if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
+	// if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
 	for (const el of els) {
 		el.classList.remove('editing');
 		const inp = el.querySelector('input, select');
@@ -103,7 +103,7 @@ function solidify(els, actionList) {
 	}
 
 	if (els.length == 1) makeEditable(els[0], els[0].pickalAttrs);
-	else {
+	else if (els.length > 1) {
 		const actions = els[0].parentNode.querySelector('.actions');
 		actions.textContent = '';
 		actions.append(...actionButtons(actionList));
@@ -147,7 +147,8 @@ Date.prototype.clockTime = function() {
 
 function sendInfo(elements, data, actions, after, errorfn) {
 	let blank, changed, inputs=[];
-	if (!(elements instanceof Array)) elements = [elements]
+	if (elements == null) elements = [];
+	else if (!(elements instanceof Array)) elements = [elements];
 	
 	//Check for blank values
 	for (const element of elements) {
@@ -164,7 +165,7 @@ function sendInfo(elements, data, actions, after, errorfn) {
 	if (blank) return;
 		
 	//Only make a request if the value has changed
-	if (changed) {
+	if (changed || !elements.length) {
 		const req = new XMLHttpRequest();
 		req.open('GET', '../ajax.php?'+data.join('&'), true);
 		req.onload = function() {
