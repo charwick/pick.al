@@ -63,6 +63,12 @@ form { width: 400px; }
 	box-sizing: border-box;
 }
 
+#login .button#orcid {
+	background-size: 14px 14px;
+	padding: 2px 12px 2px 36px;
+	margin-top: 1em;
+}
+
 @media only screen and (max-width : 975px) {
 	#split { display: block; }
 	main { width: auto; }

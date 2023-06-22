@@ -425,7 +425,7 @@ main .gravatar {
 	color: #777;
 }
 
-#orcid .button {
+#orcid .button, .button#orcid {
 	background: #ACDA53 url("/icon/orcid.png") 10px center/12px 12px no-repeat;
 	color: #FFF;
 	font-size: small;
@@ -433,4 +433,5 @@ main .gravatar {
 	border-bottom-width: 2px;
 	margin: 0 0 0 0.5em;
 }
+#orcid .button:hover, .button#orcid:hover { background-color: #8cba43; }
 #orcid .actions + .button { display: none; }

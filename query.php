@@ -164,7 +164,7 @@ class chooser_query extends mysqli {
 		$q = "SELECT * FROM users WHERE {$field}=?";
 		$pq = $this->run_query($q, [trim($val)]);
 		$user = $pq->get_result()->fetch_object();
-		if ($user->options) $user->options = json_decode($user->options);
+		if ($user && $user->options) $user->options = json_decode($user->options);
 		return $user;
 	}
 

@@ -1,4 +1,6 @@
 <?php $message = null;
+require_once((str_contains(getcwd(), 'login') ? '../' : '').'orcid.php'); //Because it's relative to the including script, and not this file
+$orcid = new orcid_api();
 
 if (isset($_GET['action']) && $_GET['action']=='logout') {
 	session_start();
@@ -39,6 +41,19 @@ elseif (isset($_POST['action'])) {
 			header("Location: .");
 		} else $message = "The password was incorrect.";
 	}
+} 
+
+//Authenticate via OrcID
+elseif (isset($_GET['code'])) {
+	$response = $orcid->get_auth_token($_GET['code']);
+	$user = $sql->get_user_by('orcid', $response->orcid);
+	if ($user) {
+		$_SESSION['user'] = $user->id;
+		header("Location: .");
+		exit;
+	} else {
+		$message = "Registering with OrcID coming soon.";
+	}
 } ?>
 
 <!DOCTYPE html>
@@ -75,6 +90,8 @@ elseif (isset($_POST['action'])) {
 					
 					<input type="submit" value="Register" />
 				</div>
+
+				<a href="<?php echo $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcId</a>
 			</form>
 		</section>
 	</main>
