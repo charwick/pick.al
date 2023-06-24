@@ -23,7 +23,8 @@ function makeInput(elements, attrs) {
 	//Keep track of what actions to put back when we solidify
 	if (!('actions' in attrs)) {
 		attrs['actions'] = [];
-		for (const a of elements[0].parentNode.querySelectorAll('.actions a'))
+		const container = elements.length==1 ? elements[0] : elements[0].parentNode;
+		for (const a of container.querySelectorAll('.actions a'))
 			attrs['actions'].push(a.getAttribute('class'));
 	}
 
@@ -101,13 +102,17 @@ function solidify(els, actionList) {
 		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
 		else inp.parentNode.textContent = inp.value;
 	}
-
-	if (els.length == 1) makeEditable(els[0], els[0].pickalAttrs);
-	else if (els.length > 1) {
-		const actions = els[0].parentNode.querySelector('.actions');
+	
+	let actions;
+	if (els.length == 1) {
+		actions = document.createElement('span');
+		actions.classList.add('actions');
+		els[0].append(actions);
+	} else if (els.length > 1) {
+		actions = els[0].parentNode.querySelector('.actions');
 		actions.textContent = '';
-		actions.append(...actionButtons(actionList));
 	}
+	actions.append(...actionButtons(actionList));
 }
 
 function clearPopups() {

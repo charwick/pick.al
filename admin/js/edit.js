@@ -4,12 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
 	if (document.body.classList.contains('admin-edit')) {
+		const title = document.getElementById('name');
 		function infoData(inps) { return ['req=updateclassinfo', 'class='+classid, 'k='+inps[0].name, 'v='+inps[0].value]; };
 
-		makeEditable(document.getElementById('name'), {placeholder: 'Class Name', data: infoData})
+		makeEditable(title, {placeholder: 'Class Name', data: infoData})
 		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], data: infoData})
 		makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year', data: infoData})
 		makeEditable(document.getElementById('activeuntil'), {type: 'date', data: infoData})
+
+		//Delete button
+		title.querySelector('.actions').append(...actionButtons(['delete']));
+		title.addEventListener('click', function(e) {
+			e.preventDefault();
+			if (!e.target.classList.contains('delete')) return;
+			const delform = document.getElementById('deleteform');
+			if (confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?')) delform.submit();
+		});
 	}
 
 	//Action buttons
@@ -253,13 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		selectorDesc();
 	}
 	
-	//Delete button
-	const delform = document.getElementById('deleteform');
-	if (delform) delform.addEventListener('submit', function(e) {
-		if (!confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?'))
-			e.preventDefault();
-	});
-	
 	//Validate new class
 	const newform = document.querySelector('.admin-new #classinfo');
 	if (newform) newform.addEventListener('submit', function (e) {
@@ -412,7 +415,7 @@ function uploadCSV(e) {
 		formData.append("class", ''+classid);
 		req.open("POST", "../ajax.php", true);
 		req.onload = function() {
-			response = JSON.parse(this.response);
+			const response = JSON.parse(this.response);
 			if (!response) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
@@ -421,6 +424,7 @@ function uploadCSV(e) {
 				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
 				for (const row of response) {
 					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
+					tr.querySelector('.nullscore').classList.add('score');
 					tr.dataset.id = row['id'];
 				}
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
@@ -433,7 +437,7 @@ function uploadCSV(e) {
 		}
 		req.send(formData);
 	};
-	file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
+	let file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
 	document.querySelector('label[for="csvfile"]').classList.remove('active');
 	if (!file.type.includes('csv')) {
 		const error = infoElement("This file isn't a CSV!", 'error');

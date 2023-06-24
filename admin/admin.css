@@ -46,13 +46,6 @@ a.button.small {
 	padding: 3px 13px 1px;
 	border-bottom-width: 2px;
 }
-#deleteform input[type='submit'] { background-color: #933; }
-#deleteform input[type='submit']:hover { background-color: #822; }
-#deleteform {
-	border-top: 1px solid rgba(0,0,0,0.1);
-	margin-top: 2em;
-	padding-top: 1em;
-}
 
 #name input {
 	font-size: 1.25em;
@@ -208,7 +201,7 @@ span.num::before { content: ' / '; }
 	line-height: 1.5rem;
 	font-weight: normal;
 }
-h1 .edit {
+h1 .actions a {
 	height: 16px; width: 16px;
 	background-size: 16px 16px;
 }

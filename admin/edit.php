@@ -21,7 +21,7 @@ $error = false;
 
 //Create new class
 if (isset($_POST['name'])) {
-	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['selector']);
+	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil']);
 	if ($id) {
 		$url = "edit.php?class={$id}";
 		header("Location: {$url}");
@@ -138,9 +138,8 @@ if (isset($_POST['name'])) {
 			<form id="deleteform" action="." method="post">
 				<input type="hidden" name="action" value="delete" />
 				<input type="hidden" name="class" value="<?php echo $classid; ?>" />
-				<input type="submit" value="Delete class" />
 			</form>
-				
+		
 		<?php } ?>
 	</main>
 	<?php footer(); ?>

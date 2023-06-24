@@ -46,13 +46,15 @@ elseif (isset($_POST['action'])) {
 //Authenticate via OrcID
 elseif (isset($_GET['code'])) {
 	$response = $orcid->get_auth_token($_GET['code']);
-	$user = $sql->get_user_by('orcid', $response->orcid);
-	if ($user) {
-		$_SESSION['user'] = $user->id;
-		header("Location: .");
-		exit;
-	} else {
-		$message = "Registering with OrcID coming soon.";
+	if (isset($response->orcid)) {
+		$user = $sql->get_user_by('orcid', $response->orcid);
+		if ($user) {
+			$_SESSION['user'] = $user->id;
+			header("Location: .");
+			exit;
+		} else {
+			$message = "Registering with OrcID coming soon.";
+		}
 	}
 } ?>
 

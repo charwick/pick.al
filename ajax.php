@@ -20,6 +20,7 @@ switch ($req) {
 		$added = [];
 		$rows = preg_split('/\r\n|\r|\n/', $_POST['csv']);
 		foreach ($rows as $row) {
+			if (!$row) continue;
 			$row = str_getcsv($row);
 			if (!$i) {
 				$fnkey = array_search('fname', $row);

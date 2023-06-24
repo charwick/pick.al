@@ -27,7 +27,7 @@ header("Content-Disposition: attachment;filename=".str_replace(' ', '-', strtolo
 header("Content-Transfer-Encoding: binary");
 
 //Output CSV
-echo '"First name", "Last name", "Numerator", "Denominator", "Score"'.PHP_EOL;
+echo '"fname", "lname", "numerator", "denominator", "score"'.PHP_EOL;
 foreach ($sql->get_roster($classid, true) as $student) {
 	echo "\"{$student->fname}\",";
 	echo "\"{$student->lname}\",";
