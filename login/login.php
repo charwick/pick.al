@@ -48,7 +48,13 @@ elseif (isset($_GET['code'])) {
 	$response = $orcid->get_auth_token($_GET['code']);
 	if (isset($response->orcid)) {
 		$user = $sql->get_user_by('orcid', $response->orcid);
+		$orcid_data = [
+			'access_token' => $response->access_token,
+			'refresh_token' => $response->refresh_token,
+			'expires_in' => $response->expires_in
+		];
 		if ($user) {
+			$sql->user_add_option('orcid_data', $orcid_data);
 			$_SESSION['user'] = $user->id;
 			header("Location: .");
 			exit;

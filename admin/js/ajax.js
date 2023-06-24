@@ -96,6 +96,7 @@ function makeInput(elements, attrs) {
 //Turns a set of inputs back into elements
 function solidify(els, actionList) {
 	// if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
+	if (!els.length) return;
 	for (const el of els) {
 		el.classList.remove('editing');
 		const inp = el.querySelector('input, select');

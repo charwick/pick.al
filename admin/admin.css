@@ -419,7 +419,7 @@ main .gravatar {
 }
 
 #orcid .button, .button#orcid {
-	background: #ACDA53 url("/icon/orcid.png") 10px center/12px 12px no-repeat;
+	background: #ACDA53 url("/icon/orcid.svg") 10px center/12px 12px no-repeat;
 	color: #FFF;
 	font-size: small;
 	padding: 0px 13px 0px 30px;

@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
 
 		sendInfo(null, ['req=deleteorcid'], null, function() {
-			oid.querySelector('span').remove();
+			oid.querySelector('a').remove();
 			oid.querySelector('.actions').remove();
 		});
 	});

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			if (!e.target.classList.contains('delete')) return;
 			const delform = document.getElementById('deleteform');
-			if (confirm('Are you sure you want to delete '+document.getElementById('name').firstChild.textContent+'?')) delform.submit();
+			if (confirm('Are you sure you want to delete '+title.textContent+' and all its students?')) delform.submit();
 		});
 	}
 

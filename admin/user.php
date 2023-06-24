@@ -9,7 +9,7 @@ $orcid = new orcid_api();
 //Authorize OrcID
 if (isset($_GET['code']) && !$user->orcid) {
 	$response = $orcid->get_auth_token($_GET['code']);
-	if ($response) {
+	if (isset($response->orcid)) {
 		$sql->edit_user('orcid', $response->orcid);
 		$orcid_data = [
 			'access_token' => $response->access_token,
@@ -48,7 +48,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 		</p>
 
 		<p id="orcid">OrcId:
-			<?php if ($user->orcid) echo "<span>{$user->orcid}</span>" . ' <span class="actions"><a class="cancel" href="#" title="Disconnect"></a></span>'; ?>
+			<?php if ($user->orcid) echo "<a href='https://orcid.org/{$user->orcid}'>{$user->orcid}</a>" . ' <span class="actions"><a class="cancel" href="#" title="Disconnect"></a></span>'; ?>
 			<a class="button" href="<?php echo $orcid->auth_url('https://pick.al/admin/user.php'); ?>">Connect</a>
 		</p>
 	</main>
