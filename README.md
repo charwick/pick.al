@@ -10,13 +10,18 @@ The frontend (to be used on a phone in class) randomly selects a student from th
 
 [See how it works here](https://twitter.com/C_Harwick/status/1615481096161861632).
 
-The admin backend allows class and roster management, along with viewing and editing scores and answer histories. Students can be added to classes either one-by-one or by uploading a CSV, and excused absences can be set so a student's name doesn't come up until a set date.
+## Features
+
+* Record and keep track of participation events and total scores
+* Upload and download CSV rosters, or add students one-by-one
+* View, edit, and delete individual participation events on a per-student basis
+* Excused absences, so a student's name doesn't come up until a set date
+* Register and log in with OrcID
 
 Bug reports and feature requests can be filed in the [issues tab](https://github.com/charwick/pick.al/issues) here on Github.
 
-## To do
+## Planned features
 
-* Register with OrcId
 * Undo and resubmit
 * "Snooze" student on frontend
 * Custom frontend actions

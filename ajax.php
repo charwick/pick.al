@@ -98,6 +98,7 @@ switch ($req) {
 		break;
 	
 	case 'deleteorcid':
+		if (!$sql->current_user()->password) return false; //Don't allow disconnection unless a password is set
 		$result = $sql->edit_user('orcid', null);
 		$sql->user_add_option('orcid_data', null);
 		echo json_encode($result);

@@ -31,7 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		const element = e.target.parentNode.parentNode,
 			fields = Array.from(element.querySelectorAll('.field'));
 		if (e.target.classList.contains('edit')) {
+			let pwnone = false;
+			if (document.getElementById('oldpw').textContent == 'None') pwnone = true;
 			makeInput(fields, {type: 'password', placeholder: ['Current Password', 'New Password', 'Confirm New Password']});
+			if (pwnone) {
+				const opwi = element.querySelector('#oldpw input');
+				opwi.style.display = 'none';
+				opwi.validate = false;
+			}
 			
 			for (const inp of element.querySelectorAll('input')) {
 				inp.value = '';
@@ -39,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				inp.parentNode.save = function() {
 					const error = element.querySelector('.inlineError');
 					if (error) error.remove();
-					const oldpw = element.querySelector('input[name="oldpw"]')
+					const oldpw = element.querySelector('input[name="oldpw"]'),
 						newpw = element.querySelector('input[name="newpw"]'),
 						confirmpw = element.querySelector('input[name="confirmpw"]');
 					if (newpw.value != confirmpw.value) {
@@ -48,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						inlineError(element, 'Passwords do not match.');
 						return;
 					}
-					sendInfo(fields, ['req=editpw', 'current='+oldpw.value, 'new='+newpw.value], ['edit'], pwafter, pwerror);
+					sendInfo(fields, ['req=editpw', 'current='+(oldpw ? oldpw.value : ''), 'new='+newpw.value], ['edit'], pwafter, pwerror);
 				}
 			}
 		
@@ -61,6 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	oid.addEventListener('click', function(e) {
 		if (!e.target.classList.contains('cancel')) return;
 		e.preventDefault();
+		if (document.getElementById('oldpw').textContent == 'None') {
+			alert('Cannot disconnect OrcID without a password set. Please set a password and then try again.');
+			return;
+		}
 		if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
 
 		sendInfo(null, ['req=deleteorcid'], null, function() {

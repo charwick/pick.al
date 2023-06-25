@@ -160,6 +160,7 @@ function sendInfo(elements, data, actions, after, errorfn) {
 	for (const element of elements) {
 		const inp = element.querySelector('input,select');
 		inp.classList.remove('error');
+		if (Object.hasOwn(inp, 'validate') && !inp.validate) continue;
 		if (inp.value == '') {
 			inp.classList.add('error');
 			inp.focus();

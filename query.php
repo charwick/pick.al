@@ -186,9 +186,10 @@ class chooser_query extends mysqli {
 		return $this->get_user_by('id', $_SESSION['user']);
 	}
 	
-	function new_user($username, $email, $password) {
-		$q = "INSERT INTO users (username, email, password, registered) VALUES (?, ?, ?, NOW())";
-		$pq = $this->run_query($q, [$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
+	function new_user($username, $email, $password='', $orcid=null) {
+		if (!$password && !$orcid) return false;
+		$q = "INSERT INTO users (username, email, password, orcid, registered) VALUES (?, ?, ?, ?, NOW())";
+		$pq = $this->run_query($q, [$username, $email, $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
 		return $pq->insert_id;
 	}
 
@@ -204,7 +205,8 @@ class chooser_query extends mysqli {
 
 	function edit_pw($old, $new) {
 		if (!isset($_SESSION['user'])) return false;
-		if (!password_verify($old, $this->current_user()->password)) return false;
+		$user = $this->current_user();
+		if ($user->password && !password_verify($old, $user->password)) return false;
 		if ($old==$new) return 1;
 		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
 		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $_SESSION['user']]);

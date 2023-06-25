@@ -68,6 +68,11 @@ form { width: 400px; }
 	padding: 2px 12px 2px 36px;
 	margin-top: 1em;
 }
+li#orcid {
+	font-size: smaller;
+	padding: 0.5em 0 0 1em;
+	color: #777;
+  }
 
 @media only screen and (max-width : 975px) {
 	#split { display: block; }

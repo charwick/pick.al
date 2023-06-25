@@ -41,9 +41,9 @@ if (isset($_GET['code']) && !$user->orcid) {
 		<h1>User profile  <span class="num"><?php echo $user->username; ?></span></h1>
 
 		<p>Email: <span id="email"><?php echo $user->email; ?></span></p>
-		<p id="password" data-date="<?php echo date('F j, Y \a\t H:i', strtotime($user->pwchanged)); ?>">
+		<p id="password" data-date="<?php echo $user->password ? date('F j, Y \a\t H:i', strtotime($user->pwchanged)) : 'never'; ?>">
 			Password:
-			<span class="field" id="oldpw">••••••••</span><span class="field" id="newpw"></span><span class="field" id="confirmpw"></span>
+			<span class="field" id="oldpw"><?php echo $user->password ? '••••••••' : 'None'; ?></span><span class="field" id="newpw"></span><span class="field" id="confirmpw"></span>
 			<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
 		</p>
 
