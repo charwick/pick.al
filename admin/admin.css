@@ -230,8 +230,8 @@ table .actions {
 	font-size: 1em;
 }
 table .actions a { visibility: hidden; }
-table tr:hover .actions, table tr.editing .actions { border-left-color: #CCC; }
-table tr:hover .actions a, table tr.editing .actions a { visibility: visible; }
+table tr:hover .actions, table td.editing + td.actions { border-left-color: #CCC; }
+table tr:hover .actions a, table td.editing + td.actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
 
 table.sortable th::after {
@@ -244,8 +244,7 @@ table.sortable th::after {
 table.sortable th[data-sort="desc"]::after { content: '↓'; }
 table.sortable th[data-sort="asc"]::after { content: '↑'; }
 
-
-:not(.nottip) .actions a:hover::after {
+.actions a:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -259,7 +258,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	white-space: nowrap;
 	pointer-events: none;
 }
-:not(.nottip) .actions a:hover::before, .popup::after {
+.actions a:hover::before, .popup::after {
 	content: '';
 	display: block;
 	position: absolute;
@@ -269,6 +268,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	pointer-events: none;
 	top: -6px;
 }
+.nottip .actions a:hover::after, .nottip .actions a:hover::before { display: none; }
 .popup {
 	background: rgba(0,0,0,0.8);
 	text-align: center;

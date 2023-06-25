@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				req.send();
 			
 			} else if (e.target.classList.contains('excuses')) {
-				if (tr.classList.contains('editing')) {
+				const lname = tr.querySelector('.lname')
+				if (lname.classList.contains('editing')) {
 					clearPopups();
 					return;
 				}
@@ -76,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					inp = document.createElement('input'),
 					erect = e.target.getBoundingClientRect();
 			
-				tr.classList.add('editing', 'nottip');
+				tr.classList.add('nottip');
+				lname.classList.add('editing');
 				popup.textContent = 'Excused until ';
 				popup.classList.add('popup');
 				inp.type = 'date';
@@ -345,7 +347,7 @@ function eventActions(e) {
 	} else if (e.target.classList.contains('cancel')) {
 		if (evrow.dataset.id) {
 			for (const b of restd.querySelectorAll('.unselected')) b.remove();
-			evrow.classList.remove('editing');
+			restd.classList.remove('editing');
 			acttd.textContent = '';
 			numspan.textContent = weights[restd.dataset.result];
 			acttd.append(...actionButtons(['edit', 'delete']));
@@ -424,7 +426,7 @@ function editEvent(row, selected) {
 	const actionsCell = row.querySelector('.actions'),
 		resultsCell = actionsCell.previousElementSibling;
 	
-	row.classList.add('editing');
+	resultsCell.classList.add('editing');
 	actionsCell.textContent = '';
 	resultsCell.textContent = '';
 	actionsCell.append(...actionButtons(['cancel']));
@@ -459,7 +461,7 @@ function editEvent(row, selected) {
 				actionsCell.append(...actionButtons(['edit', 'delete']));
 				const oldval = resultsCell.dataset.result;
 				resultsCell.dataset.result = result;
-				row.classList.remove('editing');
+				resultsCell.classList.remove('editing');
 				let opts;
 				
 				//Add to or update class events table

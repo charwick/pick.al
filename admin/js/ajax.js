@@ -118,9 +118,12 @@ function solidify(els, actionList) {
 
 function clearPopups() {
 	for (const pp of document.querySelectorAll('.popup')) pp.remove();
-	for (const tr of document.querySelectorAll('#roster tr'))
-		if (tr.classList.contains('editing') && !tr.querySelector('input'))
-			tr.classList.remove('editing', 'nottip');
+	for (const tr of document.querySelectorAll('#roster tr')) {
+		tr.classList.remove('nottip');
+		for (const td of tr.querySelectorAll('td'))
+			if (td.classList.contains('editing') && !td.querySelector('input'))
+				td.classList.remove('editing');
+	}
 }
 
 function actionButtons(list) {
