@@ -94,8 +94,8 @@ if (isset($_POST['name'])) {
 							<th class="score">Score</th>
 						</tr>
 					</thead>
-					<tbody>
-						<?php $row=0;
+					<tbody><?php
+						 $row=0;
 						foreach ($roster as $student) {
 							if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
 							echo "<tr data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
@@ -108,22 +108,15 @@ if (isset($_POST['name'])) {
 								echo "</td>";
 							echo "</tr>";
 							$row = !$row;
-						} ?>
-					</tbody>
+						}
+					?></tbody>
 					<tfoot>
-						<tr><td colspan="4" class="addnew"><a href="#">+</a></td></tr>
+						<tr>
+							<td colspan="3" class="addnew"><a href="#" title="New Student">+</a></td>
+							<td class="uploadcsv"><a href="#" title="Upload CSV">CSV</a></td>
+						</tr>
 					</tfoot>
 				</table>
-			</section>
-			
-			<section id="csvupload">
-				<h2>Upload Students</h2>
-				<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>
-			
-				<p>
-					<label for="csvfile">Click here or drag a CSV file to upload</label>
-					<input type="file" id="csvfile" name="csvfile" accept="text/csv">
-				</p>
 			</section>
 
 			<?php $events = $sql->get_events_by_class($classid, 10);

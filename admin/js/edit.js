@@ -168,6 +168,23 @@ document.addEventListener('DOMContentLoaded', () => {
 				req.send();
 			}
 		});
+
+		//CSV Upload
+		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
+			e.preventDefault();
+			let content = document.createElement('div');
+			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>'
+				+'<p><label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>';
+			
+			const csvElement = content.querySelector('#csvfile'),
+				label = content.querySelector('label[for="csvfile"]');
+			label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
+			label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
+			label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
+			label.addEventListener('drop', uploadCSV);
+			csvElement.addEventListener('change', uploadCSV);
+			modal('Upload Students', content);
+		});
 	}
 
 	//Class recent events
@@ -203,17 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
-	
-	//Handle CSV
-	const csvElement = document.getElementById('csvfile');
-	if (csvElement) {
-		const label = document.querySelector('label[for="csvfile"]');
-		label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
-		label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
-		label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
-		label.addEventListener('drop', uploadCSV);
-		csvElement.addEventListener('change', uploadCSV);
-	}
 	
 	//Validate new class
 	const newform = document.querySelector('.admin-new #classinfo');
@@ -495,7 +501,7 @@ function uploadCSV(e) {
 	const files = this.files || e.dataTransfer.items,
 		reader = new FileReader(),
 		csvElement = document.getElementById('csvfile'),
-		error = document.querySelector('#csvupload .info');
+		error = document.querySelector('.info');
 	if (files.length == 0) return;
 	if (error) error.remove();
 	
@@ -511,22 +517,22 @@ function uploadCSV(e) {
 			const response = JSON.parse(this.response);
 			if (!response) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
-				csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 			} else {
 				const info = infoElement("Uploaded "+response.length+" students")
-				csvElement.parentNode.parentNode.insertBefore(info, csvElement.parentNode);
+				document.querySelector('#students h2').after(info);
 				for (const row of response) {
 					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
 					tr.querySelector('.nullscore').classList.add('score');
 					tr.dataset.id = row['id'];
 				}
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+				clearModal();
 			}
 		};
 		req.onerror = function() {
-			const error = document.createElement('span');
-			error.textContent = 'There was an error uploading this CSV.';
-			csvElement.parentNode.insertBefore(error, csvElement);
+			const error = infoElement('There was an error uploading this CSV.', 'error');
+			csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 		}
 		req.send(formData);
 	};
@@ -534,6 +540,6 @@ function uploadCSV(e) {
 	document.querySelector('label[for="csvfile"]').classList.remove('active');
 	if (!file.type.includes('csv')) {
 		const error = infoElement("This file isn't a CSV!", 'error');
-		csvElement.parentNode.parentNode.insertBefore(error, csvElement.parentNode);
+		csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 	} else reader.readAsText(file);
 }

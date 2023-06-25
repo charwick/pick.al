@@ -93,8 +93,8 @@ table th {
 table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
 .nullscore { color: #AAA; }
 
-td.addnew { padding: 0 !important; }
-.addnew a {
+td.addnew, #roster tfoot td { padding: 0 !important; } /* Replace with :has(a) when Firefox gets support */
+tfoot a {
 	text-align: center;
 	display: block;
 	font-size: 1.5em;
@@ -103,29 +103,45 @@ td.addnew { padding: 0 !important; }
 	padding: 0.5rem 0;
 	min-width: 1.75em;
 }
-#roster .addnew a {
+#roster tfoot a {
 	border-top: 1px solid rgba(0,0,0,0.1);
 	padding: 5px 0;
 }
-.addnew a:hover {
-	background: rgba(0,0,0,0.1);
+tfoot a:hover {
+	background-color: rgba(0,0,0,0.1);
 	color: #555;
 }
-.addnew a.disabled {
+tfoot a.disabled {
 	color: #CCC;
 	cursor: default;
 }
-.addnew a.disabled:hover { background: none; }
-.events .addnew { border-left: none; }
+tfoot a.disabled:hover { background: none; }
+.events tfoot .addnew { border-left: none; }
+.uploadcsv a {
+	font-weight: normal;
+	font-size: 0.8rem;
+}
+.uploadcsv a::before {
+	background-image: url('../icon/upload.svg');
+	background-size: 16px 16px;
+	height: 16px; width: 16px;
+	opacity: 67%;
+	display: inline-block;
+	content: '';
+	margin: 3px 10px -3px 0;
+}
 
-.events tbody:empty::before {
-	content: 'No events yet';
+table tbody:empty { height: 3em; }
+table tbody:empty::before {
 	padding: 10px 0;
 	display: table-cell;
 	font-size: 0.8em;
 	font-style: italic;
 	color: #999;
+	position: absolute; /* Best substitute for lack of CSS colspan */
 }
+.events tbody:empty::before { content: 'No events yet'; }
+#roster tbody:empty::before { content: 'No students yet. You can add them individually, or upload a CSV roster, below.' }
 
 input.error { box-shadow: 0 0 3px 1px #D22; }
 
