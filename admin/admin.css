@@ -116,9 +116,9 @@ td.addnew { padding: 0 !important; }
 	cursor: default;
 }
 .addnew a.disabled:hover { background: none; }
-#events .addnew { border-left: none; }
+.events .addnew { border-left: none; }
 
-#events tbody:empty::before {
+.events tbody:empty::before {
 	content: 'No events yet';
 	padding: 10px 0;
 	display: table-cell;
@@ -134,11 +134,11 @@ td.score:hover {
 	background: rgba(0,0,0,0.05);
 }
 
-#events tfoot {
+.events tfoot {
 	font-weight: bold;
 	border-top: 1px solid #CCC;
 }
-#events tfoot td {
+.events tfoot td {
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
 }

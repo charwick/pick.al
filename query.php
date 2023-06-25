@@ -127,6 +127,19 @@ class chooser_query extends mysqli {
 		while ($event = $events->fetch_object()) $result[] = $event;
 		return $result;
 	}
+
+	function get_events_by_class($class, $limit=false) {
+		$q = "SELECT events.id, date, result, student, students.fname, students.lname FROM events
+			LEFT JOIN students ON students.id=events.student
+			WHERE class=? and user=?
+			ORDER BY date DESC";
+		if ($limit) $q .= " LIMIT {$limit}";
+		$events = $this->run_query($q, [$class, $_SESSION['user']])->get_result();
+
+		$result = [];
+		while ($event = $events->fetch_object()) $result[] = $event;
+		return $result;
+	}
 	
 	function add_student($fname, $lname, $class) {
 		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";

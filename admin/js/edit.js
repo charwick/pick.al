@@ -54,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				req.onload = function() {
 					if (parseInt(this.response) != 1) req.onerror();
 					else {
+						const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
+						for (const evrow of evrows) evrow.remove();
 						tr.remove();
 						const snum = document.getElementById('num_students');
 						snum.textContent = parseInt(snum.textContent)-1;
@@ -132,64 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
 						tbody = document.createElement('tbody'),
 						tfoot = document.createElement('tfoot');
 					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
-					table.id = 'events';
+					table.classList.add('events');
 					let num=0, den=0;
 					for (const event of events) {
-						const evtr = document.createElement('tr'),
-							exc = new Date(event.date),
-							modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
-							res = {2:'good', 1:'meh', 0:'bad'}[event.result*2];
-						evtr.eventid = event.id;
-						evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
-							+'<td data-result="'+res+'"><div class="result-button '+res+'"></div><span class="numspan">'+event.result+'</span></td>'
-							+'<td class="actions"></td>';
-						evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
-						tbody.append(evtr);
+						event.student = tr.dataset.id;
+						tbody.append(eventRow(event, false));
 						num += event.result;
 						den++;
 					}
 					
-					//Event action buttons
-					tbody.addEventListener('click', function(e) {
-						if (!e.target.matches('.actions a')) return;
-						e.preventDefault();
-						
-						const evrow = e.target.parentNode.parentNode,
-							acttd = e.target.parentNode,
-							restd = acttd.previousElementSibling,
-							numspan = restd.querySelector('.numspan');
-						
-						//Edit event
-						if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.result);
-						
-						//Delete event
-						else if (e.target.classList.contains('delete')) {
-							if (confirm('Are you sure you want to delete this event?')) {
-								const req = new XMLHttpRequest();
-								req.open('GET', '../ajax.php?req=deleteevent&event='+evrow.eventid, true);
-								req.onload = function() {
-									evrow.remove();
-									updateScore(tr, table);
-								}
-								req.onerror = () => {  };
-								req.send();
-							}
-						
-						//Cancel event edits
-						} else if (e.target.classList.contains('cancel')) {
-							if (evrow.eventid) {
-								for (const b of restd.querySelectorAll('.unselected')) b.remove();
-								evrow.classList.remove('editing');
-								acttd.textContent = '';
-								numspan.textContent = weights[restd.dataset.result];
-								acttd.append(...actionButtons(['edit', 'delete']));
-							} else {
-								evrow.remove();
-								tfoot.querySelector('.addnew a').classList.remove('disabled');
-							}
-						}
-					});
-					
+					tbody.addEventListener('click', eventActions); //Event action buttons
 					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 					table.append(tbody, tfoot);
 					
@@ -199,11 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
 						if (this.classList.contains('disabled')) return;
 						this.classList.add('disabled');
 						
-						const tr = document.createElement('tr'),
+						const evtr = document.createElement('tr'),
 							date = new Date();
-						tr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
-						editEvent(tr);
-						tbody.append(tr);
+						evtr.dataset.student = tr.dataset.id;
+						evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+						editEvent(evtr);
+						tbody.prepend(evtr);
 					});
 					
 					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
@@ -213,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 	}
+
+	//Class recent events
+	let classEvents = document.querySelector('#recentevents .events tbody');
+	if (classEvents)
+		for (const event of events)
+			classEvents.append(eventRow(event, true));
+	classEvents.addEventListener('click', eventActions);
 	
 	//Add new student
 	const addStudent = document.querySelector('#roster .addnew a');
@@ -252,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	//Selector function change
-	const selector = document.getElementById('selector');
+	/* const selector = document.getElementById('selector');
 	if (selector) {
 		selector.oldValue = selector.value;
 		selector.addEventListener('change', function(e) {
@@ -261,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			else selectorDesc();
 		});
 		selectorDesc();
-	}
+	} */
 	
 	//Validate new class
 	const newform = document.querySelector('.admin-new #classinfo');
@@ -278,22 +240,79 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 });
 
-function updateScore(rostertr, evtable) {
-	const results = [],
-		evcell = evtable.querySelector('.numtotal'),
-		rostercell = rostertr.querySelector('.score');
-	for (const n of evtable.querySelectorAll('.numspan')) results.push(parseFloat(n.textContent));
-	if (results.length) {
-		const sum = results.reduce((a,b) => a+b);
-		evcell.textContent = Math.round(sum/results.length*100)+'%';
-		rostercell.textContent = sum+'/'+results.length+' ('+Math.round(sum/results.length*100)+'%)';
+function updateScore(student, opts) {
+	const evcell = document.querySelector('#modal td.numtotal'),
+		rostercell = document.querySelector('#roster tr[data-id="'+student+'"] .score'),
+		match = rostercell.textContent.match(/^(\d+(\.\d+)?)\/(\d+)\s+\(\d+%?\)$/);
+	let num = parseFloat(match[1]),
+		den = parseInt(match[3]);
+
+	if (opts.action=='delete') {
+		den--;
+		num -= weights[opts.oldval];
+	} else if (opts.action=='new') {
+		den++;
+		num += weights[opts.newval];
+	} else if (opts.action=='update') num += weights[opts.newval] - weights[opts.oldval];
+
+	if (den) {
+		rostercell.textContent = num+'/'+den+' ('+Math.round(num/den*100)+'%)';
 		rostercell.classList.remove('nullscore');
 	} else {
-		evcell.textContent = '—';
 		rostercell.textContent = '—';
 		rostercell.classList.add('nullscore');
 	}
-	document.querySelector('#modal span.num').textContent = results.length;
+
+	//Update modal totals if necessary
+	if (evcell) {
+		evcell.textContent = den ? Math.round(num/den*100)+'%' : '—'
+		const spannum = document.querySelector('#modal span.num');
+		if (spannum) spannum.textContent = den;
+	}
+}
+
+function eventActions(e) {
+	if (!e.target.matches('.actions a')) return;
+	e.preventDefault();
+	
+	const evrow = e.target.parentNode.parentNode,
+		acttd = e.target.parentNode,
+		restd = acttd.previousElementSibling,
+		numspan = restd.querySelector('.numspan');
+	
+	//Edit event
+	if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.result);
+	
+	//Delete event
+	else if (e.target.classList.contains('delete')) {
+		if (confirm('Are you sure you want to delete this event?')) {
+			const req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=deleteevent&event='+evrow.dataset.id, true);
+			req.onload = function() {
+				const student = evrow.dataset.student,
+					result = evrow.querySelector('td[data-result]').dataset.result,
+					evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
+				for (const row of evrows) row.remove();
+				updateScore(student, {action: 'delete', oldval: result});
+			}
+			req.onerror = () => {  };
+			req.send();
+		}
+	
+	//Cancel event edits
+	} else if (e.target.classList.contains('cancel')) {
+		if (evrow.dataset.id) {
+			for (const b of restd.querySelectorAll('.unselected')) b.remove();
+			evrow.classList.remove('editing');
+			acttd.textContent = '';
+			numspan.textContent = weights[restd.dataset.result];
+			acttd.append(...actionButtons(['edit', 'delete']));
+		} else {
+			const tfoot = evrow.parentNode.parentNode.querySelector('tfoot');
+			if (tfoot) tfoot.querySelector('.addnew a').classList.remove('disabled');
+			evrow.remove();
+		}
+	}
 }
 
 //===================================
@@ -315,6 +334,21 @@ function studentRow(col1, col2, actions=[]) {
 	tr.querySelector('.actions').append(...actionButtons(actions));
 	stable.append(tr);
 	return tr;
+}
+
+function eventRow(event, namecol) {
+	const evtr = document.createElement('tr'),
+		exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
+		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
+		res = {2:'good', 1:'meh', 0:'bad'}[event.result*2];
+	evtr.dataset.id = event.id;
+	evtr.dataset.student = event.student;
+	evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
+		+(namecol ? '<td>'+event.fname+' '+event.lname+'</td>' : '')
+		+'<td data-result="'+res+'"><div class="result-button '+res+'"></div><span class="numspan">'+event.result+'</span></td>'
+		+'<td class="actions"></td>';
+	evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
+	return evtr;
 }
 
 function modal(title, content) {
@@ -360,7 +394,7 @@ function editEvent(row, selected) {
 				result = this.name;
 			
 			//Save event edits
-			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.eventid+'&result='+weights[result], true);
+			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+weights[result], true);
 			
 			//Save new event
 			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+weights[result], true);
@@ -373,11 +407,36 @@ function editEvent(row, selected) {
 				numspan.textContent = weights[i];
 				actionsCell.textContent = '';
 				actionsCell.append(...actionButtons(['edit', 'delete']));
+				const oldval = resultsCell.dataset.result;
 				resultsCell.dataset.result = result;
 				row.classList.remove('editing');
-				if (!selected) row.eventid = parseInt(this.response); //Save new event ID if necessary
-				row.parentNode.parentNode.querySelector('.addnew a').classList.remove('disabled');
-				updateScore(document.querySelector('#roster tr[data-id="'+document.getElementById('modal').student+'"]'), row.parentNode.parentNode);
+				let opts;
+				
+				//Add to or update class events table
+				if (!selected) {
+					opts = {action: 'new', newval: result};
+					row.dataset.id = parseInt(this.response); //Save new event ID if necessary
+					const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
+					document.querySelector('#recentevents tbody').prepend(eventRow({
+						id: row.dataset.id,
+						student: row.dataset.student,
+						fname: studentRow.querySelector('.fname').textContent,
+						lname: studentRow.querySelector('.lname').textContent,
+						result: weights[result]
+					}, true))
+				} else {
+					opts = {action: 'update', oldval: oldval, newval: result};
+					const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-result]');
+					if (recent) {
+						recent.dataset.result = result;
+						recent.querySelector('.result-button').setAttribute('class', 'result-button '+result);
+						recent.querySelector('.numspan').textContent = weights[result];
+					}
+				}
+				
+				const addnew = row.parentNode.parentNode.querySelector('.addnew a');
+				if (addnew) addnew.classList.remove('disabled');
+				updateScore(row.dataset.student, opts);
 			};
 			
 			req.onerror = () => {  };
@@ -387,7 +446,7 @@ function editEvent(row, selected) {
 	resultsCell.append(numspan);
 }
 
-function selectorDesc() {
+/* function selectorDesc() {
 	const val = document.getElementById('selector').value,
 		descs = {
 			rand: 'Random with replacement',
@@ -395,7 +454,7 @@ function selectorDesc() {
 			order: 'Rotate through the class in order (your place is saved across sessions)'
 		};
 	document.getElementById('selector-desc').textContent = descs[val];
-}
+} */
 
 function uploadCSV(e) {
 	e.preventDefault();
