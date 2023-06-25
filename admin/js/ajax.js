@@ -1,3 +1,4 @@
+"use strict";
 function makeEditable(element, attrs) {
 	if (!element) return;
 	const actions = document.createElement('span'),

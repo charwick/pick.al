@@ -2,6 +2,7 @@
 require_once('parts.php');
 $sql = new chooser_query();
 $user = $sql->current_user();
+$message = false;
 
 require_once('../orcid.php');
 $orcid = new orcid_api();
@@ -10,15 +11,18 @@ $orcid = new orcid_api();
 if (isset($_GET['code']) && !$user->orcid) {
 	$response = $orcid->get_auth_token($_GET['code']);
 	if (isset($response->orcid)) {
-		$sql->edit_user('orcid', $response->orcid);
-		$orcid_data = [
-			'access_token' => $response->access_token,
-			'refresh_token' => $response->refresh_token,
-			'expires_in' => $response->expires_in
-		];
-		$sql->user_add_option('orcid_data', $orcid_data);
-		$user->orcid = $response->orcid;
-		$user->options->orcid_data = $orcid_data;
+		if ($sql->get_user_by('orcid', $response->orcid)) $message = 'This OrcID is already registered to another Pick.al account.';
+		else {
+			$sql->edit_user('orcid', $response->orcid);
+			$orcid_data = [
+				'access_token' => $response->access_token,
+				'refresh_token' => $response->refresh_token,
+				'expires_in' => $response->expires_in
+			];
+			$sql->user_add_option('orcid_data', $orcid_data);
+			$user->orcid = $response->orcid;
+			$user->options->orcid_data = $orcid_data;
+		}
 	}
 } ?>
 
@@ -47,6 +51,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 			<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
 		</p>
 
+		<?php if ($message) echo '<div class="info error">'.$message.'</div>'; ?>
 		<p id="orcid">OrcId:
 			<?php if ($user->orcid) echo "<a href='https://orcid.org/{$user->orcid}'>{$user->orcid}</a>" . ' <span class="actions"><a class="cancel" href="#" title="Disconnect"></a></span>'; ?>
 			<a class="button" href="<?php echo $orcid->auth_url('https://pick.al/admin/user.php'); ?>">Connect</a>
