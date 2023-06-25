@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Chooser button
 	const pick = document.getElementById('pick');
 	if (pick) pick.addEventListener('click', function(e) {
-		currentStudent = selectorFuncs[selector](roster);
+		currentStudent = studentSelect(roster);
 		sinfo = document.getElementById('sinfo');
 		sinfo.style.visibility = 'visible';
 		document.getElementById('sname').innerHTML = currentStudent.fname+' '+currentStudent.lname;
@@ -54,33 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 Array.prototype.random = function () { return this[Math.floor((Math.random()*this.length))]; }
-const selectorFuncs = {
-	//Unbiased random with replacement
-	rand: (list) => list.random(),
+
+//Random choice among students that have been called on the least so far
+function studentSelect(list) {
+	list.sort((a,b) => { return a.denominator > b.denominator });
+	const smallerList = [];
+	for (const student of list)
+		if (student.denominator == list[0].denominator)
+			smallerList.push(student);
 	
-	//Random choice among students that have been called on the least so far
-	even: (list) => {
-		list.sort((a,b) => { return a.denominator > b.denominator });
-		const smallerList = [];
-		for (const student of list)
-			if (student.denominator == list[0].denominator)
-				smallerList.push(student);
-		
-		return smallerList.random();
-	},
-	
-	//Cycles through alphabetically, saving the position locally for the next session
-	order: (list) => {
-		if (!('lastStudent' in localStorage)) localStorage.lastStudent = list[list.length-1].id;
-		let next = false;
-		for (const student of list) {
-			if (next) {
-				localStorage.lastStudent = student.id;
-				return student;
-			}
-			if (student.id == parseInt(localStorage['lastStudent'])) next = true;
-		}
-		localStorage.lastStudent = list[0].id;
-		return list[0];
-	}
+	return smallerList.random();
 }

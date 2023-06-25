@@ -211,18 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		csvElement.addEventListener('change', uploadCSV);
 	}
 	
-	//Selector function change
-	/* const selector = document.getElementById('selector');
-	if (selector) {
-		selector.oldValue = selector.value;
-		selector.addEventListener('change', function(e) {
-			if (document.body.classList.contains('admin-edit'))
-				sendInfo(this.parentNode, 'updateclassinfo', ['class='+classid, 'k=selector', 'v='+this.value], selectorDesc);
-			else selectorDesc();
-		});
-		selectorDesc();
-	} */
-	
 	//Validate new class
 	const newform = document.querySelector('.admin-new #classinfo');
 	if (newform) newform.addEventListener('submit', function (e) {
@@ -489,16 +477,6 @@ function editEvent(row, selected) {
 	}
 	resultsCell.append(numspan);
 }
-
-/* function selectorDesc() {
-	const val = document.getElementById('selector').value,
-		descs = {
-			rand: 'Random with replacement',
-			even: 'Preferentially choose students that have been called on the least so far',
-			order: 'Rotate through the class in order (your place is saved across sessions)'
-		};
-	document.getElementById('selector-desc').textContent = descs[val];
-} */
 
 function uploadCSV(e) {
 	e.preventDefault();

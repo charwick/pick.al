@@ -50,9 +50,9 @@ class chooser_query extends mysqli {
 		return $pq->fetch_object();
 	}
 	
-	function new_class($name, $semester, $year, $activeuntil, $selector='even') {
-		$q = "INSERT INTO classes (name, semester, year, activeuntil, user, selector) VALUES (?, ?, ?, ?, ?, ?)";
-		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user'], $selector]);
+	function new_class($name, $semester, $year, $activeuntil) {
+		$q = "INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)";
+		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user']]);
 		return $pq->insert_id;
 	}
 	
