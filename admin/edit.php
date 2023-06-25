@@ -98,9 +98,9 @@ if (isset($_POST['name'])) {
 				<table id="roster">
 					<thead>
 						<tr>
-							<th>First name</th>
-							<th colspan="2">Last name</th>
-							<th>Score</th>
+							<th class="fname">First name</th>
+							<th class="lname" colspan="2">Last name</th>
+							<th class="score">Score</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -136,24 +136,21 @@ if (isset($_POST['name'])) {
 			</section>
 
 			<?php $events = $sql->get_events_by_class($classid, 10);
-			if ($events) {
-				//Render in JS because PHP doesn't know the right timezone ?>
-				<script type="text/javascript">
-					var events = <?php echo json_encode($events); ?>;
-				</script>
-				<section id="recentevents">
-					<h2>Recent Participation Events</h2>
-					<table class="events">
-						<thead>
-							<tr>
-								<th>Date</th>
-								<th>Student</th>
-								<th colspan="2">Result</th>
-							</tr>
-						</thead>
-						<tbody><!--Filled in with JS--></tbody>
-					</table>
-			<?php } ?>
+			//Render in JS because PHP doesn't know the right timezone ?>
+			<script type="text/javascript">var events = <?php echo json_encode($events); ?>;</script>
+			<section id="recentevents">
+				<h2>Recent Participation Events</h2>
+				<table class="events">
+					<thead>
+						<tr>
+							<th>Date</th>
+							<th>Student</th>
+							<th colspan="2">Result</th>
+						</tr>
+					</thead>
+					<tbody><!--Filled in with JS--></tbody>
+				</table>
+			</section>
 			
 			<form id="deleteform" action="." method="post">
 				<input type="hidden" name="action" value="delete" />

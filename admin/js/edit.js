@@ -23,158 +23,156 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	//Action buttons
+	makeSortable(document.getElementById('roster'), 'lname', 'desc');
 	const roster = document.querySelector('#roster tbody');
-	if (roster) {
-		for (const td of roster.querySelectorAll('.actions')) {
-			td.append(...actionButtons(['edit', 'excuses', 'delete']));
-			if ('excused' in td.parentNode.dataset) {
-				const exc = new Date(td.parentNode.dataset.excused),
-					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
-				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-			}
+	for (const td of roster.querySelectorAll('.actions')) {
+		td.append(...actionButtons(['edit', 'excuses', 'delete']));
+		if ('excused' in td.parentNode.dataset) {
+			const exc = new Date(td.parentNode.dataset.excused),
+				modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
+			td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 		}
-
-		function studentData(inputs) { return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value] }
+	}
+	
+	roster.addEventListener('click', function(e) {
+		if (!e.target.matches('.actions a, .score')) return;
+		e.preventDefault();
+		let tr = e.target.parentNode.parentNode,
+			td_fn = tr.querySelector('.fname'),
+			td_ln = tr.querySelector('.lname');
+		if (e.target.classList.contains('edit'))
+			makeInput([td_fn, td_ln], {placeholder: ['First Name', 'Last Name'], data: function(inputs) {
+				return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value];
+			}});
+		else if (e.target.classList.contains('save')) td_fn.save();
+		else if (e.target.classList.contains('cancel')) td_fn.cancel();
 		
-		roster.addEventListener('click', function(e) {
-			if (!e.target.matches('.actions a, .score')) return;
-			e.preventDefault();
-			let tr = e.target.parentNode.parentNode,
-				td_fn = tr.querySelector('.fname'),
-				td_ln = tr.querySelector('.lname');
-			if (e.target.classList.contains('edit'))
-				makeInput([td_fn, td_ln], {placeholder: ['First Name', 'Last Name'], data: studentData});
-			else if (e.target.classList.contains('save')) td_fn.save();
-			else if (e.target.classList.contains('cancel')) td_fn.cancel();
+		else if (e.target.classList.contains('delete')) {
+			if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
+			const req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
+			req.onload = function() {
+				if (parseInt(this.response) != 1) req.onerror();
+				else {
+					const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
+					for (const evrow of evrows) evrow.remove();
+					tr.remove();
+					const snum = document.getElementById('num_students');
+					snum.textContent = parseInt(snum.textContent)-1;
+				}
+			};
+			req.onerror = () => {  };
+			req.send();
+		
+		} else if (e.target.classList.contains('excuses')) {
+			if (tr.classList.contains('editing')) {
+				clearPopups();
+				return;
+			}
 			
-			else if (e.target.classList.contains('delete')) {
-				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
-				const req = new XMLHttpRequest();
-				req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
-				req.onload = function() {
-					if (parseInt(this.response) != 1) req.onerror();
-					else {
-						const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
-						for (const evrow of evrows) evrow.remove();
-						tr.remove();
-						const snum = document.getElementById('num_students');
-						snum.textContent = parseInt(snum.textContent)-1;
+			clearPopups();
+			const popup = document.createElement('div'),
+				inp = document.createElement('input'),
+				erect = e.target.getBoundingClientRect();
+		
+			tr.classList.add('editing', 'nottip');
+			popup.textContent = 'Excused until ';
+			popup.classList.add('popup');
+			inp.type = 'date';
+			inp.value = tr.dataset.excused;
+			inp.oldValue = inp.value;
+			popup.appendChild(inp);
+			popup.style.top = (erect.top+window.pageYOffset-40)+'px';
+			document.body.appendChild(popup);
+			popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
+			inp.focus();
+		
+			inp.addEventListener('keydown', function(e2) {
+				if (e2.key == "Enter") {
+					e2.preventDefault();
+					if (inp.value == inp.oldValue) {
+						popup.remove();
+						return;
 					}
-				};
-				req.onerror = () => {  };
-				req.send();
-			
-			} else if (e.target.classList.contains('excuses')) {
-				if (tr.classList.contains('editing')) {
-					clearPopups();
-					return;
+				
+					const req = new XMLHttpRequest();
+					req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
+					req.onload = function() {
+						if (parseInt(this.response) != 1) inp.classList.add('error');
+						else {
+							const exc = new Date(inp.value),
+								now = new Date(),
+								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+							if (modDate > now) {
+								tr.dataset.excused = inp.value;
+								e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+							} else {
+								delete tr.dataset.excused;
+								e.target.title = "Set excused absences";
+							}
+							tr.classList.remove('editing', 'nottip');
+							popup.remove();
+						}
+					};
+					req.onerror = () => { inp.classList.add('error'); };
+					req.send();
+				} else if (e2.key == "Escape") {
+					e2.preventDefault();
+					tr.classList.remove('editing', 'nottip')
+					popup.remove();
+				}
+			});
+		
+		//Event detail modal
+		} else if (e.target.classList.contains('score')) {
+			tr = e.target.parentNode;
+			const req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
+			req.onload = function() {
+				const events = JSON.parse(this.response),
+					table = document.createElement('table'),
+					tbody = document.createElement('tbody'),
+					tfoot = document.createElement('tfoot');
+				table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
+				table.classList.add('events');
+				let num=0, den=0;
+				for (const event of events) {
+					event.student = tr.dataset.id;
+					tbody.append(eventRow(event, false));
+					num += event.result;
+					den++;
 				}
 				
-				clearPopups();
-				const popup = document.createElement('div'),
-					inp = document.createElement('input'),
-					erect = e.target.getBoundingClientRect();
-			
-				tr.classList.add('editing', 'nottip');
-				popup.textContent = 'Excused until ';
-				popup.classList.add('popup');
-				inp.type = 'date';
-				inp.value = tr.dataset.excused;
-				inp.oldValue = inp.value;
-				popup.appendChild(inp);
-				popup.style.top = (erect.top+window.pageYOffset-40)+'px';
-				document.body.appendChild(popup);
-				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
-				inp.focus();
-			
-				inp.addEventListener('keydown', function(e2) {
-					if (e2.key == "Enter") {
-						e2.preventDefault();
-						if (inp.value == inp.oldValue) {
-							popup.remove();
-							return;
-						}
+				tbody.addEventListener('click', eventActions); //Event action buttons
+				tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
+				table.append(tbody, tfoot);
+				
+				//Add new event
+				tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
+					e.preventDefault();
+					if (this.classList.contains('disabled')) return;
+					this.classList.add('disabled');
 					
-						const req = new XMLHttpRequest();
-						req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
-						req.onload = function() {
-							if (parseInt(this.response) != 1) inp.classList.add('error');
-							else {
-								const exc = new Date(inp.value),
-									now = new Date(),
-									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
-								if (modDate > now) {
-									tr.dataset.excused = inp.value;
-									e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-								} else {
-									delete tr.dataset.excused;
-									e.target.title = "Set excused absences";
-								}
-								tr.classList.remove('editing', 'nottip');
-								popup.remove();
-							}
-						};
-						req.onerror = () => { inp.classList.add('error'); };
-						req.send();
-					} else if (e2.key == "Escape") {
-						e2.preventDefault();
-						tr.classList.remove('editing', 'nottip')
-						popup.remove();
-					}
+					const evtr = document.createElement('tr'),
+						date = new Date();
+					evtr.dataset.student = tr.dataset.id;
+					evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+					editEvent(evtr);
+					tbody.prepend(evtr);
 				});
-			
-			//Event detail modal
-			} else if (e.target.classList.contains('score')) {
-				tr = e.target.parentNode;
-				const req = new XMLHttpRequest();
-				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
-				req.onload = function() {
-					const events = JSON.parse(this.response),
-						table = document.createElement('table'),
-						tbody = document.createElement('tbody'),
-						tfoot = document.createElement('tfoot');
-					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
-					table.classList.add('events');
-					let num=0, den=0;
-					for (const event of events) {
-						event.student = tr.dataset.id;
-						tbody.append(eventRow(event, false));
-						num += event.result;
-						den++;
-					}
-					
-					tbody.addEventListener('click', eventActions); //Event action buttons
-					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
-					table.append(tbody, tfoot);
-					
-					//Add new event
-					tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
-						e.preventDefault();
-						if (this.classList.contains('disabled')) return;
-						this.classList.add('disabled');
-						
-						const evtr = document.createElement('tr'),
-							date = new Date();
-						evtr.dataset.student = tr.dataset.id;
-						evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
-						editEvent(evtr);
-						tbody.prepend(evtr);
-					});
-					
-					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
-				};
-				req.onerror = () => {  };
-				req.send();
-			}
-		});
-	}
+				
+				modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
+			};
+			req.onerror = () => {  };
+			req.send();
+		}
+	});
 
 	//Class recent events
 	let classEvents = document.querySelector('#recentevents .events tbody');
-	if (classEvents)
-		for (const event of events)
-			classEvents.append(eventRow(event, true));
+	for (const event of events) classEvents.append(eventRow(event, true));
 	classEvents.addEventListener('click', eventActions);
+	if (!classEvents.children.length) document.getElementById('recentevents').style.display = 'none';
 	
 	//Add new student
 	const addStudent = document.querySelector('#roster .addnew a');
@@ -240,12 +238,57 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 });
 
+function makeSortable(table, defaultsort, defaultdesc) {
+	table.classList.add('sortable');
+
+	table.sort = function(sortby, desc) {
+		table.direction = desc;
+		table.sortby = sortby;
+
+		for (const th of table.querySelectorAll('th')) {
+			if (th.getAttribute('class')==sortby) th.dataset.sort = desc ? 'desc' : 'asc';
+			else delete th.dataset.sort;
+		}
+		const tbody = table.querySelector('tbody');
+		let rows = Array.from(tbody.querySelectorAll('tr'));
+		rows.sort(function(a,b) {
+			if (sortby!='score') return a.querySelector('.'+sortby).textContent.localeCompare(b.querySelector('.'+sortby).textContent) * (desc ? 1 : -1);
+			else {
+				const regex = /^(\d+(\.\d+)?)\/(\d+)\s+\((\d+)%?\)$/;
+				let vals = [];
+				for (const element of [a, b]) {
+					const text = element.querySelector('.'+sortby).textContent;
+					vals.push(text=='—' ? -1 : parseInt(text.match(regex)[4]));
+				}
+				return (vals[1] - vals[0])  * (desc ? 1 : -1);
+			}
+		});
+		for (const row of rows) tbody.append(row);
+	}
+
+	table.sort(defaultsort, defaultdesc);
+
+	table.querySelector('thead').addEventListener('click', function(e) {
+		const sortby = e.target.getAttribute('class');
+		let desc = true;
+		if (sortby == table.sortby) desc = !table.direction;
+		table.sort(sortby, desc);
+	});
+}
+
 function updateScore(student, opts) {
 	const evcell = document.querySelector('#modal td.numtotal'),
 		rostercell = document.querySelector('#roster tr[data-id="'+student+'"] .score'),
-		match = rostercell.textContent.match(/^(\d+(\.\d+)?)\/(\d+)\s+\(\d+%?\)$/);
-	let num = parseFloat(match[1]),
+		scoretext = rostercell.textContent;
+	let num, den;
+	
+	if (scoretext=='—') {
+		num = 0; den = 0;
+	} else {
+		const match = scoretext.match(/^(\d+(\.\d+)?)\/(\d+)\s+\(\d+%?\)$/);
+		num = parseFloat(match[1]);
 		den = parseInt(match[3]);
+	}
 
 	if (opts.action=='delete') {
 		den--;
@@ -262,6 +305,7 @@ function updateScore(student, opts) {
 		rostercell.textContent = '—';
 		rostercell.classList.add('nullscore');
 	}
+	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
 
 	//Update modal totals if necessary
 	if (evcell) {
