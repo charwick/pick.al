@@ -1,7 +1,6 @@
 "use strict";
 var currentStudent = null,
-	lastEvent = null,
-	weights = {good: 1, meh: 0.5, bad: 0 };
+	lastEvent = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	const actions = document.querySelectorAll('#actions button');
@@ -27,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		//Re-do button press (edit event)
 		if (btn.parentNode.parentNode.classList.contains('picked')) {
-			req.open('GET', 'ajax.php?req=updateevent&event='+lastEvent+'&result='+weights[this.id], true);
+			req.open('GET', 'ajax.php?req=updateevent&event='+lastEvent+'&result='+schema[this.dataset.schema].value, true);
 			req.onload = function() {
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
@@ -35,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		//Send event (create new)
 		} else {
-			req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+weights[this.id], true);
+			req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+schema[this.dataset.schema].value, true);
 			req.onload = function() {
 				btn.parentNode.parentNode.classList.add('picked');
 				for (const btn2 of actions) btn2.disabled = false;
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				btn.parentNode.parentNode.classList.add('picked');
 				lastEvent = parseInt(this.response);
 				if (currentStudent.score == null) currentStudent.score = 0;
-				currentStudent.score += weights[btn.id];
+				currentStudent.score += schema[btn.dataset.schema].value;
 				currentStudent.denominator++;
 			};
 		}

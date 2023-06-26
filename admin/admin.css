@@ -318,6 +318,9 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	background-size: 13px 13px;
 	background-repeat: no-repeat;
 	background-position: center;
+	color: #FFF;
+	text-align: center;
+	line-height: 16px;
 }
 .result-button:first-of-type {
 	border-top-left-radius: 2px;
@@ -334,18 +337,6 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 }
 .result-button.unselected:hover {
 	opacity: 0.5;
-}
-.good {
-	background-color: #393;
-	background-image: url('../icon/svg.php?icon=check-lg&color=FFF');
-}
-.meh {
-	background-color: #C92;
-	background-image: url('../icon/svg.php?icon=question-lg&color=FFF');
-}
-.bad {
-	background-color: #C33;
-	background-image: url('../icon/svg.php?icon=x-lg&color=FFF');
 }
 
 /* =================

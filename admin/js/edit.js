@@ -1,5 +1,4 @@
 "use strict";
-var weights = {good: 1, meh: 0.5, bad: 0 };
 document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
@@ -113,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 									delete tr.dataset.excused;
 									e.target.title = "Set excused absences";
 								}
-								tr.classList.remove('editing', 'nottip');
+								tr.querySelector('.lname').classList.remove('editing', 'nottip');
 								popup.remove();
 							}
 						};
@@ -121,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						req.send();
 					} else if (e2.key == "Escape") {
 						e2.preventDefault();
-						tr.classList.remove('editing', 'nottip')
+						tr.querySelector('.lname').classList.remove('editing', 'nottip')
 						popup.remove();
 					}
 				});
@@ -292,11 +291,11 @@ function updateScore(student, opts) {
 
 	if (opts.action=='delete') {
 		den--;
-		num -= weights[opts.oldval];
+		num -= schema[opts.oldval].value;
 	} else if (opts.action=='new') {
 		den++;
-		num += weights[opts.newval];
-	} else if (opts.action=='update') num += weights[opts.newval] - weights[opts.oldval];
+		num += schema[opts.newval].value;
+	} else if (opts.action=='update') num += schema[opts.newval].value - schema[opts.oldval].value;
 
 	if (den) {
 		rostercell.textContent = num+'/'+den+' ('+Math.round(num/den*100)+'%)';
@@ -349,7 +348,7 @@ function eventActions(e) {
 			for (const b of restd.querySelectorAll('.unselected')) b.remove();
 			restd.classList.remove('editing');
 			acttd.textContent = '';
-			numspan.textContent = weights[restd.dataset.result];
+			numspan.textContent = schema[restd.dataset.result].value;
 			acttd.append(...actionButtons(['edit', 'delete']));
 		} else {
 			const tfoot = evrow.parentNode.parentNode.querySelector('tfoot');
@@ -388,12 +387,12 @@ function eventRow(event, namecol) {
 	const evtr = document.createElement('tr'),
 		exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
 		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
-		res = {2:'good', 1:'meh', 0:'bad'}[event.result*2];
+		res = invertSchema()[event.result];
 	evtr.dataset.id = event.id;
 	evtr.dataset.student = event.student;
 	evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
 		+(namecol ? '<td>'+event.fname+' '+event.lname+'</td>' : '')
-		+'<td data-result="'+res+'"><div class="result-button '+res+'"></div><span class="numspan">'+event.result+'</span></td>'
+		+'<td data-result="'+res+'"><div class="result-button" data-schema="'+res+'">'+schema[res].text+'</div><span class="numspan">'+event.result+'</span></td>'
 		+'<td class="actions"></td>';
 	evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
 	return evtr;
@@ -432,31 +431,32 @@ function editEvent(row, selected) {
 	actionsCell.append(...actionButtons(['cancel']));
 	const numspan = document.createElement('span');
 	numspan.classList.add('numspan');
-	if (selected) numspan.textContent = weights[selected];
+	if (selected) numspan.textContent = schema[selected].value;
 	
-	for (const i of ['good', 'meh', 'bad']) {
+	for (const i in schema) {
 		const a = document.createElement('a');
-		a.name = i;
-		a.classList.add('result-button', i);
+		a.classList.add('result-button');
+		a.textContent = schema[i].text;
+		a.dataset.schema = i;
 		if (i!=selected) a.classList.add('unselected');
 		resultsCell.append(a);
 		
 		a.addEventListener('click', function(e) {
 			const req = new XMLHttpRequest(),
-				result = this.name;
+				result = this.dataset.schema;
 			
 			//Save event edits
-			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+weights[result], true);
+			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schema[result].value, true);
 			
 			//Save new event
-			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+weights[result], true);
+			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+schema[result].value, true);
 			
 			req.onload = function() {
 				for (const b of resultsCell.querySelectorAll('.result-button')) {
-					if (b.name == result) b.classList.remove('unselected');
+					if (b.dataset.schema == result) b.classList.remove('unselected');
 					else b.remove();
 				}
-				numspan.textContent = weights[i];
+				numspan.textContent = schema[i].value;
 				actionsCell.textContent = '';
 				actionsCell.append(...actionButtons(['edit', 'delete']));
 				const oldval = resultsCell.dataset.result;
@@ -474,15 +474,15 @@ function editEvent(row, selected) {
 						student: row.dataset.student,
 						fname: studentRow.querySelector('.fname').textContent,
 						lname: studentRow.querySelector('.lname').textContent,
-						result: weights[result]
+						result: schema[result].value
 					}, true))
 				} else {
 					opts = {action: 'update', oldval: oldval, newval: result};
 					const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-result]');
 					if (recent) {
 						recent.dataset.result = result;
-						recent.querySelector('.result-button').setAttribute('class', 'result-button '+result);
-						recent.querySelector('.numspan').textContent = weights[result];
+						recent.querySelector('.result-button').dataset.schema = result;
+						recent.querySelector('.numspan').textContent = schema[result].value;
 					}
 				}
 				

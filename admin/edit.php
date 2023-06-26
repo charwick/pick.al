@@ -32,11 +32,17 @@ if (isset($_POST['name'])) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New class"; ?> | Pick.al</title>
+	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New Class"; ?> | Pick.al</title>
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
-	<script type="text/javascript">var classid = <?php echo $classid ? $classid : 'null'; ?>;</script>
+	<script type="text/javascript">
+		var classid = <?php echo $classid ? $classid : 'null'; ?>;
+		<?php if ($classid) {
+			echo $class->schema->output_js(false);
+		 } ?>
+	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
 	<script type="text/javascript" src="js/edit.js"></script>
+	<?php if ($classid) echo $class->schema->output_css(true, false); ?>
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
@@ -50,8 +56,8 @@ if (isset($_POST['name'])) {
 				echo "<input type='hidden' name='classid' value='{$classid}'>";
 				echo "<h1 id='name'>{$class->name}</h1>";
 			} else {
-				echo '<h1>New class</h1>';
-				echo '<p id="name"><input type="text" name="name" placeholder="Class name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
+				echo '<h1>New Class</h1>';
+				echo '<p id="name"><input type="text" name="name" placeholder="Class Name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
 			} ?>
 			
 			<p>

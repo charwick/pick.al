@@ -50,7 +50,9 @@ class chooser_query extends mysqli {
 	function get_class($id) {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
 		$pq = $this->run_query($q, [$id, $_SESSION['user']])->get_result();
-		return $pq->fetch_object();
+		$obj = $pq->fetch_object();
+		$obj->schema = $this->get_schema($id);
+		return $obj;
 	}
 	
 	function new_class($name, $semester, $year, $activeuntil) {
@@ -250,6 +252,80 @@ class chooser_query extends mysqli {
 
 		return send_email($user->username, $user->email, 'Pick.al Mail', 'Your Pick.al password reset request', $emailtext);
 	}
+
+	function get_schema($class) {
+		$q="SELECT schemae.* FROM classes
+			LEFT JOIN schemae ON classes.schema=schemae.schema
+		 	WHERE classes.id=? AND classes.user=?";
+		$pq = $this->run_query($q, [$class, $_SESSION['user']])->get_result();
+		$result = [];
+		while ($item = $pq->fetch_object()) $result[] = $item;
+		return new Schema($result);
+	}
+
+	function get_available_schemae() {
+		$q = "SELECT * FROM schemae WHERE user=0 OR user=?";
+		$schemae = $this->run_query($q, [$_SESSION['user']])->get_result();
+		$result = []; $return = [];
+		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item;
+		foreach ($result as $schema) $return[] = new Schema($schema);
+		return $return;
+	}
+}
+
+class Schema {
+	public $name;
+	public $items = [];
+	public $global;
+	public static $icons = [
+		'✓' => 'check-lg',
+		'×' => 'x-lg'
+	];
+
+	function __construct($data) {
+		$this->name = $data[0]->schema;
+		$this->global = $data[0]->user==0;
+		foreach ($data as $key => $item) $this->items[$item->id] = [
+			'color' => $item->color,
+			'hovercolor' => adjustBrightness($item->color, -0.15),
+			'text' => $item->text,
+			'value' => $item->value
+		];
+	}
+
+	function output_css($standalone=true, $hover=true) {
+		$css = '';
+		$textindent = 'text-indent: -9999px;';
+		foreach ($this->items as $id => $item) {
+			$css .= "[data-schema=\"{$id}\"] { background-color: #{$item['color']}; \r\n";
+			if (isset(self::$icons[$item['text']])) $css .= "text-indent: -9999px; background-image: url('/icon/svg.php?icon=".self::$icons[$item['text']]."&color=FFF');";
+			$css .= "}\r\n";
+			if ($hover) $css .= "[data-schema=\"{$id}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
+		}
+		return $standalone ? "<style type='text/css'>{$css}</style>" : $css;
+	}
+
+	function output_js($standalone=true) {
+		$js = 'var schema = '.json_encode($this->items).';';
+		return $standalone ? "<script type='text/javascript'>{$js}</script>" : $js;
+	}
+}
+
+//==================
+// HELPER FUNCTIONS
+//==================
+
+//https://stackoverflow.com/questions/3512311/how-to-generate-lighter-darker-color-with-php
+function adjustBrightness($hexCode, $adjustPercent) {
+    if (strlen($hexCode) == 3) $hexCode = $hexCode[0] . $hexCode[0] . $hexCode[1] . $hexCode[1] . $hexCode[2] . $hexCode[2];
+    $hexCode = array_map('hexdec', str_split($hexCode, 2));
+
+    foreach ($hexCode as &$color) {
+        $adjustableLimit = $adjustPercent < 0 ? $color : 255 - $color;
+        $adjustAmount = ceil($adjustableLimit * $adjustPercent);
+        $color = str_pad(dechex($color + $adjustAmount), 2, '0', STR_PAD_LEFT);
+    }
+    return implode($hexCode);
 }
 
 function send_email($toname, $toaddress, $fromname, $subject, $message) {

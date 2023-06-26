@@ -24,8 +24,11 @@ if ($classid) {
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
 				roster = <?php echo json_encode($sql->get_roster($classid)); ?>;
+			<?php echo $class->schema->output_js(false); ?>
 		</script>
-	<?php } else { ?>
+		<?php 
+		echo $class->schema->output_css();
+	} else { ?>
 		<title>Available Classes | Pick.al</title>
 	<?php } ?>
 	
@@ -45,9 +48,8 @@ if ($classid) {
 			<h2 id="sname"><!-- Filled in by JS --></h2>
 		
 			<ul id="actions">
-				<li><button id="good">✓</button></li>
-				<li><button id="meh">?</button></li>
-				<li><button id="bad">×</button></li>
+				<?php foreach ($class->schema->items as $id => $item)
+					echo "<li><button data-schema='{$id}'>{$item['text']}</button></li>"; ?>
 			</ul>
 		</div>
 	
