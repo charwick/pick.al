@@ -4,6 +4,9 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 //Returns the SQL object
 class chooser_query extends mysqli {
 	function __construct() {
@@ -182,15 +185,15 @@ class chooser_query extends mysqli {
 	}
 
 	//$v=null to delete an option
-	function user_add_option($k, $v) {
-		if (!isset($_SESSION['user'])) return false;
+	function user_add_option($k, $v, $user=null) {
+		if (!$user) $user = $_SESSION['user'];
 		$q = "SELECT options FROM users WHERE id=?";
-		$options = $this->run_query($q, [$_SESSION['user']])->get_result()->fetch_object()->options;
-		$options = $options ? json_decode($options) : [];
+		$options = $this->run_query($q, [$user])->get_result()->fetch_object()->options;
+		$options = $options ? json_decode($options) : new stdClass();
 		if ($v != null) $options->{$k} = $v;
 		else unset($options->{$k});
 		$q2 = "UPDATE users SET options=? WHERE id=?";
-		$pq = $this->run_query($q2, [json_encode($options), $_SESSION['user']]);
+		$pq = $this->run_query($q2, [json_encode($options), $user]);
 		return $pq->affected_rows;
 	}
 	
@@ -216,13 +219,73 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 
-	function edit_pw($old, $new) {
-		if (!isset($_SESSION['user'])) return false;
-		$user = $this->current_user();
-		if ($user->password && !password_verify($old, $user->password)) return false;
+	function edit_pw($old, $new, $userid=null, $reset=false) {
+		$user = $userid ? $this->get_user_by('id', $userid) : $this->current_user();
+		if (!$reset && $user->password && !password_verify($old, $user->password)) return false;
 		if ($old==$new) return 1;
 		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
-		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $_SESSION['user']]);
+		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $user->id]);
+		if ($pq->affected_rows) $this->user_add_option('pwreset', null, $user->id);
 		return $pq->affected_rows;
 	}
+
+	function generate_reset_link($userid) {
+		$user = $this->get_user_by(str_contains($userid, '@') ? 'email' : 'username', $userid);
+		if (!$user) return 0;
+
+		if ($user->password) {
+			$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+			$key = '';
+			for ($i = 0; $i<16; $i++) $key .= $characters[rand(0, strlen($characters)-1)];
+			$this->user_add_option('pwreset', ['key'=>$key, 'expires'=>time()+3600*24], $user->id);
+			$link = "https://pick.al?action=pwreset&user={$user->id}&key={$key}";
+
+			$emailtext = "<p>A password reset has been requested for your Pick.al account. If this was not you, delete this email and do nothing.</p>"
+				."<p>If this was you, you can click <a href=\"{$link}\">this link</a> to reset your password or paste the following link into your browser.</p>"
+				."<p>{$link}</p> <p>This link is valid for 24 hours.</p>";
+			if ($user->orcid) $emailtext .= "<p>This account is also linked to an OrcID, so you can log in that way too.</p>";
+		} else {
+			$emailtext = "<p>A password reset has been requested for your Pick.al account. However, no password is set for this account because it was registered with an OrcID. Please log into Pick.al with your OrcID to set a password, or <a href=\"https://orcid.org/reset-password\">reset your OrcID password</a> and then log in.</p>";
+		}
+
+		return send_email($user->username, $user->email, 'Pick.al Mail', 'Your Pick.al password reset request', $emailtext);
+	}
+}
+
+function send_email($toname, $toaddress, $fromname, $subject, $message) {
+	require(get_root_directory().'phpmailer/Exception.php');
+	require(get_root_directory().'phpmailer/PHPMailer.php');
+	require(get_root_directory().'phpmailer/SMTP.php');
+
+	$mail = new PHPMailer(true);
+	try {
+		//$mail->SMTPDebug = 2;	//Verbose debug output
+		$mail->isSMTP();
+		$mail->Host = 'smtp.dreamhost.com';
+		$mail->SMTPAuth = true;
+		$mail->Username = smtpvars()['username'];
+		$mail->Password = smtpvars()['password'];
+		$mail->SMTPSecure = 'ssl';
+		$mail->Port = 465;
+
+		$mail->setFrom(smtpvars()['username'], $fromname);
+		$mail->addAddress($toaddress, $toname);
+		$mail->isHTML(true);
+		$mail->Subject = $subject;
+		$mail->Body = $message;
+
+		$mail->send();
+		return 1;
+	} catch (Exception $e) { return $mail->ErrorInfo; }
+}
+
+function get_root_directory() {
+	$dirs = explode('/', getcwd());
+	$tripped = false;
+	$relative = [];
+	foreach ($dirs as $dir) {
+		if ($tripped) $relative[] = '..';
+		if ($dir=='pick.al') $tripped = true;
+	}
+	return implode('/', $relative);
 }

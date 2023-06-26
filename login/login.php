@@ -1,4 +1,5 @@
 <?php $message = null;
+$defaulttab = 'register';
 require_once((str_contains(getcwd(), 'login') ? '../' : '').'orcid.php'); //Because it's relative to the including script, and not this file
 $bodyclass = '';
 $orcid = new orcid_api();
@@ -28,8 +29,28 @@ if (isset($_GET['action']) && $_GET['action']=='logout') {
 
 elseif (!isset($sql)) exit; //Only run from the front page
 
-elseif (isset($_POST['action'])) {
-	if ($_POST['action']=='register') {
+//Request a password reset
+elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
+	$bodyclass = 'resetpw';
+
+//Actually reset the password
+} elseif (isset($_GET['action']) && $_GET['action']=='pwreset') {
+	$user = $sql->get_user_by('id', $_GET['user']);
+	if (!$user || $user->options->pwreset->key!=$_GET['key'] || (int)$user->options->pwreset->key > time()) $message = 'Invalid password reset link. Please request another.';
+	else $bodyclass = 'choosepw';
+
+} elseif (isset($_POST['action'])) {
+	//Make the reset happen
+	if ($_POST['action']=='resetpw') {
+		$user = $sql->get_user_by('id', $_POST['user']);
+		if (!$user || $user->options->pwreset->key!=$_POST['key'] || (int)$user->options->pwreset->key > time()) $message = 'Invalid password reset link. Please request another.';
+		else {
+			$reset = $sql->edit_pw('', $_POST['password'], $user->id, true);
+			if ($reset) $message = 'Password has been reset. You may now log in with your new password.';
+			$defaulttab = 'login';
+		}
+
+	} elseif ($_POST['action']=='register') {
 		$message = validate();
 		if (!$message) {
 			$result = $sql->new_user($_POST['username'], $_POST['email'], $_POST['password']);
@@ -48,7 +69,10 @@ elseif (isset($_POST['action'])) {
 		if (password_verify($_POST['password'], $user->password)) {
 			$_SESSION['user'] = $user->id;
 			header("Location: .");
-		} else $message = "The password was incorrect.";
+		} else {
+			$message = "The password was incorrect.";
+			$defaulttab = 'login';
+		}
 	}
 
 //Finalize OrcID registration
@@ -68,7 +92,7 @@ elseif (isset($_POST['action'])) {
 //Authenticate via OrcID
 } elseif (isset($_GET['code'])) {
 	$response = $orcid->get_auth_token($_GET['code']);
-	if (isset($response->error)) print_r($response->error);
+	if (isset($response->error)) $message = $response->error;
 	if (isset($response->orcid)) {
 		$user = $sql->get_user_by('orcid', $response->orcid);
 		$orcid_data = [
@@ -79,8 +103,8 @@ elseif (isset($_POST['action'])) {
 
 		//Login
 		if ($user) {
-			$sql->user_add_option('orcid_data', $orcid_data);
 			$_SESSION['user'] = $user->id;
+			$sql->user_add_option('orcid_data', $orcid_data);
 			header("Location: .");
 			exit;
 		
@@ -117,13 +141,14 @@ elseif (isset($_POST['action'])) {
 		<h1 id="logo">Pick.al</h1>
 		<section id="split">
 			<div id="desc">
-				<?php if ($bodyclass!='orcid_register') echo 'is a lightweight app for selecting students at random and recording participation.';
-				else echo 'One more step to complete your registration.'; ?>
+				<?php if ($bodyclass=='orcid_register') echo 'One more step to complete your registration.';
+				elseif ($bodyclass=='resetpw') echo 'Enter your username or email and we\'ll send you a link to reset your password.';
+				elseif ($bodyclass=='choosepw') echo "Welcome back, {$user->username}. Choose a new password and you'll be on your way.";
+				else echo 'is a lightweight app for selecting students at random and recording participation.'; ?>
 			</div>
 
 			<form action="/" method="post">
 				<?php if ($bodyclass=='orcid_register') { ?>
-					<input type="hidden" name="orcid" value="true" />
 					<div id="formbody">
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries">
@@ -136,14 +161,33 @@ elseif (isset($_POST['action'])) {
 						</ul>
 						<input type="submit" value="Register" />
 					</div>
+
+				<?php } elseif ($bodyclass=='resetpw') { ?>
+					<div id="formbody">
+						<ul id="entries"><li><input name="username" type="text" placeholder="Username or Email Address" required=""></li></ul>
+						<input type="submit" value="Submit" />
+					</div>
+
+				<?php } elseif ($bodyclass=='choosepw') { ?>
+					<div id="formbody">
+						<ul id="entries">
+							<li><input name="password" type="password" placeholder="New Password" required=""></li>
+							<li><input name="confirm" type="password" placeholder="Confirm Password" required=""></li>
+						</ul>
+						<input type="hidden" name="action" value="resetpw" />
+						<input type="hidden" name="user" value="<?php echo $_GET['user']; ?>" />
+						<input type="hidden" name="key" value="<?php echo $_GET['key']; ?>" />
+						<input type="submit" value="Submit" />
+					</div>
+
 				<?php } else { ?>
 					<ul id="tabs">
 						<li>
-							<input type="radio" name="action" value="register" id="tab_register" checked />
+							<input type="radio" name="action" value="register" id="tab_register" <?php echo $defaulttab=='register' ? 'checked' : ''; ?> />
 							<label for="tab_register">Register</label>
 						</li>
 						<li>
-							<input type="radio" name="action" value="login" id="tab_login" />
+							<input type="radio" name="action" value="login" id="tab_login" <?php echo $defaulttab=='login' ? 'checked' : ''; ?> />
 							<label for="tab_login">Log in</label>
 						</li>
 					</ul>
@@ -152,6 +196,7 @@ elseif (isset($_POST['action'])) {
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries"><!--Filled by JS--></ul>
 						
+						<a href="/?action=resetpw" id="resetlink">Forgot password?</a>
 						<input type="submit" value="Register" />
 					</div>
 

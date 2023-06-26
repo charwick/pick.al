@@ -103,4 +103,10 @@ switch ($req) {
 		$sql->user_add_option('orcid_data', null);
 		echo json_encode($result);
 		break;
+	
+	case 'resetpwlink':
+		$result = $sql->generate_reset_link($_GET['username']);
+		if (!is_numeric($result)) http_response_code(500);
+		echo $result;
+		break;
 }

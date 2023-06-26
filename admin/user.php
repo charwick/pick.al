@@ -11,7 +11,7 @@ $orcid = new orcid_api();
 if (isset($_GET['code']) && !$user->orcid) {
 	$response = $orcid->get_auth_token($_GET['code']);
 	if (isset($response->orcid)) {
-		if ($sql->get_user_by('orcid', $response->orcid)) $message = 'This OrcID is already registered to another Pick.al account.';
+		if ($sql->get_user_by('orcid', $response->orcid)) $message = 'This OrcID is already linked to another Pick.al account.';
 		else {
 			$sql->edit_user('orcid', $response->orcid);
 			$orcid_data = [

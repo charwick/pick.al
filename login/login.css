@@ -72,7 +72,14 @@ li#orcid {
 	font-size: smaller;
 	padding: 0.5em 0 0 1em;
 	color: #777;
-  }
+}
+
+#resetlink {
+	float: right;
+	font-size: small;
+	margin: 1.5em 1em 0 0;
+	opacity: 0.5;
+}
 
 @media only screen and (max-width : 975px) {
 	#split { display: block; }
