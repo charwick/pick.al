@@ -1,22 +1,22 @@
 <?php require_once('connect.php');
 
 class orcid_api {
-	public $client_id;
-	private $secret;
-	public $auth_url;
-	public $token_url = "https://orcid.org/oauth/token";
-	public $data_url;
-	public $orcid;
-	private $access_token;
+	public string $client_id;
+	private string $secret;
+	public string $auth_url;
+	public string $token_url = "https://orcid.org/oauth/token";
+	public string $data_url;
+	public string $orcid;
+	private string $access_token;
 
 	function __construct() {
 		foreach (orcidvars() as $key => $var) $this->{$key} = $var;
 		$this->auth_url = "https://orcid.org/oauth/authorize?client_id=".$this->client_id."&response_type=code&scope=/authenticate";
 	}
 
-	function auth_url($redirect) { return "{$this->auth_url}&redirect_uri={$redirect}"; }
+	function auth_url(string $redirect): string { return "{$this->auth_url}&redirect_uri={$redirect}"; }
 
-	function get_auth_token($code) {
+	function get_auth_token(string $code) {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $this->token_url);
 		curl_setopt($ch, CURLOPT_POST, 1);

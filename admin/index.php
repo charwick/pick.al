@@ -21,7 +21,7 @@ foreach ($sql->get_classes() as $class) {
 	else $inactive[] = $class;
 }
 
-function classlist($classes, $title) {
+function classlist(array $classes, string $title): void {
 	echo "<h2>{$title}</h2>";
 	echo '<ul class="classes">';
 		foreach ($classes as $class) {

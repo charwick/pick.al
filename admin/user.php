@@ -4,6 +4,12 @@ $sql = new chooser_query();
 $user = $sql->current_user();
 $message = false;
 
+//Login-wall
+if (!$sql->current_user()) {
+	header("Location: ../");
+	exit;
+}
+
 require_once('../orcid.php');
 $orcid = new orcid_api();
 

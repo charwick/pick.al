@@ -14,7 +14,7 @@ class chooser_query extends mysqli {
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 	}
 	
-	function run_query($query, $vars) {
+	function run_query(string $query, array $vars) {
 		$q = $this->prepare($query);
 		$types = '';
 		$typemap = [ 'integer' => 'i', 'string' => 's', 'double' => 'd', 'NULL' => 'i' ];
@@ -30,7 +30,7 @@ class chooser_query extends mysqli {
 	// DATA FETCH FUNCTIONS
 	//======================
 
-	function get_classes($active=false) {
+	function get_classes(bool $active=false): array {
 		$aw = $active ? ' AND activeuntil >= NOW()' : '';
 		
 		$q = "SELECT classes.*, COUNT(students.class) AS students
@@ -47,7 +47,7 @@ class chooser_query extends mysqli {
 	}
 
 	//Get info on one class. Returns a single row by ID
-	function get_class($id) {
+	function get_class(int $id) {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
 		$pq = $this->run_query($q, [$id, $_SESSION['user']])->get_result();
 		$obj = $pq->fetch_object();
@@ -55,13 +55,13 @@ class chooser_query extends mysqli {
 		return $obj;
 	}
 	
-	function new_class($name, $semester, $year, $activeuntil) {
+	function new_class(string $name, string $semester, int $year, string $activeuntil): int {
 		$q = "INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)";
 		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user']]);
 		return $pq->insert_id;
 	}
 	
-	function edit_class($class, $key, $val) {
+	function edit_class(int $class, string $key, $val): int {
 		$keys = ['name', 'semester', 'year', 'activeuntil', 'selector'];
 		if (!in_array($key, $keys)) return False;
 		
@@ -70,7 +70,7 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 	
-	function delete_class($class) {
+	function delete_class(int $class): int {
 		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
 		$q = "DELETE FROM classes WHERE id=? AND user=?";
 		$pq = $this->run_query($q, [$class, $_SESSION['user']]);
@@ -78,7 +78,8 @@ class chooser_query extends mysqli {
 	}
 
 	//Get the roster for a class. Returns an array of objects
-	function get_roster($classid, $all=false) {
+	//Doesn't return excused students by default
+	function get_roster(int $classid, bool $all=false): array {
 		$wand = $all ? '' : " AND (excuseduntil IS NULL OR NOW() > DATE_ADD(excuseduntil, INTERVAL 1 DAY))";
 		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
 			FROM students
@@ -93,13 +94,13 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 
-	function new_event($rosterid, $result) {
+	function new_event(int $rosterid, $result): int {
 		$q = "INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)";
 		$pq = $this->run_query($q, [$rosterid, $result]);
 		return $pq->insert_id;
 	}
 	
-	function edit_event($id, $result) {
+	function edit_event(int $id, $result): int {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
@@ -110,7 +111,7 @@ class chooser_query extends mysqli {
 		} else return 0;
 	}
 	
-	function delete_event($id) {
+	function delete_event(int $id): int {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
@@ -121,7 +122,7 @@ class chooser_query extends mysqli {
 		} else return 0;
 	}
 	
-	function get_events($student) {
+	function get_events(int $student): array {
 		$q = "SELECT events.id, date, result FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE student=? and user=?
@@ -133,7 +134,7 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 
-	function get_events_by_class($class, $limit=false) {
+	function get_events_by_class(int $class, int $limit=0): array {
 		$q = "SELECT events.id, date, result, student, students.fname, students.lname FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE class=? and user=?
@@ -146,19 +147,19 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 	
-	function add_student($fname, $lname, $class) {
+	function add_student(string $fname, string $lname, int $class): int {
 		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
 		$pq = $this->run_query($q, [trim($fname), trim($lname), $class, $_SESSION['user']]);
 		return $pq->insert_id;
 	}
 	
-	function edit_student($id, $fname, $lname) {
+	function edit_student(int $id, string $fname, string $lname): int {
 		$q = "UPDATE students SET fname=?, lname=? WHERE id=? AND user=?";
 		$pq = $this->run_query($q, [trim($fname), trim($lname), $id, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 	
-	function delete_student($id) {
+	function delete_student(int $id): int {
 		$q1 = "DELETE FROM students WHERE id=? AND user=?";
 		$pq = $this->run_query($q1, [$id, $_SESSION['user']]);
 		if ($pq->affected_rows) {
@@ -168,14 +169,13 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 	
-	function student_excused($id, $excused) {
+	function student_excused(int $id, ?string $excused): int {
 		$q = "UPDATE students SET excuseduntil=? WHERE id=? AND user=?";
-		if (!$excused) $excused = null;
 		$pq = $this->run_query($q, [$excused, $id, $_SESSION['user']]);
 		return $pq->affected_rows;
 	}
 	
-	function get_user_by($field, $val) {
+	function get_user_by(string $field, $val) {
 		$fields = ['username', 'email', 'id', 'orcid'];
 		if (!in_array($field, $fields)) return False;
 		
@@ -186,8 +186,13 @@ class chooser_query extends mysqli {
 		return $user;
 	}
 
+	function current_user() {
+		if (!isset($_SESSION['user'])) return false;
+		return $this->get_user_by('id', $_SESSION['user']);
+	}
+
 	//$v=null to delete an option
-	function user_add_option($k, $v, $user=null) {
+	function user_add_option(string $k, $v, int $user=null): int {
 		if (!$user) $user = $_SESSION['user'];
 		$q = "SELECT options FROM users WHERE id=?";
 		$options = $this->run_query($q, [$user])->get_result()->fetch_object()->options;
@@ -199,19 +204,14 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 	
-	function current_user() {
-		if (!isset($_SESSION['user'])) return false;
-		return $this->get_user_by('id', $_SESSION['user']);
-	}
-	
-	function new_user($username, $email, $password='', $orcid=null) {
+	function new_user(string $username, string $email, string $password='', ?string $orcid=null): int {
 		if (!$password && !$orcid) return false;
 		$q = "INSERT INTO users (username, email, password, orcid, registered) VALUES (?, ?, ?, ?, NOW())";
 		$pq = $this->run_query($q, [$username, $email, $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
 		return $pq->insert_id;
 	}
 
-	function edit_user($key, $val) {
+	function edit_user(string $key, string $val): int {
 		$keys = ['email', 'orcid'];
 		if (!in_array($key, $keys) || !isset($_SESSION['user'])) return False;
 		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";
@@ -221,7 +221,7 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 
-	function edit_pw($old, $new, $userid=null, $reset=false) {
+	function edit_pw(string $old, string $new, ?int $userid=null, bool $reset=false): int {
 		$user = $userid ? $this->get_user_by('id', $userid) : $this->current_user();
 		if (!$reset && $user->password && !password_verify($old, $user->password)) return false;
 		if ($old==$new) return 1;
@@ -231,7 +231,7 @@ class chooser_query extends mysqli {
 		return $pq->affected_rows;
 	}
 
-	function generate_reset_link($userid) {
+	function generate_reset_link(int $userid) {
 		$user = $this->get_user_by(str_contains($userid, '@') ? 'email' : 'username', $userid);
 		if (!$user) return 0;
 
@@ -253,7 +253,7 @@ class chooser_query extends mysqli {
 		return send_email($user->username, $user->email, 'Pick.al Mail', 'Your Pick.al password reset request', $emailtext);
 	}
 
-	function get_schema($class) {
+	function get_schema(int $class): Schema {
 		$q="SELECT schemae.* FROM classes
 			LEFT JOIN schemae ON classes.schema=schemae.schema
 		 	WHERE classes.id=? AND classes.user=?";
@@ -263,7 +263,7 @@ class chooser_query extends mysqli {
 		return new Schema($result);
 	}
 
-	function get_available_schemae() {
+	function get_available_schemae(): array {
 		$q = "SELECT * FROM schemae WHERE user=0 OR user=?";
 		$schemae = $this->run_query($q, [$_SESSION['user']])->get_result();
 		$result = []; $return = [];
@@ -274,10 +274,10 @@ class chooser_query extends mysqli {
 }
 
 class Schema {
-	public $name;
-	public $items = [];
-	public $global;
-	public static $icons = [
+	public string $name;
+	public array $items = [];
+	public bool $global;
+	public static array $icons = [
 		'✓' => 'check-lg',
 		'×' => 'x-lg'
 	];
@@ -293,7 +293,7 @@ class Schema {
 		];
 	}
 
-	function output_css($standalone=true, $hover=true) {
+	function output_css(bool $standalone=true, bool $hover=true): string {
 		$css = '';
 		$textindent = 'text-indent: -9999px;';
 		foreach ($this->items as $id => $item) {
@@ -302,12 +302,27 @@ class Schema {
 			$css .= "}\r\n";
 			if ($hover) $css .= "[data-schema=\"{$id}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
 		}
-		return $standalone ? "<style type='text/css'>{$css}</style>" : $css;
+		return $standalone ? "<style type='text/css' class='schema-css'>{$css}</style>" : $css;
 	}
 
-	function output_js($standalone=true) {
+	function output_js(bool $standalone=true): string {
 		$js = 'var schema = '.json_encode($this->items).';';
 		return $standalone ? "<script type='text/javascript'>{$js}</script>" : $js;
+	}
+
+	//If $schema is a superset of $this w.r.t. item values
+	function compatible_with(Schema $schema): bool {
+		//Invert $schema
+		$schema_items = [];
+		foreach ($schema->items as $item) $schema_items[] = $item->value;
+
+		$pass = true;
+		foreach ($this->items as $item)
+			if (!in_array($item->value, $schema_items)) {
+				$pass = false;
+				break;
+			}
+		return $pass;
 	}
 }
 
@@ -316,7 +331,7 @@ class Schema {
 //==================
 
 //https://stackoverflow.com/questions/3512311/how-to-generate-lighter-darker-color-with-php
-function adjustBrightness($hexCode, $adjustPercent) {
+function adjustBrightness(string $hexCode, $adjustPercent): string {
     if (strlen($hexCode) == 3) $hexCode = $hexCode[0] . $hexCode[0] . $hexCode[1] . $hexCode[1] . $hexCode[2] . $hexCode[2];
     $hexCode = array_map('hexdec', str_split($hexCode, 2));
 
@@ -328,7 +343,7 @@ function adjustBrightness($hexCode, $adjustPercent) {
     return implode($hexCode);
 }
 
-function send_email($toname, $toaddress, $fromname, $subject, $message) {
+function send_email(?string $toname, string $toaddress, ?string $fromname, string $subject, string $message) {
 	require(get_root_directory().'phpmailer/Exception.php');
 	require(get_root_directory().'phpmailer/PHPMailer.php');
 	require(get_root_directory().'phpmailer/SMTP.php');
@@ -355,7 +370,7 @@ function send_email($toname, $toaddress, $fromname, $subject, $message) {
 	} catch (Exception $e) { return $mail->ErrorInfo; }
 }
 
-function get_root_directory() {
+function get_root_directory(): string  {
 	$dirs = explode('/', getcwd());
 	$tripped = false;
 	$relative = [];

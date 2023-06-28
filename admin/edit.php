@@ -36,9 +36,7 @@ if (isset($_POST['name'])) {
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">
 		var classid = <?php echo $classid ? $classid : 'null'; ?>;
-		<?php if ($classid) {
-			echo $class->schema->output_js(false);
-		 } ?>
+		<?php if ($classid) echo $class->schema->output_js(false); ?>
 	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
 	<script type="text/javascript" src="js/edit.js"></script>

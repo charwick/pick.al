@@ -163,9 +163,10 @@ td.score:hover, table.sortable th:hover {
 label[for="csvfile"] {
 	cursor: pointer;
 	border: 3px dashed rgba(0,0,0,0.15);
-	padding: 20px 40px;
-	display: inline-block;
+	padding: 20px;
+	display: block;
 	color: #555;
+	text-align: center;
 }
 label[for="csvfile"]:hover { background: rgba(0,0,0,0.05); }
 label.active[for="csvfile"] { background: rgba(0,0,0,0.1); }

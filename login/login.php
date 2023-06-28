@@ -6,7 +6,7 @@ $orcid = new orcid_api();
 
 //Some server-side registration validation just in case
 //Should have already checked all of these client-side
-function validate() {
+function validate(): ?string {
 	global $sql;
 	if (isset($_POST['password']) && $_POST['password'] != $_POST['confirm']) return 'The passwords did not match.';
 	elseif (!((isset($_POST['password']) && $_POST['password']) || isset($_SESSION['orcid'])) || !$_POST['username'] || !$_POST['email']) return 'All fields are required.';
