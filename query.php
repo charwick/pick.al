@@ -14,21 +14,9 @@ class chooser_query extends mysqli {
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 	}
 	
-	function run_query(string $query, array $vars) {
-		$q = $this->prepare($query);
-		$types = '';
-		$typemap = [ 'integer' => 'i', 'string' => 's', 'double' => 'd', 'NULL' => 'i' ];
-		foreach ($vars as $var) {
-			if (is_numeric($var)) $var += 0; //GET comes in as all strings; convert to numeric if necessary
-			$types .= $typemap[gettype($var)];
-		}
-		if ($q->bind_param($types, ...$vars)) $q->execute();
-		return $q;
-	}
-	
-	//======================
-	// DATA FETCH FUNCTIONS
-	//======================
+	//=========
+	// CLASSES
+	//=========
 
 	function get_classes(bool $active=false): array {
 		$aw = $active ? ' AND activeuntil >= NOW()' : '';
@@ -39,7 +27,7 @@ class chooser_query extends mysqli {
 			WHERE classes.user=? {$aw}
 			GROUP BY id
 			ORDER BY year DESC";
-		$result = $this->run_query($q, [$_SESSION['user']])->get_result();
+		$result = $this->execute_query($q, [$_SESSION['user']]);
 		
 		$classes = [];
 		while ($class = $result->fetch_object()) $classes[] = $class;
@@ -49,7 +37,7 @@ class chooser_query extends mysqli {
 	//Get info on one class. Returns a single row by ID
 	function get_class(int $id) {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
-		$pq = $this->run_query($q, [$id, $_SESSION['user']])->get_result();
+		$pq = $this->execute_query($q, [$id, $_SESSION['user']]);
 		$obj = $pq->fetch_object();
 		$obj->schema = $this->get_schema($id);
 		return $obj;
@@ -57,8 +45,8 @@ class chooser_query extends mysqli {
 	
 	function new_class(string $name, string $semester, int $year, string $activeuntil): int {
 		$q = "INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)";
-		$pq = $this->run_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user']]);
-		return $pq->insert_id;
+		$this->execute_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user']]);
+		return $this->insert_id;
 	}
 	
 	function edit_class(int $class, string $key, $val): int {
@@ -66,16 +54,39 @@ class chooser_query extends mysqli {
 		if (!in_array($key, $keys)) return False;
 		
 		$q = "UPDATE classes SET {$key}=? WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [trim($val), $class, $_SESSION['user']]);
-		return $pq->affected_rows;
+		$this->execute_query($q, [trim($val), $class, $_SESSION['user']]);
+		return $this->affected_rows;
 	}
 	
 	function delete_class(int $class): int {
 		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
 		$q = "DELETE FROM classes WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [$class, $_SESSION['user']]);
-		return $pq->affected_rows;
+		$this->execute_query($q, [$class, $_SESSION['user']]);
+		return $this->affected_rows;
 	}
+
+	function get_schema(int $class): Schema {
+		$q="SELECT schemae.* FROM classes
+			LEFT JOIN schemae ON classes.schema=schemae.schema
+		 	WHERE classes.id=? AND classes.user=?";
+		$pq = $this->execute_query($q, [$class, $_SESSION['user']]);
+		$result = [];
+		while ($item = $pq->fetch_object()) $result[] = $item;
+		return new Schema($result);
+	}
+
+	function get_available_schemae(): array {
+		$q = "SELECT * FROM schemae WHERE user=0 OR user=?";
+		$schemae = $this->execute_query($q, [$_SESSION['user']]);
+		$result = []; $return = [];
+		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item;
+		foreach ($result as $schema) $return[] = new Schema($schema);
+		return $return;
+	}
+
+	//==========
+	// STUDENTS
+	//==========
 
 	//Get the roster for a class. Returns an array of objects
 	//Doesn't return excused students by default
@@ -87,27 +98,60 @@ class chooser_query extends mysqli {
 			WHERE class=? AND user=? $wand
 			GROUP BY students.id
 			ORDER BY students.lname";
-		$students = $this->run_query($q, [$classid, $_SESSION['user']])->get_result();
+		$students = $this->execute_query($q, [$classid, $_SESSION['user']]);
 
 		$result = [];
 		while ($student = $students->fetch_object()) $result[] = $student;
 		return $result;
 	}
 
+	function add_student(string $fname, string $lname, int $class): int {
+		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
+		$this->execute_query($q, [trim($fname), trim($lname), $class, $_SESSION['user']]);
+		return $this->insert_id;
+	}
+	
+	function edit_student(int $id, string $fname, string $lname): int {
+		$q = "UPDATE students SET fname=?, lname=? WHERE id=? AND user=?";
+		$this->execute_query($q, [trim($fname), trim($lname), $id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+	
+	function delete_student(int $id): int {
+		$q1 = "DELETE FROM students WHERE id=? AND user=?";
+		$this->execute_query($q1, [$id, $_SESSION['user']]);
+		$affect = $this->affected_rows;
+		if ($affect) {
+			$q2 = "DELETE FROM events WHERE student=?";
+			$this->execute_query($q2, [$id]);
+		}
+		return $affect;
+	}
+	
+	function student_excused(int $id, ?string $excused): int {
+		$q = "UPDATE students SET excuseduntil=? WHERE id=? AND user=?";
+		$this->execute_query($q, [$excused, $id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
+	//========
+	// EVENTS
+	//========
+
 	function new_event(int $rosterid, $result): int {
 		$q = "INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)";
-		$pq = $this->run_query($q, [$rosterid, $result]);
-		return $pq->insert_id;
+		$this->execute_query($q, [$rosterid, $result]);
+		return $this->insert_id;
 	}
 	
 	function edit_event(int $id, $result): int {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
-		if ($this->run_query($q1, [$id, $_SESSION['user']])->get_result()->num_rows) {
+		if ($this->execute_query($q1, [$id, $_SESSION['user']])->num_rows) {
 			$q2 = "UPDATE events SET result=? WHERE id=?";
-			$pq2 = $this->run_query($q2, [$result, $id]);
-			return $pq2->affected_rows;
+			$this->execute_query($q2, [$result, $id]);
+			return $this->affected_rows;
 		} else return 0;
 	}
 	
@@ -115,10 +159,10 @@ class chooser_query extends mysqli {
 		$q1="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			WHERE events.id=? AND students.user=?";
-		if ($this->run_query($q1, [$id, $_SESSION['user']])->get_result()->num_rows) {
+		if ($this->execute_query($q1, [$id, $_SESSION['user']])->num_rows) {
 			$q2 = "DELETE FROM events WHERE id=?";
-			$pq2 = $this->run_query($q2, [$id]);
-			return $pq2->affected_rows;
+			$this->execute_query($q2, [$id]);
+			return $this->affected_rows;
 		} else return 0;
 	}
 	
@@ -127,7 +171,7 @@ class chooser_query extends mysqli {
 			LEFT JOIN students ON students.id=events.student
 			WHERE student=? and user=?
 			ORDER BY date DESC";
-		$events = $this->run_query($q, [$student, $_SESSION['user']])->get_result();
+		$events = $this->execute_query($q, [$student, $_SESSION['user']]);
 
 		$result = [];
 		while ($event = $events->fetch_object()) $result[] = $event;
@@ -140,48 +184,23 @@ class chooser_query extends mysqli {
 			WHERE class=? and user=?
 			ORDER BY date DESC";
 		if ($limit) $q .= " LIMIT {$limit}";
-		$events = $this->run_query($q, [$class, $_SESSION['user']])->get_result();
+		$events = $this->execute_query($q, [$class, $_SESSION['user']]);
 
 		$result = [];
 		while ($event = $events->fetch_object()) $result[] = $event;
 		return $result;
 	}
-	
-	function add_student(string $fname, string $lname, int $class): int {
-		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
-		$pq = $this->run_query($q, [trim($fname), trim($lname), $class, $_SESSION['user']]);
-		return $pq->insert_id;
-	}
-	
-	function edit_student(int $id, string $fname, string $lname): int {
-		$q = "UPDATE students SET fname=?, lname=? WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [trim($fname), trim($lname), $id, $_SESSION['user']]);
-		return $pq->affected_rows;
-	}
-	
-	function delete_student(int $id): int {
-		$q1 = "DELETE FROM students WHERE id=? AND user=?";
-		$pq = $this->run_query($q1, [$id, $_SESSION['user']]);
-		if ($pq->affected_rows) {
-			$q2 = "DELETE FROM events WHERE student=?";
-			$pq2 = $this->run_query($q2, [$id]);
-		}
-		return $pq->affected_rows;
-	}
-	
-	function student_excused(int $id, ?string $excused): int {
-		$q = "UPDATE students SET excuseduntil=? WHERE id=? AND user=?";
-		$pq = $this->run_query($q, [$excused, $id, $_SESSION['user']]);
-		return $pq->affected_rows;
-	}
+
+	//=======
+	// USERS
+	//=======
 	
 	function get_user_by(string $field, $val) {
 		$fields = ['username', 'email', 'id', 'orcid'];
 		if (!in_array($field, $fields)) return False;
 		
 		$q = "SELECT * FROM users WHERE {$field}=?";
-		$pq = $this->run_query($q, [trim($val)]);
-		$user = $pq->get_result()->fetch_object();
+		$user = $this->execute_query($q, [trim($val)])->fetch_object();
 		if ($user && $user->options) $user->options = json_decode($user->options);
 		return $user;
 	}
@@ -195,20 +214,20 @@ class chooser_query extends mysqli {
 	function user_add_option(string $k, $v, int $user=null): int {
 		if (!$user) $user = $_SESSION['user'];
 		$q = "SELECT options FROM users WHERE id=?";
-		$options = $this->run_query($q, [$user])->get_result()->fetch_object()->options;
+		$options = $this->execute_query($q, [$user])->fetch_object()->options;
 		$options = $options ? json_decode($options) : new stdClass();
 		if ($v != null) $options->{$k} = $v;
 		else unset($options->{$k});
 		$q2 = "UPDATE users SET options=? WHERE id=?";
-		$pq = $this->run_query($q2, [json_encode($options), $user]);
-		return $pq->affected_rows;
+		$this->execute_query($q2, [json_encode($options), $user]);
+		return $this->affected_rows;
 	}
 	
 	function new_user(string $username, string $email, string $password='', ?string $orcid=null): int {
 		if (!$password && !$orcid) return false;
 		$q = "INSERT INTO users (username, email, password, orcid, registered) VALUES (?, ?, ?, ?, NOW())";
-		$pq = $this->run_query($q, [$username, $email, $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
-		return $pq->insert_id;
+		$this->execute_query($q, [$username, $email, $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
+		return $this->insert_id;
 	}
 
 	function edit_user(string $key, string $val): int {
@@ -217,8 +236,8 @@ class chooser_query extends mysqli {
 		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";
 		
 		$q = "UPDATE users SET {$key}=? WHERE id=?";
-		$pq = $this->run_query($q, [$val ? trim($val) : $val, $_SESSION['user']]);
-		return $pq->affected_rows;
+		$this->execute_query($q, [$val ? trim($val) : $val, $_SESSION['user']]);
+		return $this->affected_rows;
 	}
 
 	function edit_pw(string $old, string $new, ?int $userid=null, bool $reset=false): int {
@@ -226,9 +245,10 @@ class chooser_query extends mysqli {
 		if (!$reset && $user->password && !password_verify($old, $user->password)) return false;
 		if ($old==$new) return 1;
 		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
-		$pq = $this->run_query($q, [password_hash($new, PASSWORD_DEFAULT), $user->id]);
-		if ($pq->affected_rows) $this->user_add_option('pwreset', null, $user->id);
-		return $pq->affected_rows;
+		$this->execute_query($q, [password_hash($new, PASSWORD_DEFAULT), $user->id]);
+		$affect = $this->affected_rows;
+		if ($affect) $this->user_add_option('pwreset', null, $user->id);
+		return $affect;
 	}
 
 	function generate_reset_link(int $userid) {
@@ -251,25 +271,6 @@ class chooser_query extends mysqli {
 		}
 
 		return send_email($user->username, $user->email, 'Pick.al Mail', 'Your Pick.al password reset request', $emailtext);
-	}
-
-	function get_schema(int $class): Schema {
-		$q="SELECT schemae.* FROM classes
-			LEFT JOIN schemae ON classes.schema=schemae.schema
-		 	WHERE classes.id=? AND classes.user=?";
-		$pq = $this->run_query($q, [$class, $_SESSION['user']])->get_result();
-		$result = [];
-		while ($item = $pq->fetch_object()) $result[] = $item;
-		return new Schema($result);
-	}
-
-	function get_available_schemae(): array {
-		$q = "SELECT * FROM schemae WHERE user=0 OR user=?";
-		$schemae = $this->run_query($q, [$_SESSION['user']])->get_result();
-		$result = []; $return = [];
-		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item;
-		foreach ($result as $schema) $return[] = new Schema($schema);
-		return $return;
 	}
 }
 
