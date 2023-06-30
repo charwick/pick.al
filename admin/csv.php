@@ -1,13 +1,11 @@
 <?php //Get roster
 require_once('../query.php');
 $sql = new chooser_query();
-$classid = isset($_GET['class']) ? $_GET['class'] : null;
-if ($classid) {
-	$class = $sql->get_class($classid);
-	if (!$class) {
-		require_once('../404.php');
-		exit;
-	}
+$classid = $_GET['class'] ?? null;
+if ($classid) $class = $sql->get_class($classid);
+if (!$classid || !$class) {
+	require_once('../404.php');
+	exit;
 }
 
 //Disable caching
@@ -31,7 +29,7 @@ echo '"fname", "lname", "numerator", "denominator", "score"'.PHP_EOL;
 foreach ($sql->get_roster($classid, true) as $student) {
 	echo "\"{$student->fname}\",";
 	echo "\"{$student->lname}\",";
-	echo '"'.($student->score ? $student->score : '').'",';
+	echo '"'.($student->score ?: '').'",';
 	echo "\"{$student->denominator}\",";
 	echo '"'.($student->denominator ? round($student->score/$student->denominator*100) : '').'"'.PHP_EOL;
 }

@@ -44,8 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				inp.value = '';
 
 				inp.parentNode.save = function() {
-					const error = element.querySelector('.inlineError');
-					if (error) error.remove();
+					element.querySelector('.inlineError')?.remove();
 					const oldpw = element.querySelector('input[name="oldpw"]'),
 						newpw = element.querySelector('input[name="newpw"]'),
 						confirmpw = element.querySelector('input[name="confirmpw"]');

@@ -113,7 +113,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 			$record = $orcid->get_record();
 			$bodyclass = 'orcid_register';
 			$username = $record->person->name->{'given-names'}->value.$record->person->name->{'family-name'}->value;
-			$email = $record->person->emails->email ? $record->person->emails->email[0]->email : '';
+			$email = $record->person->emails->email[0]->email ?? '';
 
 			//Avoid username collisions
 			$unoriginal = $username; $uninc = 1;

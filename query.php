@@ -39,21 +39,21 @@ class chooser_query extends mysqli {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
 		$pq = $this->execute_query($q, [$id, $_SESSION['user']]);
 		$obj = $pq->fetch_object();
-		$obj->schema = $this->get_schema($id);
+		$obj->schema = $this->get_schema($obj->schema);
 		return $obj;
 	}
 	
-	function new_class(string $name, string $semester, int $year, string $activeuntil): int {
-		$q = "INSERT INTO classes (name, semester, year, activeuntil, user) VALUES (?, ?, ?, ?, ?)";
-		$this->execute_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user']]);
+	function new_class(string $name, string $semester, int $year, string $activeuntil, string $schema): int {
+		$q = "INSERT INTO classes (name, semester, year, activeuntil, user, `schema`) VALUES (?, ?, ?, ?, ?, ?)";
+		$this->execute_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user'], $schema]);
 		return $this->insert_id;
 	}
 	
 	function edit_class(int $class, string $key, $val): int {
-		$keys = ['name', 'semester', 'year', 'activeuntil', 'selector'];
+		$keys = ['name', 'semester', 'year', 'activeuntil', 'schema'];
 		if (!in_array($key, $keys)) return False;
 		
-		$q = "UPDATE classes SET {$key}=? WHERE id=? AND user=?";
+		$q = "UPDATE classes SET `{$key}`=? WHERE id=? AND user=?";
 		$this->execute_query($q, [trim($val), $class, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
@@ -65,11 +65,9 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function get_schema(int $class): Schema {
-		$q="SELECT schemae.* FROM classes
-			LEFT JOIN schemae ON classes.schema=schemae.schema
-		 	WHERE classes.id=? AND classes.user=?";
-		$pq = $this->execute_query($q, [$class, $_SESSION['user']]);
+	function get_schema(string $name): Schema {
+		$q="SELECT * FROM schemae WHERE `schema`=? AND (user=? OR user=0) ORDER BY value DESC";
+		$pq = $this->execute_query($q, [$name, $_SESSION['user']]);
 		$result = [];
 		while ($item = $pq->fetch_object()) $result[] = $item;
 		return new Schema($result);
@@ -294,32 +292,47 @@ class Schema {
 		];
 	}
 
+	function output_item_css($id) {
+		$item = $this->items[$id];
+		$css = ["background-color: #{$item['color']}"];
+		if (isset(self::$icons[$item['text']]))
+			$css = [...$css, ...["text-indent: -9999px", "background-image: url(\"/icon/svg.php?icon=".self::$icons[$item['text']]."&color=FFF\")"]];
+		return implode('; ', $css);
+	}
+
 	function output_css(bool $standalone=true, bool $hover=true): string {
 		$css = '';
 		$textindent = 'text-indent: -9999px;';
 		foreach ($this->items as $id => $item) {
-			$css .= "[data-schema=\"{$id}\"] { background-color: #{$item['color']}; \r\n";
-			if (isset(self::$icons[$item['text']])) $css .= "text-indent: -9999px; background-image: url('/icon/svg.php?icon=".self::$icons[$item['text']]."&color=FFF');";
-			$css .= "}\r\n";
+			$css .= "[data-schema=\"{$id}\"] { {$this->output_item_css($id)} }\r\n";
 			if ($hover) $css .= "[data-schema=\"{$id}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
 		}
 		return $standalone ? "<style type='text/css' class='schema-css'>{$css}</style>" : $css;
 	}
 
 	function output_js(bool $standalone=true): string {
-		$js = 'var schema = '.json_encode($this->items).';';
-		return $standalone ? "<script type='text/javascript'>{$js}</script>" : $js;
+		$js = json_encode($this->items);
+		return $standalone ? "var schema = {$js};" : $js;
 	}
 
-	//If $schema is a superset of $this w.r.t. item values
-	function compatible_with(Schema $schema): bool {
+	function output_buttons(bool $inline_css=false): string {
+		$html = '';
+		foreach ($this->items as $id => $item) {
+			$html .= "<span class='result-button'";
+			if ($inline_css) $html .= " style='{$this->output_item_css($id)}'";
+			$html .= ">{$item['text']}</span>";
+		}
+		return $html;
+	}
+
+	function contains_values(array $values): bool {
 		//Invert $schema
 		$schema_items = [];
-		foreach ($schema->items as $item) $schema_items[] = $item->value;
+		foreach ($this->items as $item) $schema_items[] = $item['value'];
 
 		$pass = true;
-		foreach ($this->items as $item)
-			if (!in_array($item->value, $schema_items)) {
+		foreach ($values as $value)
+			if (!in_array($value, $schema_items)) {
 				$pass = false;
 				break;
 			}

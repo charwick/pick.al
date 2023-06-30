@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const actions = document.querySelectorAll('#actions button');
 	
 	//Chooser button
-	const pick = document.getElementById('pick');
-	if (pick) pick.addEventListener('click', function(e) {
+	document.getElementById('pick')?.addEventListener('click', function(e) {
 		currentStudent = studentSelect(roster);
 		sinfo = document.getElementById('sinfo');
 		sinfo.style.visibility = 'visible';

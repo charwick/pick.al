@@ -8,7 +8,7 @@ header("Expires: Tue, 03 Jul 2001 06:00:00 GMT");
 header("Cache-Control: max-age=0, no-cache, must-revalidate, proxy-revalidate");
 header("Last-Modified: {$now} GMT");
 
-$req = isset($_POST['req']) ? $_POST['req'] : $_GET['req'];
+$req = $_POST['req'] ?? $_GET['req'];
 
 switch ($req) {
 	case 'writeevent':
@@ -44,6 +44,33 @@ switch ($req) {
 		$response = $sql->edit_class($_GET['class'], $_GET['k'], $_GET['v']);
 		if ($response) echo $response;
 		else http_response_code(403);
+		break;
+	
+	case 'schemae':
+		//Figure out the pattern a schema has to fit
+		$events = $sql->get_events_by_class($_GET['class']);
+		$values = [];
+		foreach ($events as $event) $values["$event->result"] = true;
+
+		$schemae = $sql->get_available_schemae();
+		$result = [];
+		foreach ($schemae as $schema) $result[] = [
+			'name' => $schema->name,
+			'compatible' => $schema->contains_values(array_keys($values))
+		];
+		echo json_encode($result);
+		break;
+	
+	//Basically the same as updateclassinfo, but returns schema info too
+	case 'editschema':
+		$updated = $sql->edit_class($_GET['class'], 'schema', $_GET['schema']);
+		if ($updated) {
+			$schema = $sql->get_schema($_GET['schema']);
+			echo json_encode([
+				'weights' => $schema->items,
+				'css' => $schema->output_css(false, false)
+			]);
+		} else echo 0;
 		break;
 	
 	case 'editstudent':

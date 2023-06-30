@@ -9,7 +9,7 @@ if (!$sql->current_user()) {
 }
 
 //In case of no class
-$classid = isset($_GET['class']) ? $_GET['class'] : null;
+$classid = $_GET['class'] ?? null;
 if ($classid) {
 	$class = $sql->get_class($classid);
 	if (!$class) {
@@ -21,7 +21,7 @@ $error = false;
 
 //Create new class
 if (isset($_POST['name'])) {
-	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil']);
+	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['schema']);
 	if ($id) {
 		$url = "edit.php?class={$id}";
 		header("Location: {$url}");
@@ -35,12 +35,23 @@ if (isset($_POST['name'])) {
 	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New Class"; ?> | Pick.al</title>
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">
-		var classid = <?php echo $classid ? $classid : 'null'; ?>;
-		<?php if ($classid) echo $class->schema->output_js(false); ?>
+		var classid = <?php echo $classid ?: 'null'; ?>;
+		<?php if ($classid) echo $class->schema->output_js();
+		else {
+			$schemae = $sql->get_available_schemae();
+			echo 'var schemae = {';
+				foreach ($schemae as $schema) echo "'{$schema->name}': ".$schema->output_js(false).',';
+			echo '};';
+		} ?>
 	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
 	<script type="text/javascript" src="js/edit.js"></script>
-	<?php if ($classid) echo $class->schema->output_css(true, false); ?>
+	<?php if ($classid) echo $class->schema->output_css(true, false);
+	else {
+		echo '<style type="text/css" class="schema-css">';
+		foreach ($schemae as $schema) echo $schema->output_css(false, false);
+		echo '</style>';
+	} ?>
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 </head>
 
@@ -58,24 +69,37 @@ if (isset($_POST['name'])) {
 				echo '<p id="name"><input type="text" name="name" placeholder="Class Name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
 			} ?>
 			
-			<p>
-				<?php if ($classid) { ?>
+			<?php if ($classid) { ?>
+				<p>
 					<span id="semester"> <?php echo ucwords($class->semester); ?></span>
 					<span id="year"><?php echo $class->year; ?></span>
 					<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
 					<span id="activeuntil"><?php echo $class->activeuntil; ?></span>
-				<?php } else {
-					$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
-					if ($error) $selected = $_POST['semester'];
-					else $selected = date('n')<6 ? 'spring' : 'fall'; ?>
+				</p>
+				<p id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
+					Button schema: <?php echo $class->schema->output_buttons(true); ?>
+					<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
+				</p>
+			<?php } else {
+				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
+				if ($error) $selected = $_POST['semester'];
+				else $selected = date('n')<6 ? 'spring' : 'fall'; ?>
+				<p>
 					<select name="semester" id="semester">
 						<?php foreach ($seasons as $season)
 							echo "<option value='".strtolower($season)."'".($selected==strtolower($season) ? ' selected' : '').">{$season}</option>"; ?>
 					</select>
 					<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>" required="">
 					Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>" required="">
-				<?php } ?>
-			</p>
+				</p>
+				<p id="schemaselect">
+					Button schema:
+					<select name="schema">
+						<?php foreach ($schemae as $schema) echo "<option value='{$schema->name}'>{$schema->name}</option>"; ?>
+						<option disabled>Custom schemae coming soon</option>
+					</select>
+				</p>
+			<?php } ?>
 			
 			<?php if (!$classid) { ?>
 				<p><input type="submit" name="submit" value="Create Class"></p>

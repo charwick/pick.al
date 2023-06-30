@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			const delform = document.getElementById('deleteform');
 			if (confirm('Are you sure you want to delete '+title.textContent+' and all its students?')) delform.submit();
 		});
+	
+	//Schema buttons
+	} else {
+		function addSchemaButtons(buttons) {
+			const target = document.getElementById('schemaselect');
+			for (const btn of target.querySelectorAll('[data-schema]')) btn.remove();
+			target.append(...buttons);
+		}
+		document.querySelector('#schemaselect select')?.addEventListener('change', function(e) { addSchemaButtons(schemaButtons(schemae[this.value])); });
+		addSchemaButtons(schemaButtons(schemae[document.querySelector('#schemaselect select').value]));
 	}
 
 	//Action buttons
@@ -223,8 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	
 	//Validate new class
-	const newform = document.querySelector('.admin-new #classinfo');
-	if (newform) newform.addEventListener('submit', function (e) {
+	document.querySelector('.admin-new #classinfo')?.addEventListener('submit', function (e) {
 		let pass = true;
 		for (const i of this.querySelectorAll('input')) {
 			i.classList.remove('error');
@@ -235,7 +244,80 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!pass) e.preventDefault();
 	});
+
+	//Schema select
+	document.getElementById('schemaselect').addEventListener('click', function(e) {
+		if (!e.target.classList.contains('edit')) return;
+		e.preventDefault();
+		const req = new XMLHttpRequest(),
+			schemaselect = this;
+		req.open('GET', '../ajax.php?req=schemae&class='+classid, true);
+		req.onload = function() {
+			for (const btn of schemaselect.querySelectorAll('.result-button')) btn.remove();
+			const actions = schemaselect.querySelector('.actions'),
+				select = document.createElement('select');
+			actions.textContent = '';
+			// actions.append(...actionButtons(['cancel', 'save']));
+			
+			let html = '';
+			for (const schema of JSON.parse(this.response))
+				html += '<option value="'+schema.name+'"'+(schema.compatible ? '' : ' disabled')+(schema.name==schemaselect.dataset.schemaname ? ' selected' : '')+'>'+schema.name+'</option>'
+			html += '<option disabled>Custom schemae coming soon</option>';
+			select.innerHTML = html;
+			schemaselect.insertBefore(select, actions);
+
+			select.save = function() {
+				const savereq = new XMLHttpRequest();
+				savereq.open('GET', '../ajax.php?req=editschema&class='+classid+'&schema='+select.value, true);
+				savereq.onload = function() {
+					const response = JSON.parse(this.response),
+						oldschema = schema;
+					document.querySelector('.schema-css').textContent = response.css;
+					window.schema = response.weights;
+					schemaselect.dataset.schemaname = select.value;
+
+					const inv = invertSchema();
+					for (const el of document.querySelectorAll('[data-schema]')) {
+						el.dataset.schema = inv[oldschema[el.dataset.schema].value];
+						el.textContent = schema[el.dataset.schema].text;
+					}
+					select.solidify();
+				}
+				savereq.send();
+			}
+			select.solidify = function() {
+				select.remove();
+				for (const btn of schemaButtons(schema)) schemaselect.insertBefore(btn, actions)
+				actions.append(...actionButtons(['edit']));
+			}
+			function onchange() {
+				if (select.value==schemaselect.dataset.schemaname) select.solidify();
+				else select.save();
+			}
+			select.addEventListener('change', onchange);
+			select.addEventListener('blur', onchange);
+			select.addEventListener('keydown', function(e) {
+				if (e.key == "Enter") onchange();
+				else if (e.key == "Escape") select.solidify();
+			});
+			select.focus();
+		};
+		req.send();
+	});
+
 });
+
+function schemaButtons(schema) {
+	let btns = [];
+	for (const bid in schema) {
+		const btn = document.createElement('span');
+		btn.classList.add('result-button');
+		btn.dataset.schema = bid;
+		btn.textContent = schema[bid].text;
+		btns.push(btn);
+	}
+	return btns;
+}
 
 function makeSortable(table, defaultsort, defaultdesc) {
 	table.classList.add('sortable');
@@ -351,8 +433,7 @@ function eventActions(e) {
 			numspan.textContent = schema[restd.dataset.result].value;
 			acttd.append(...actionButtons(['edit', 'delete']));
 		} else {
-			const tfoot = evrow.parentNode.parentNode.querySelector('tfoot');
-			if (tfoot) tfoot.querySelector('.addnew a').classList.remove('disabled');
+			evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
 			evrow.remove();
 		}
 	}
@@ -486,8 +567,7 @@ function editEvent(row, selected) {
 					}
 				}
 				
-				const addnew = row.parentNode.parentNode.querySelector('.addnew a');
-				if (addnew) addnew.classList.remove('disabled');
+				row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
 				updateScore(row.dataset.student, opts);
 			};
 			
@@ -502,10 +582,9 @@ function uploadCSV(e) {
 	e.preventDefault();
 	const files = this.files || e.dataTransfer.items,
 		reader = new FileReader(),
-		csvElement = document.getElementById('csvfile'),
-		error = document.querySelector('.info');
+		csvElement = document.getElementById('csvfile');
 	if (files.length == 0) return;
-	if (error) error.remove();
+	document.querySelector('.info')?.remove();
 	
 	reader.onload = function(e) {
 		const formData = new FormData(),

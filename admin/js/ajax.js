@@ -65,14 +65,11 @@ function makeInput(elements, attrs) {
 		element.cancel = function() {
 			for (const input of inps) input.value = input.oldValue;
 			solidify(elements, attrs['actions']);
-			const addnew = document.querySelector('#roster .addnew a'),
-				error = element.parentNode.querySelector('.inlineError');
-			if (addnew) addnew.classList.remove('disabled');
-			if (error) error.remove();
+			document.querySelector('#roster .addnew a')?.classList.remove('disabled');
+			element.parentNode.querySelector('.inlineError')?.remove();
 		}
 		element.save = function() {
-			const error = element.parentNode.querySelector('.inlineError');
-			if (error) error.remove();
+			element.parentNode.querySelector('.inlineError')?.remove();
 			sendInfo(elements, attrs.data(inps), attrs['actions'], 'after' in attrs ? attrs.after : null);
 		};
 
@@ -96,7 +93,6 @@ function makeInput(elements, attrs) {
 
 //Turns a set of inputs back into elements
 function solidify(els, actionList) {
-	// if (els[0].querySelector('#selector')) return; //Don't solidify the selector dropdown
 	if (!els.length) return;
 	for (const el of els) {
 		el.classList.remove('editing');

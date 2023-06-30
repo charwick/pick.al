@@ -7,7 +7,7 @@ if (!$user) {
 	exit;
 }
 
-$classid = isset($_GET['class']) ? $_GET['class'] : null;
+$classid = $_GET['class'] ?? null;
 if ($classid) {
 	$class = $sql->get_class($classid);
 	if (!$class) {
@@ -24,7 +24,7 @@ if ($classid) {
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
 				roster = <?php echo json_encode($sql->get_roster($classid)); ?>;
-			<?php echo $class->schema->output_js(false); ?>
+			<?php echo $class->schema->output_js(true); ?>
 		</script>
 		<?php 
 		echo $class->schema->output_css();
