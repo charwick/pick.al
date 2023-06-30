@@ -20,16 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (confirm('Are you sure you want to delete '+title.textContent+' and all its students?')) delform.submit();
 		});
 	
-	//Schema buttons
-	} else {
-		function addSchemaButtons(buttons) {
-			const target = document.getElementById('schemaselect');
-			for (const btn of target.querySelectorAll('[data-schema]')) btn.remove();
-			target.append(...buttons);
-		}
-		document.querySelector('#schemaselect select')?.addEventListener('change', function(e) { addSchemaButtons(schemaButtons(schemae[this.value])); });
-		addSchemaButtons(schemaButtons(schemae[document.querySelector('#schemaselect select').value]));
-	}
+	} else addSchemaButtons();
 
 	//Action buttons
 	const roster = document.querySelector('#roster tbody');
@@ -122,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
 									delete tr.dataset.excused;
 									e.target.title = "Set excused absences";
 								}
-								tr.querySelector('.lname').classList.remove('editing', 'nottip');
+								tr.classList.remove('nottip');
+								tr.querySelector('.lname').classList.remove('editing');
 								popup.remove();
 							}
 						};
@@ -130,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						req.send();
 					} else if (e2.key == "Escape") {
 						e2.preventDefault();
-						tr.querySelector('.lname').classList.remove('editing', 'nottip')
+						tr.classList.remove('nottip');
+						tr.querySelector('.lname').classList.remove('editing')
 						popup.remove();
 					}
 				});
@@ -253,9 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			schemaselect = this;
 		req.open('GET', '../ajax.php?req=schemae&class='+classid, true);
 		req.onload = function() {
-			for (const btn of schemaselect.querySelectorAll('.result-button')) btn.remove();
 			const actions = schemaselect.querySelector('.actions'),
 				select = document.createElement('select');
+			select.stop = false;
 			actions.textContent = '';
 			// actions.append(...actionButtons(['cancel', 'save']));
 			
@@ -264,22 +257,23 @@ document.addEventListener('DOMContentLoaded', () => {
 				html += '<option value="'+schema.name+'"'+(schema.compatible ? '' : ' disabled')+(schema.name==schemaselect.dataset.schemaname ? ' selected' : '')+'>'+schema.name+'</option>'
 			html += '<option disabled>Custom schemae coming soon</option>';
 			select.innerHTML = html;
-			schemaselect.insertBefore(select, actions);
+			schemaselect.insertBefore(select, schemaselect.querySelector('.schemalist'));
 
 			select.save = function() {
 				const savereq = new XMLHttpRequest();
 				savereq.open('GET', '../ajax.php?req=editschema&class='+classid+'&schema='+select.value, true);
 				savereq.onload = function() {
 					const response = JSON.parse(this.response),
-						oldschema = schema;
+						oldschema = schemae[schema];
 					document.querySelector('.schema-css').textContent = response.css;
-					window.schema = response.weights;
+					window.schema = select.value;
+					window.schemae[schema] = response.weights;
 					schemaselect.dataset.schemaname = select.value;
 
 					const inv = invertSchema();
 					for (const el of document.querySelectorAll('[data-schema]')) {
 						el.dataset.schema = inv[oldschema[el.dataset.schema].value];
-						el.textContent = schema[el.dataset.schema].text;
+						el.textContent = schemae[schema][el.dataset.schema].text;
 					}
 					select.solidify();
 				}
@@ -287,36 +281,49 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			select.solidify = function() {
 				select.remove();
-				for (const btn of schemaButtons(schema)) schemaselect.insertBefore(btn, actions)
+				addSchemaButtons();
 				actions.append(...actionButtons(['edit']));
 			}
 			function onchange() {
 				if (select.value==schemaselect.dataset.schemaname) select.solidify();
 				else select.save();
 			}
-			select.addEventListener('change', onchange);
-			select.addEventListener('blur', onchange);
 			select.addEventListener('keydown', function(e) {
-				if (e.key == "Enter") onchange();
-				else if (e.key == "Escape") select.solidify();
+				if (e.key == "Enter") { select.stop = true; onchange(); }
+				else if (e.key == "Escape") { select.stop = true; select.solidify(); }
+			});
+			select.addEventListener('blur', function(e) {
+				if (select.stop) return; //Because Chrome fires both the blur and the keydown
+				onchange();
 			});
 			select.focus();
 		};
 		req.send();
 	});
+	document.querySelector('#schemaselect').addEventListener('change', function(e) { addSchemaButtons(); });
 
 });
 
-function schemaButtons(schema) {
-	let btns = [];
-	for (const bid in schema) {
-		const btn = document.createElement('span');
-		btn.classList.add('result-button');
-		btn.dataset.schema = bid;
-		btn.textContent = schema[bid].text;
-		btns.push(btn);
+function addSchemaButtons() {
+	const target = document.getElementById('schemaselect'),
+		schema = target.querySelector('select')?.value ?? window.schema;
+
+	function drawButtons(html) {
+		const cont = target.querySelector('.schemalist');
+		cont.textContent = '';
+		cont.innerHTML = html;
 	}
-	return btns;
+	
+	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
+	else {
+		const req = new XMLHttpRequest();
+		req.open('GET', '../ajax.php?req=getschemabuttons&schema='+schema, true);
+		req.onload = function() {
+			schemabuttons[schema] = this.response;
+			drawButtons(this.response);
+		}
+		req.send();
+	}
 }
 
 function makeSortable(table, defaultsort, defaultdesc) {
@@ -373,11 +380,11 @@ function updateScore(student, opts) {
 
 	if (opts.action=='delete') {
 		den--;
-		num -= schema[opts.oldval].value;
+		num -= schemae[schema][opts.oldval].value;
 	} else if (opts.action=='new') {
 		den++;
-		num += schema[opts.newval].value;
-	} else if (opts.action=='update') num += schema[opts.newval].value - schema[opts.oldval].value;
+		num += schemae[schema][opts.newval].value;
+	} else if (opts.action=='update') num += schemae[schema][opts.newval].value - schemae[schema][opts.oldval].value;
 
 	if (den) {
 		rostercell.textContent = num+'/'+den+' ('+Math.round(num/den*100)+'%)';
@@ -430,7 +437,7 @@ function eventActions(e) {
 			for (const b of restd.querySelectorAll('.unselected')) b.remove();
 			restd.classList.remove('editing');
 			acttd.textContent = '';
-			numspan.textContent = schema[restd.dataset.result].value;
+			numspan.textContent = schemae[schema][restd.dataset.result].value;
 			acttd.append(...actionButtons(['edit', 'delete']));
 		} else {
 			evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
@@ -473,7 +480,7 @@ function eventRow(event, namecol) {
 	evtr.dataset.student = event.student;
 	evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
 		+(namecol ? '<td>'+event.fname+' '+event.lname+'</td>' : '')
-		+'<td data-result="'+res+'"><div class="result-button" data-schema="'+res+'">'+schema[res].text+'</div><span class="numspan">'+event.result+'</span></td>'
+		+'<td data-result="'+res+'"><div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span></td>'
 		+'<td class="actions"></td>';
 	evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
 	return evtr;
@@ -512,12 +519,12 @@ function editEvent(row, selected) {
 	actionsCell.append(...actionButtons(['cancel']));
 	const numspan = document.createElement('span');
 	numspan.classList.add('numspan');
-	if (selected) numspan.textContent = schema[selected].value;
+	if (selected) numspan.textContent = schemae[schema][selected].value;
 	
-	for (const i in schema) {
+	for (const i in schemae[schema]) {
 		const a = document.createElement('a');
 		a.classList.add('result-button');
-		a.textContent = schema[i].text;
+		a.textContent = schemae[schema][i].text;
 		a.dataset.schema = i;
 		if (i!=selected) a.classList.add('unselected');
 		resultsCell.append(a);
@@ -527,17 +534,17 @@ function editEvent(row, selected) {
 				result = this.dataset.schema;
 			
 			//Save event edits
-			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schema[result].value, true);
+			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schemae[schema][result].value, true);
 			
 			//Save new event
-			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+schema[result].value, true);
+			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+schemae[schema][result].value, true);
 			
 			req.onload = function() {
 				for (const b of resultsCell.querySelectorAll('.result-button')) {
 					if (b.dataset.schema == result) b.classList.remove('unselected');
 					else b.remove();
 				}
-				numspan.textContent = schema[i].value;
+				numspan.textContent = schemae[schema][i].value;
 				actionsCell.textContent = '';
 				actionsCell.append(...actionButtons(['edit', 'delete']));
 				const oldval = resultsCell.dataset.result;
@@ -555,7 +562,7 @@ function editEvent(row, selected) {
 						student: row.dataset.student,
 						fname: studentRow.querySelector('.fname').textContent,
 						lname: studentRow.querySelector('.lname').textContent,
-						result: schema[result].value
+						result: schemae[schema][result].value
 					}, true))
 				} else {
 					opts = {action: 'update', oldval: oldval, newval: result};
@@ -563,7 +570,7 @@ function editEvent(row, selected) {
 					if (recent) {
 						recent.dataset.result = result;
 						recent.querySelector('.result-button').dataset.schema = result;
-						recent.querySelector('.numspan').textContent = schema[result].value;
+						recent.querySelector('.numspan').textContent = schemae[schema][result].value;
 					}
 				}
 				

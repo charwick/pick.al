@@ -73,6 +73,11 @@ switch ($req) {
 		} else echo 0;
 		break;
 	
+	case 'getschemabuttons':
+		$schema = $sql->get_schema($_GET['schema']);
+		echo $schema->output_buttons(true);
+		break;
+	
 	case 'editstudent':
 		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname']);
 		if ($response) echo $response;

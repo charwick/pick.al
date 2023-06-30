@@ -310,7 +310,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	border-radius: 12px;
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 }
-
+.schemalist { margin-left: 0.5em; }
 .result-button {
 	height: 16px; width: 16px;
 	display: inline-block;

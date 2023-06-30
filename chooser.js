@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Chooser button
 	document.getElementById('pick')?.addEventListener('click', function(e) {
 		currentStudent = studentSelect(roster);
-		sinfo = document.getElementById('sinfo');
-		sinfo.style.visibility = 'visible';
+		document.getElementById('sinfo').style.visibility = 'visible';
 		document.getElementById('sname').innerHTML = currentStudent.fname+' '+currentStudent.lname;
 		for (const btn of actions) btn.classList.remove('picked');
 		document.getElementById('actions').classList.remove('picked');

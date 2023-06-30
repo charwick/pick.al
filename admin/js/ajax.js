@@ -143,7 +143,7 @@ function actionButtons(list) {
 
 function invertSchema() {
 	let array = {};
-	for (const id in schema) array[schema[id].value] = id;
+	for (const id in schemae[schema]) array[schemae[schema][id].value] = id;
 	return array;
 }
 

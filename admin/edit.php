@@ -36,13 +36,13 @@ if (isset($_POST['name'])) {
 	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">
 		var classid = <?php echo $classid ?: 'null'; ?>;
-		<?php if ($classid) echo $class->schema->output_js();
-		else {
-			$schemae = $sql->get_available_schemae();
-			echo 'var schemae = {';
-				foreach ($schemae as $schema) echo "'{$schema->name}': ".$schema->output_js(false).',';
-			echo '};';
-		} ?>
+		<?php if ($classid) {
+			$schemae = [$class->schema->name => $class->schema];
+			echo "var schema = '{$class->schema->name}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
+		} else $schemae = $sql->get_available_schemae();
+		echo 'var schemae = {';
+			foreach ($schemae as $schema) echo "'{$schema->name}': ".$schema->output_js(false).',';
+		echo '}, schemabuttons = {};'; ?>
 	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
 	<script type="text/javascript" src="js/edit.js"></script>
@@ -77,7 +77,7 @@ if (isset($_POST['name'])) {
 					<span id="activeuntil"><?php echo $class->activeuntil; ?></span>
 				</p>
 				<p id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
-					Button schema: <?php echo $class->schema->output_buttons(true); ?>
+					Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
 					<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
 				</p>
 			<?php } else {
@@ -98,6 +98,7 @@ if (isset($_POST['name'])) {
 						<?php foreach ($schemae as $schema) echo "<option value='{$schema->name}'>{$schema->name}</option>"; ?>
 						<option disabled>Custom schemae coming soon</option>
 					</select>
+					<span class="schemalist"></span>
 				</p>
 			<?php } ?>
 			

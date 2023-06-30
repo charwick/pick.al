@@ -21,7 +21,7 @@ header("Content-Type: application/download");
 header('Content-Type: text/csv');
 
 //Disposition / encoding on response body
-header("Content-Disposition: attachment;filename=".str_replace(' ', '-', strtolower($class->name)));
+header("Content-Disposition: attachment;filename=".str_replace(' ', '-', strtolower($class->name)).'.csv');
 header("Content-Transfer-Encoding: binary");
 
 //Output CSV
