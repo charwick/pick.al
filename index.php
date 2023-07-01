@@ -46,6 +46,7 @@ if ($classid) {
 	
 		<div id="sinfo">
 			<h2 id="sname"><!-- Filled in by JS --></h2>
+			<p class="note"></p>
 		
 			<ul id="actions">
 				<?php foreach ($class->schema->items as $id => $item)

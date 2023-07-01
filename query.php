@@ -103,15 +103,15 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 
-	function add_student(string $fname, string $lname, int $class): int {
-		$q = "INSERT INTO students (fname, lname, class, user) VALUES (?, ?, ?, ?)";
-		$this->execute_query($q, [trim($fname), trim($lname), $class, $_SESSION['user']]);
+	function add_student(int $class, string $fname, string $lname, ?string $note=null): int {
+		$q = "INSERT INTO students (fname, lname, note, class, user) VALUES (?, ?, ?, ?, ?)";
+		$this->execute_query($q, [trim($fname), trim($lname), $note, $class, $_SESSION['user']]);
 		return $this->insert_id;
 	}
 	
-	function edit_student(int $id, string $fname, string $lname): int {
-		$q = "UPDATE students SET fname=?, lname=? WHERE id=? AND user=?";
-		$this->execute_query($q, [trim($fname), trim($lname), $id, $_SESSION['user']]);
+	function edit_student(int $id, string $fname, string $lname, ?string $note=null): int {
+		$q = "UPDATE students SET fname=?, lname=?, note=? WHERE id=? AND user=?";
+		$this->execute_query($q, [trim($fname), trim($lname), $note, $id, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 	

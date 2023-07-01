@@ -91,7 +91,18 @@ table th {
 	text-align: left;
 }
 table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
-.nullscore { color: #AAA; }
+.score:empty::before, .note:empty::before {
+	content: '—';
+	color: #AAA;
+}
+
+td.note {
+	text-overflow: ellipsis;
+	max-width: 150px;
+	overflow: hidden;
+	white-space: nowrap;
+	font-size: small;
+}
 
 td.addnew, #roster tfoot td { padding: 0 !important; } /* Replace with :has(a) when Firefox gets support */
 tfoot a {
@@ -148,6 +159,10 @@ input.error { box-shadow: 0 0 3px 1px #D22; }
 td.score:hover, table.sortable th:hover {
 	cursor: pointer;
 	background: rgba(0,0,0,0.05);
+}
+td.editing ~ td.score {
+	cursor: auto;
+	background: none;
 }
 
 .events tfoot {
@@ -218,7 +233,7 @@ span.num::before { content: ' / '; }
 .edit, .actions a {
 	color: #AAA;
 	display: inline-block;
-	padding: 0 0.6em;
+	padding: 0 0.5em;
 	position: relative;
 	height: 12px; width: 12px;
 	background-size: 12px 12px;

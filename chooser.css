@@ -29,17 +29,28 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #sinfo {
 	margin: 100px auto 0;
 	background: rgba(255,255,255,0.15);
-	padding: 20px 0 0;
+	padding: 2.25em 0 0;
 	border-radius: 10px;
 	visibility: hidden;
 }
 #sinfo, #pick, #classlist a { max-width: 800px; }
+#sinfo h2 { margin: 0; }
+.note {
+	margin: 0.25em 3em 0;
+	font-size: smaller;
+	font-style: italic;
+	color: #CCC;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.5em;
+}
 
 #actions {
 	padding: 0; margin: 0;
 	list-style: none;
 	display: flex;
-	margin: 2em 0 0;
+	margin: 1.75em 0 0;
 }
 #actions li { flex: 1; }
 #actions button {

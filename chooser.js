@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('pick')?.addEventListener('click', function(e) {
 		currentStudent = studentSelect(roster);
 		document.getElementById('sinfo').style.visibility = 'visible';
-		document.getElementById('sname').innerHTML = currentStudent.fname+' '+currentStudent.lname;
+		document.getElementById('sname').textContent = currentStudent.fname+' '+currentStudent.lname;
+		document.querySelector('.note').textContent = currentStudent.note;
 		for (const btn of actions) btn.classList.remove('picked');
 		document.getElementById('actions').classList.remove('picked');
 	});

@@ -8,6 +8,8 @@ if (!$classid || !$class) {
 	exit;
 }
 
+function escape_csv(?string $str): ?string { return str_replace('"', '""', $str); }
+
 //Disable caching
 $now = gmdate("D, d M Y H:i:s");
 header("Expires: Tue, 03 Jul 2001 06:00:00 GMT");
@@ -25,10 +27,11 @@ header("Content-Disposition: attachment;filename=".str_replace(' ', '-', strtolo
 header("Content-Transfer-Encoding: binary");
 
 //Output CSV
-echo '"fname", "lname", "numerator", "denominator", "score"'.PHP_EOL;
+echo '"fname", "lname", "note", "numerator", "denominator", "score"'.PHP_EOL;
 foreach ($sql->get_roster($classid, true) as $student) {
-	echo "\"{$student->fname}\",";
-	echo "\"{$student->lname}\",";
+	echo '"'.escape_csv($student->fname).'",';
+	echo '"'.escape_csv($student->lname).'",';
+	echo '"'.escape_csv($student->note ?? '').'",';
 	echo '"'.($student->score ?: '').'",';
 	echo "\"{$student->denominator}\",";
 	echo '"'.($student->denominator ? round($student->score/$student->denominator*100) : '').'"'.PHP_EOL;

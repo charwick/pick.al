@@ -28,10 +28,10 @@ function makeInput(elements, attrs) {
 		for (const a of container.querySelectorAll('.actions a'))
 			attrs['actions'].push(a.getAttribute('class'));
 	}
+	if (!('required' in attrs)) attrs['required'] = true;
 
 	clearPopups();
 	for (const element of elements) {
-		element.classList.add('editing');
 		let inp;	
 		if (attrs.type=='select') {
 			inp = document.createElement('select');
@@ -43,12 +43,15 @@ function makeInput(elements, attrs) {
 			inp = document.createElement('input');
 			inp.type = attrs.type || 'text';
 			inp.value = element.textContent.replace('✎','');
-			for (const attr of ['min', 'max', 'placeholder'])
-				if (attr in attrs)
-					inp.setAttribute(attr, attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr])
+			for (const attr of ['min', 'max', 'placeholder', 'required'])
+				if (attr in attrs) {
+					const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
+					if (val !== false) inp.setAttribute(attr, val);
+				}
 		}
 
-		inp.name = element.id;
+		inp.name = element.id || element.getAttribute('class');
+		element.classList.add('editing');
 		element.pickalAttrs = attrs
 		inp.oldValue = inp.value;
 
@@ -167,7 +170,7 @@ function sendInfo(elements, data, actions, after, errorfn) {
 		const inp = element.querySelector('input,select');
 		inp.classList.remove('error');
 		if (Object.hasOwn(inp, 'validate') && !inp.validate) continue;
-		if (inp.value == '') {
+		if (inp.required && inp.value == '') {
 			inp.classList.add('error');
 			inp.focus();
 			blank = true; //Don't return quite yet, so we can check all our inputs

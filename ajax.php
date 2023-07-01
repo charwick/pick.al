@@ -25,6 +25,7 @@ switch ($req) {
 			if (!$i) {
 				$fnkey = array_search('fname', $row);
 				$lnkey = array_search('lname', $row);
+				$notekey = array_search('note', $row);
 				
 				//Invalid CSV
 				if ($fnkey===false || $lnkey===false) {
@@ -32,8 +33,9 @@ switch ($req) {
 					exit;
 				}
 			} else {
-				$id = $sql->add_student($row[$fnkey], $row[$lnkey], $_POST['class']);
-				if ($id) $added[] = ['id'=>$id, 'fname'=>$row[$fnkey], 'lname'=>$row[$lnkey]];
+				$note = $notekey ? $row[$notekey] : null;
+				$id = $sql->add_student($_POST['class'], $row[$fnkey], $row[$lnkey], $note);
+				if ($id) $added[] = ['id'=>$id, 'fname'=>$row[$fnkey], 'lname'=>$row[$lnkey], 'note'=>$note];
 			}
 			$i++;
 		}
@@ -79,13 +81,13 @@ switch ($req) {
 		break;
 	
 	case 'editstudent':
-		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname']);
+		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname'], $_GET['note']);
 		if ($response) echo $response;
 		else http_response_code(403);
 		break;
 	
 	case 'addstudent':
-		$id = $sql->add_student($_GET['fname'], $_GET['lname'], $_GET['classid']);
+		$id = $sql->add_student($_GET['classid'], $_GET['fname'], $_GET['lname'], $_GET['note']);
 		if ($id) echo $id;
 		else http_response_code(403);
 		break;

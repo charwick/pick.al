@@ -40,10 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			let tr = e.target.parentNode.parentNode,
 				td_fn = tr.querySelector('.fname'),
-				td_ln = tr.querySelector('.lname');
+				td_ln = tr.querySelector('.lname'),
+				td_note = tr.querySelector('.note');
 			if (e.target.classList.contains('edit'))
-				makeInput([td_fn, td_ln], {placeholder: ['First Name', 'Last Name'], data: function(inputs) {
-					return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value];
+				makeInput([td_fn, td_ln, td_note], {placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false], data: function(inputs) {
+					return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value];
 				}});
 			else if (e.target.classList.contains('save')) td_fn.save();
 			else if (e.target.classList.contains('cancel')) td_fn.cancel();
@@ -149,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			//Event detail modal
 			} else if (e.target.classList.contains('score')) {
 				tr = e.target.parentNode;
+				if (tr.querySelector('.lname').classList.contains('editing')) return;
 				const req = new XMLHttpRequest();
 				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
 				req.onload = function() {
@@ -225,16 +227,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (this.classList.contains('disabled')) return;
 		this.classList.add('disabled');
 		
-		const tr = studentRow('','', ['cancel', 'save']),
-			tds = [tr.querySelector('.fname'), tr.querySelector('.lname')],
+		const tr = studentRow('','','', ['cancel', 'save']),
+			tds = [tr.querySelector('.fname'), tr.querySelector('.lname'), tr.querySelector('.note')],
 			after = (response) => {
 				tr.dataset.id = response;
 				const snum = document.getElementById('num_students');
 				snum.textContent = parseInt(snum.textContent)+1;
 				document.querySelector('#roster .addnew a').classList.remove('disabled');
-				tr.querySelector('.nullscore').classList.add('score');
 			}
-		makeInput(tds, {placeholder: ['First Name', 'Last Name'], actions: ['edit', 'excuses', 'delete'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value]; }});
+		makeInput(tds, {placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false], actions: ['edit', 'excuses', 'delete'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value]; }});
 		for (const td of tds) {
 			td.cancel = function() {
 				tr.remove();
@@ -358,13 +359,17 @@ function makeSortable(table, defaultsort, defaultdesc) {
 		const tbody = table.querySelector('tbody');
 		let rows = Array.from(tbody.querySelectorAll('tr'));
 		rows.sort(function(a,b) {
-			if (sortby!='score') return a.querySelector('.'+sortby).textContent.localeCompare(b.querySelector('.'+sortby).textContent) * (desc ? 1 : -1);
-			else {
+			if (sortby!='score') {
+				const atext = a.querySelector('.'+sortby).textContent, btext = b.querySelector('.'+sortby).textContent;
+				if (!atext && btext) return (desc ? 1 : -1);
+				else if (atext && !btext) return (desc ? -1 : 1);
+				else return atext.localeCompare(btext) * (desc ? 1 : -1);
+			} else {
 				const regex = /^(\d+(\.\d+)?)\/(\d+)\s+\((\d+)%?\)$/;
 				let vals = [];
 				for (const element of [a, b]) {
 					const text = element.querySelector('.'+sortby).textContent;
-					vals.push(text=='—' ? -1 : parseInt(text.match(regex)[4]));
+					vals.push(text=='' ? -1 : parseInt(text.match(regex)[4]));
 				}
 				return (vals[1] - vals[0])  * (desc ? 1 : -1);
 			}
@@ -404,13 +409,7 @@ function updateScore(student, opts) {
 		num += schemae[schema][opts.newval].value;
 	} else if (opts.action=='update') num += schemae[schema][opts.newval].value - schemae[schema][opts.oldval].value;
 
-	if (den) {
-		rostercell.textContent = num+'/'+den+' ('+Math.round(num/den*100)+'%)';
-		rostercell.classList.remove('nullscore');
-	} else {
-		rostercell.textContent = '—';
-		rostercell.classList.add('nullscore');
-	}
+	rostercell.textContent = den ? num+'/'+den+' ('+Math.round(num/den*100)+'%)' : '';
 	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
 
 	//Update modal totals if necessary
@@ -480,10 +479,10 @@ function infoElement(message, classname, tag) {
 	return info;
 }
 
-function studentRow(col1, col2, actions=[]) {
+function studentRow(col1, col2, col3, actions=[]) {
 	const stable = document.getElementById('roster').querySelector('tbody'),
 		tr = document.createElement('tr');
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="actions"></td><td class="nullscore">—</td>';
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="actions"></td><td class="score"></td>';
 	tr.querySelector('.actions').append(...actionButtons(actions));
 	stable.append(tr);
 	return tr;
@@ -628,8 +627,7 @@ function uploadCSV(e) {
 				const info = infoElement("Uploaded "+response.length+" students")
 				document.querySelector('#students h2').after(info);
 				for (const row of response) {
-					const tr = studentRow(row['fname'], row['lname'], ['edit', 'excuses', 'delete']);
-					tr.querySelector('.nullscore').classList.add('score');
+					const tr = studentRow(row['fname'], row['lname'], row['note'], ['edit', 'excuses', 'delete']);
 					tr.dataset.id = row['id'];
 				}
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;

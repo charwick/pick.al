@@ -119,7 +119,8 @@ if (isset($_POST['name'])) {
 					<thead>
 						<tr>
 							<th class="fname">First name</th>
-							<th class="lname" colspan="2">Last name</th>
+							<th class="lname">Last name</th>
+							<th class="note" colspan="2">Note</th>
 							<th class="score">Score</th>
 						</tr>
 					</thead>
@@ -130,10 +131,10 @@ if (isset($_POST['name'])) {
 							echo "<tr data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
 								echo "<td class='fname'>{$student->fname}</td>";
 								echo "<td class='lname'>{$student->lname}</td>";
+								echo "<td class='note'>{$student->note}</td>";
 								echo '<td class="actions"></td>';
 								echo '<td class="score'.($student->score===null ? ' nullscore' : '').'">';
-									if ($student->score===null) echo '—';
-									else echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
+									if ($student->score!==null) echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
 								echo "</td>";
 							echo "</tr>";
 							$row = !$row;
@@ -141,7 +142,7 @@ if (isset($_POST['name'])) {
 					?></tbody>
 					<tfoot>
 						<tr>
-							<td colspan="3" class="addnew"><a href="#" title="New Student">+</a></td>
+							<td colspan="4" class="addnew"><a href="#" title="New Student">+</a></td>
 							<td class="uploadcsv"><a href="#" title="Upload CSV">CSV</a></td>
 						</tr>
 					</tfoot>
