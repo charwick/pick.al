@@ -75,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				clearPopups();
 				const popup = document.createElement('div'),
 					inp = document.createElement('input'),
-					erect = e.target.getBoundingClientRect();
+					erect = e.target.getBoundingClientRect(),
+					subactions = document.createElement('span');
 			
 				tr.classList.add('nottip');
 				lname.classList.add('editing');
@@ -84,47 +85,64 @@ document.addEventListener('DOMContentLoaded', () => {
 				inp.type = 'date';
 				inp.value = tr.dataset.excused;
 				inp.oldValue = inp.value;
-				popup.appendChild(inp);
+				subactions.classList.add('actions');
+				subactions.append(...actionButtons(['save', 'cancel']))
+				popup.append(inp, subactions);
 				popup.style.top = (erect.top+window.pageYOffset-40)+'px';
-				document.body.appendChild(popup);
+				document.body.append(popup);
 				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
 				inp.focus();
+
+				popup.save = function() {
+					if (inp.value == inp.oldValue) {
+						popup.solidify();
+						return;
+					}
+
+					const req = new XMLHttpRequest();
+					req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
+					req.onload = function() {
+						if (parseInt(this.response) != 1) inp.classList.add('error');
+						else {
+							const exc = new Date(inp.value),
+								now = new Date(),
+								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+							if (modDate > now) {
+								tr.dataset.excused = inp.value;
+								e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+							} else {
+								delete tr.dataset.excused;
+								e.target.title = "Set excused absences";
+							}
+							popup.solidify();
+						}
+					};
+					req.onerror = () => { inp.classList.add('error'); };
+					req.send();
+				}
+
+				popup.solidify = function() {
+					tr.classList.remove('nottip');
+					tr.querySelector('.lname').classList.remove('editing')
+					popup.remove();
+				}
 			
 				inp.addEventListener('keydown', function(e2) {
 					if (e2.key == "Enter") {
 						e2.preventDefault();
-						if (inp.value == inp.oldValue) {
-							popup.remove();
-							return;
-						}
-					
-						const req = new XMLHttpRequest();
-						req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
-						req.onload = function() {
-							if (parseInt(this.response) != 1) inp.classList.add('error');
-							else {
-								const exc = new Date(inp.value),
-									now = new Date(),
-									modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
-								if (modDate > now) {
-									tr.dataset.excused = inp.value;
-									e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-								} else {
-									delete tr.dataset.excused;
-									e.target.title = "Set excused absences";
-								}
-								tr.classList.remove('nottip');
-								tr.querySelector('.lname').classList.remove('editing');
-								popup.remove();
-							}
-						};
-						req.onerror = () => { inp.classList.add('error'); };
-						req.send();
+						popup.save();
 					} else if (e2.key == "Escape") {
 						e2.preventDefault();
-						tr.classList.remove('nottip');
-						tr.querySelector('.lname').classList.remove('editing')
-						popup.remove();
+						popup.solidify();
+					}
+				});
+				popup.addEventListener('click', function(e2) {
+					if (e2.target.classList.contains('save')) {
+						e2.preventDefault();
+						popup.save();
+					} else if (e2.target.classList.contains('cancel')) {
+						e2.preventDefault();
+						popup.solidify();
 					}
 				});
 			

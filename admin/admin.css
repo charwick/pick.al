@@ -205,6 +205,15 @@ span.num::before { content: ' / '; }
 .cancel { background: url('../icon/x-lg.svg') center no-repeat; }
 .delete { background: url('../icon/trash3-fill.svg') center no-repeat; }
 .excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
+.popup .save { background-image: url('../icon/svg.php?icon=check-lg&color=FFF'); }
+.popup .cancel { background-image: url('../icon/svg.php?icon=x-lg&color=FFF'); }
+.popup .actions { margin-left: 10px; }
+.popup .actions a {
+	opacity: 0.5;
+	height: 16px; width: 16px;
+	background-size: 16px 16px;
+	margin-bottom: -3px;
+}
 
 .edit, .actions a {
 	color: #AAA;
