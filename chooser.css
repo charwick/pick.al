@@ -27,17 +27,19 @@ button:disabled, .picked button { opacity: 0.25; }
 button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #sinfo {
-	margin: 100px auto 0;
+	margin: 80px auto 0;
 	background: rgba(255,255,255,0.15);
 	padding: 2.25em 0 0;
 	border-radius: 10px;
 	visibility: hidden;
 }
 #sinfo, #pick, #classlist a { max-width: 800px; }
-#sinfo h2 { margin: 0; }
+#sinfo h2 {
+	margin: 0;
+	font-size: 1.75em;
+}
 .note {
-	margin: 0.25em 3em 0;
-	font-size: smaller;
+	margin: 0.5em 2em 0;
 	font-style: italic;
 	color: #CCC;
 	white-space: nowrap;
@@ -50,7 +52,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	padding: 0; margin: 0;
 	list-style: none;
 	display: flex;
-	margin: 1.75em 0 0;
+	margin: 1.5em 0 0;
 }
 #actions li { flex: 1; }
 #actions button {

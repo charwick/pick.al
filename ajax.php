@@ -11,43 +11,17 @@ header("Last-Modified: {$now} GMT");
 $req = $_POST['req'] ?? $_GET['req'];
 
 switch ($req) {
-	case 'writeevent':
-		echo $sql->new_event($_GET['rosterid'], $_GET['result']);
-		break;
-	
-	case 'uploadroster':
-		$i=0;
-		$added = [];
-		$rows = preg_split('/\r\n|\r|\n/', $_POST['csv']);
-		foreach ($rows as $row) {
-			if (!$row) continue;
-			$row = str_getcsv($row);
-			if (!$i) {
-				$fnkey = array_search('fname', $row);
-				$lnkey = array_search('lname', $row);
-				$notekey = array_search('note', $row);
-				
-				//Invalid CSV
-				if ($fnkey===false || $lnkey===false) {
-					echo 'false';
-					exit;
-				}
-			} else {
-				$note = $notekey ? $row[$notekey] : null;
-				$id = $sql->add_student($_POST['class'], $row[$fnkey], $row[$lnkey], $note);
-				if ($id) $added[] = ['id'=>$id, 'fname'=>$row[$fnkey], 'lname'=>$row[$lnkey], 'note'=>$note];
-			}
-			$i++;
-		}
-		echo json_encode($added);
-		break;
-	
+
+	//=========
+	// CLASSES
+	//=========
+
 	case 'updateclassinfo':
 		$response = $sql->edit_class($_GET['class'], $_GET['k'], $_GET['v']);
 		if ($response) echo $response;
 		else http_response_code(403);
 		break;
-	
+
 	case 'schemae':
 		//Figure out the pattern a schema has to fit
 		$events = $sql->get_events_by_class($_GET['class']);
@@ -80,6 +54,10 @@ switch ($req) {
 		echo $schema->output_buttons(true);
 		break;
 	
+	//==========
+	// STUDENTS
+	//==========
+
 	case 'editstudent':
 		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname'], $_GET['note']);
 		if ($response) echo $response;
@@ -99,9 +77,44 @@ switch ($req) {
 	case 'studentexcused':
 		echo $sql->student_excused($_GET['id'], $_GET['excused']);
 		break;
+
+	case 'uploadroster':
+		$i=0;
+		$added = [];
+		$rows = preg_split('/\r\n|\r|\n/', $_POST['csv']);
+		foreach ($rows as $row) {
+			if (!$row) continue;
+			$row = str_getcsv($row);
+			if (!$i) {
+				$fnkey = array_search('fname', $row);
+				$lnkey = array_search('lname', $row);
+				$notekey = array_search('note', $row);
+				
+				//Invalid CSV
+				if ($fnkey===false || $lnkey===false) {
+					echo 'false';
+					exit;
+				}
+			} else {
+				$note = $notekey ? $row[$notekey] : null;
+				$id = $sql->add_student($_POST['class'], $row[$fnkey], $row[$lnkey], $note);
+				if ($id) $added[] = ['id'=>$id, 'fname'=>$row[$fnkey], 'lname'=>$row[$lnkey], 'note'=>$note];
+			}
+			$i++;
+		}
+		echo json_encode($added);
+		break;
 	
+	//========
+	// EVENTS
+	//========
+
 	case 'events':
 		echo json_encode($sql->get_events($_GET['student']));
+		break;
+
+	case 'writeevent':
+		echo $sql->new_event($_GET['rosterid'], $_GET['result']);
 		break;
 	
 	case 'updateevent':
@@ -111,6 +124,10 @@ switch ($req) {
 	case 'deleteevent':
 		echo $sql->delete_event($_GET['event']);
 		break;
+
+	//========
+	// USERS
+	//========
 	
 	case 'userexists':
 		$fields = [];

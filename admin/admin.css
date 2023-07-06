@@ -103,6 +103,7 @@ td.note {
 	white-space: nowrap;
 	font-size: small;
 }
+td input { max-width: 100%; }
 
 td.addnew, #roster tfoot td { padding: 0 !important; } /* Replace with :has(a) when Firefox gets support */
 tfoot a {

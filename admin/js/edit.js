@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
 			e.preventDefault();
 			let content = document.createElement('div');
-			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code> and <code>lname</code> in the header row.</p>'
+			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.</p>'
 				+'<p><label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>';
 			
 			const csvElement = content.querySelector('#csvfile'),
