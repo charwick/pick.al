@@ -45,7 +45,7 @@ class chooser_query extends mysqli {
 	
 	function new_class(string $name, string $semester, int $year, string $activeuntil, string $schema): int {
 		$q = "INSERT INTO classes (name, semester, year, activeuntil, user, `schema`) VALUES (?, ?, ?, ?, ?, ?)";
-		$this->execute_query($q, [trim($name), $semester, $year, $activeuntil, $_SESSION['user'], $schema]);
+		$this->execute_query($q, [sanitize($name), $semester, $year, $activeuntil, $_SESSION['user'], $schema]);
 		return $this->insert_id;
 	}
 	
@@ -54,7 +54,7 @@ class chooser_query extends mysqli {
 		if (!in_array($key, $keys)) return False;
 		
 		$q = "UPDATE classes SET `{$key}`=? WHERE id=? AND user=?";
-		$this->execute_query($q, [trim($val), $class, $_SESSION['user']]);
+		$this->execute_query($q, [sanitize($val), $class, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 	
@@ -105,13 +105,13 @@ class chooser_query extends mysqli {
 
 	function add_student(int $class, string $fname, string $lname, ?string $note=null): int {
 		$q = "INSERT INTO students (fname, lname, note, class, user) VALUES (?, ?, ?, ?, ?)";
-		$this->execute_query($q, [trim($fname), trim($lname), $note, $class, $_SESSION['user']]);
+		$this->execute_query($q, [sanitize($fname), sanitize($lname), sanitize($note), $class, $_SESSION['user']]);
 		return $this->insert_id;
 	}
 	
 	function edit_student(int $id, string $fname, string $lname, ?string $note=null): int {
 		$q = "UPDATE students SET fname=?, lname=?, note=? WHERE id=? AND user=?";
-		$this->execute_query($q, [trim($fname), trim($lname), $note, $id, $_SESSION['user']]);
+		$this->execute_query($q, [sanitize($fname), sanitize($lname), sanitize($note), $id, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 	
@@ -224,7 +224,7 @@ class chooser_query extends mysqli {
 	function new_user(string $username, string $email, string $password='', ?string $orcid=null): int {
 		if (!$password && !$orcid) return false;
 		$q = "INSERT INTO users (username, email, password, orcid, registered) VALUES (?, ?, ?, ?, NOW())";
-		$this->execute_query($q, [$username, $email, $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
+		$this->execute_query($q, [sanitize($username), sanitize($email), $password ? password_hash($password, PASSWORD_DEFAULT) : '', $orcid]);
 		return $this->insert_id;
 	}
 
@@ -234,7 +234,7 @@ class chooser_query extends mysqli {
 		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";
 		
 		$q = "UPDATE users SET {$key}=? WHERE id=?";
-		$this->execute_query($q, [$val ? trim($val) : $val, $_SESSION['user']]);
+		$this->execute_query($q, [$val ? sanitize($val) : $val, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 
@@ -343,6 +343,10 @@ class Schema {
 //==================
 // HELPER FUNCTIONS
 //==================
+
+function sanitize(string $string): string {
+	return trim(htmlspecialchars($string));
+}
 
 //https://stackoverflow.com/questions/3512311/how-to-generate-lighter-darker-color-with-php
 function adjustBrightness(string $hexCode, $adjustPercent): string {

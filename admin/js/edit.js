@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						tbody.prepend(evtr);
 					});
 					
-					modal(tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
+					modal(tr.querySelector('.fname').innerHTML+' '+tr.querySelector('.lname').innerHTML + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
 				};
 				req.onerror = () => {  };
 				req.send();
@@ -495,11 +495,17 @@ function eventRow(event, namecol) {
 		res = invertSchema()[event.result];
 	evtr.dataset.id = event.id;
 	evtr.dataset.student = event.student;
-	evtr.innerHTML = '<td>'+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()+'</td>'
-		+(namecol ? '<td>'+event.fname+' '+event.lname+'</td>' : '')
-		+'<td data-result="'+res+'"><div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span></td>'
-		+'<td class="actions"></td>';
-	evtr.querySelector('.actions').append(...actionButtons(['edit', 'delete']));
+
+	let tds = [];
+	for (let i=0; i<4; i++) tds.push(document.createElement('td'));
+	tds[0].textContent = modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime();
+	tds[2].dataset.result = res;
+	tds[2].innerHTML = '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>';
+	tds[3].classList.add('actions');
+	tds[3].append(...actionButtons(['edit', 'delete']));
+	if (namecol) tds[1].innerHTML = event.fname+' '+event.lname; //Use InnerHTML so the HTML entities evaluate
+	else tds.splice(1,1);
+	evtr.append(...tds);
 	return evtr;
 }
 
@@ -577,8 +583,8 @@ function editEvent(row, selected) {
 					document.querySelector('#recentevents tbody').prepend(eventRow({
 						id: row.dataset.id,
 						student: row.dataset.student,
-						fname: studentRow.querySelector('.fname').textContent,
-						lname: studentRow.querySelector('.lname').textContent,
+						fname: studentRow.querySelector('.fname').innerHTML,
+						lname: studentRow.querySelector('.lname').innerHTML,
 						result: schemae[schema][result].value
 					}, true))
 				} else {
