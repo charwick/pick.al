@@ -51,8 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
 					if (newpw.value != confirmpw.value) {
 						newpw.classList.add('error');
 						confirmpw.classList.add('error');
-						inlineError(element, 'Passwords do not match.');
-						return;
+						return inlineError(element, 'Passwords do not match.');
+					}  else if (newpw.value.length < 5) {
+						newpw.classList.add('error');
+						return inlineError(element, 'Password must be at least 5 characters.');
+					} else if (newpw.value.toLowerCase().includes(document.querySelector('h1 .num').textContent.toLowerCase())) {
+						newpw.classList.add('error');
+						return inlineError(element, 'Password cannot contain the username.');
 					}
 					sendInfo(fields, ['req=editpw', 'current='+(oldpw ? oldpw.value : ''), 'new='+newpw.value], ['edit'], pwafter, pwerror);
 				}

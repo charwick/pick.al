@@ -240,7 +240,11 @@ class chooser_query extends mysqli {
 
 	function edit_pw(string $old, string $new, ?int $userid=null, bool $reset=false): int {
 		$user = $userid ? $this->get_user_by('id', $userid) : $this->current_user();
-		if (!$reset && $user->password && !password_verify($old, $user->password)) return false;
+		if (
+			(!$reset && $user->password && !password_verify($old, $user->password))
+			|| strlen($new) < 5
+			|| str_contains(strtolower($new), strtolower(trim($user->username)))
+		) return false;
 		if ($old==$new) return 1;
 		$q = "UPDATE users SET password=?, pwchanged=NOW() WHERE id=?";
 		$this->execute_query($q, [password_hash($new, PASSWORD_DEFAULT), $user->id]);

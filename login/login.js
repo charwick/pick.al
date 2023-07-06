@@ -30,15 +30,24 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 		
-		//Validate for password match, if applicable
+		//Validate password, if applicable
 		if (tab=='register' || document.body.classList.contains('choosepw')) {
-			const pw = inpContainer.querySelector('input[name="password"]'),
+			const uname = inpContainer.querySelector('input[name="username"]'),
+				pw = inpContainer.querySelector('input[name="password"]'),
 				pwconfirm = inpContainer.querySelector('input[name="confirm"]');
 			if (pw.value != pwconfirm.value) {
 				pass = false;
 				infoElement('The passwords do not match.', 'error');
 				pw.classList.add('error');
 				pwconfirm.classList.add('error');
+			} else if (pw.value.length < 5) {
+				pass = false;
+				infoElement('Password must be at least 5 characters.', 'error');
+				pw.classList.add('error');
+			} else if (pw.value.toLowerCase().includes(uname.value.toLowerCase())) {
+				pass = false;
+				infoElement('Password cannot contain the username.', 'error');
+				pw.classList.add('error');
 			}
 		}
 		if (!pass) return;

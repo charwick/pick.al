@@ -10,6 +10,8 @@ function validate() {
 	global $sql;
 	if (isset($_POST['password']) && $_POST['password'] != $_POST['confirm']) return 'The passwords did not match.';
 	elseif (!((isset($_POST['password']) && $_POST['password']) || isset($_SESSION['orcid'])) || !$_POST['username'] || !$_POST['email']) return 'All fields are required.';
+	elseif (strlen($_POST['password']) < 5) return 'Password must be at least 5 characters.';
+	elseif (str_contains(strtolower($_POST['password']), strtolower(trim($_POST['username'])))) return 'Password cannot contain the username.';
 	elseif ($sql->get_user_by('username', $_POST['username'])) return "The username {$_POST['username']} already exists. Please choose another.";
 	elseif ($sql->get_user_by('email', $_POST['email'])) {
 		$message = "The email address {$_POST['email']} is already registered. ";
@@ -33,7 +35,7 @@ elseif (!isset($sql)) exit; //Only run from the front page
 elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 	$bodyclass = 'resetpw';
 
-//Actually reset the password
+//Prompt the user for a new password
 } elseif (isset($_GET['action']) && $_GET['action']=='pwreset') {
 	$user = $sql->get_user_by('id', $_GET['user']);
 	if (!$user || $user->options->pwreset->key!=$_GET['key'] || (int)$user->options->pwreset->key > time()) $message = 'Invalid password reset link. Please request another.';
@@ -47,6 +49,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 		else {
 			$reset = $sql->edit_pw('', $_POST['password'], $user->id, true);
 			if ($reset) $message = 'Password has been reset. You may now log in with your new password.';
+			else $message = 'There was a problem with your new password. Please try again.'; //Javascript should enforce pw reqs on the frontend, so a user should never see this unless trying to do something fishy
 			$defaulttab = 'login';
 		}
 

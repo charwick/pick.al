@@ -1,4 +1,5 @@
 <?php function userbar($sql, $backlink=null, $backtext=null): void {
+	global $user;
 	$user = $sql->current_user(); ?>
 	<div id="userbar">
 		<?php if ($backlink) echo "<a href='{$backlink}' id='backlink'>← {$backtext}</a>"; ?>
@@ -13,9 +14,12 @@
 	</div>
 <?php }
 
-function footer(): void { ?>
+function footer(): void {
+	global $user; ?>
 	<footer id="footer">
 		<span>Pick.al is developed and maintained by <a href="https://cameronharwick.com">Cameron Harwick</a></span>
-		<span><a href="https://github.com/charwick/student-chooser/issues">Report a bug / Suggest a feature</a></span>
+		<?php if ($user) { ?>
+			<span><a href="https://github.com/charwick/pick.al/issues">Report a bug / Suggest a feature</a></span>
+		<?php } ?>
 	</footer>
 <?php }
