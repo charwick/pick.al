@@ -228,7 +228,7 @@ class chooser_query extends mysqli {
 		return $this->insert_id;
 	}
 
-	function edit_user(string $key, string $val): int {
+	function edit_user(string $key, ?string $val): int {
 		$keys = ['email', 'orcid'];
 		if (!in_array($key, $keys) || !isset($_SESSION['user'])) return False;
 		if ($key == 'email' && $this->get_user_by('email', $val)) return "Email already exists";

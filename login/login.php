@@ -10,8 +10,8 @@ function validate() {
 	global $sql;
 	if (isset($_POST['password']) && $_POST['password'] != $_POST['confirm']) return 'The passwords did not match.';
 	elseif (!((isset($_POST['password']) && $_POST['password']) || isset($_SESSION['orcid'])) || !$_POST['username'] || !$_POST['email']) return 'All fields are required.';
-	elseif (strlen($_POST['password']) < 5) return 'Password must be at least 5 characters.';
-	elseif (str_contains(strtolower($_POST['password']), strtolower(trim($_POST['username'])))) return 'Password cannot contain the username.';
+	elseif (isset($_POST['password']) && strlen($_POST['password']) < 5 && !isset($_SESSION['orcid'])) return 'Password must be at least 5 characters.';
+	elseif (isset($_POST['password']) && str_contains(strtolower($_POST['password']), strtolower(trim($_POST['username'])))) return 'Password cannot contain the username.';
 	elseif ($sql->get_user_by('username', $_POST['username'])) return "The username {$_POST['username']} already exists. Please choose another.";
 	elseif ($sql->get_user_by('email', $_POST['email'])) {
 		$message = "The email address {$_POST['email']} is already registered. ";
