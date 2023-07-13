@@ -23,6 +23,6 @@ Bug reports and feature requests can be filed in the [issues tab](https://github
 
 ## Planned features
 
-* Undo and resubmit
+* Undo participation event
 * "Snooze" student on frontend
 * Custom frontend actions

@@ -1,26 +1,49 @@
 "use strict";
 var hist = [], //Reverse coded: current student = index[0]
-	histIndex = null;
+	histIndex = null,
+	currentAnim = false;
 
 document.addEventListener('DOMContentLoaded', () => {
 	
 	//Chooser button
 	document.getElementById('pick')?.addEventListener('click', function(e) {
+		if (currentAnim) return;
+		currentAnim = true;
+		setTimeout(() => { currentAnim = false; }, 250);
+
 		const student = new StudentEvent(studentSelect(roster));
-		if (histIndex != null) {
-			let element = hist[histIndex].element;
-			element.classList.add('out');
-			setTimeout(function() { element.remove(); }, 250);
-		}
+		if (histIndex != null) hist[histIndex].exit();
 		if (hist[0]?.event) hist.unshift(student);
 		else hist[0] = student;
 		histIndex = 0;
+		student.enter();
+		setButtons();
+	});
 
-		document.getElementById('sinfo').append(student.element);
-		setTimeout(function() { student.element.classList.remove('in'); }, 1); //JS will skip the animation without the timeout
-		this.disabled = true;
-		setTimeout(() => { this.disabled = false; }, 250);
-		
+	//Back button
+	document.getElementById('back')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		if (currentAnim) return;
+		currentAnim = true;
+		setTimeout(() => { currentAnim = false; }, 250);
+
+		hist[histIndex].exit(true);
+		histIndex++;
+		hist[histIndex].enter(true);
+		setButtons();
+	});
+	
+	//Forward button
+	document.getElementById('forward')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		if (currentAnim) return;
+		currentAnim = true;
+		setTimeout(() => { currentAnim = false; }, 250);
+
+		hist[histIndex].exit();
+		histIndex--;
+		hist[histIndex].enter();
+		setButtons();
 	});
 });
 
@@ -35,11 +58,9 @@ function StudentEvent(student) {
 		note = document.createElement('p'),
 		actionlist = document.createElement('ul'),
 		actions = [];
-	h2.id = 'sname';
 	h2.innerHTML = this.info.fname+' '+this.info.lname;
 	note.classList.add('note');
 	note.innerHTML = this.info.note;
-	actionlist.id = 'actions';
 	for (const s in schema) {
 		const li = document.createElement('li'),
 			btn = document.createElement('button');
@@ -57,7 +78,6 @@ function StudentEvent(student) {
 		actions.push(btn);
 	}
 	this.element.append(h2, note, actionlist);
-	this.element.classList.add('in');
 
 	this.send = function(result) {
 		const req = new XMLHttpRequest(),
@@ -97,6 +117,25 @@ function StudentEvent(student) {
 		req.onerror = () => { console.log('There was an error'); };
 		req.send();
 	};
+
+	this.enter = function(left) {
+		left = left ?? false;
+		this.element.classList.add(left ? 'out' : 'in')
+		document.getElementById('sinfo').append(this.element);
+		setTimeout(() => { this.element.classList.remove(left ? 'out' : 'in'); }, 1); //JS will skip the animation without the timeout
+	}
+	this.exit = function(right) {
+		right = right ?? false;
+		this.element.classList.add(right ? 'in' : 'out');
+		setTimeout(() => { this.element.remove(); }, 250);
+	}
+}
+
+function setButtons() {
+	if (histIndex < hist.length-1) document.getElementById('back').classList.remove('disabled');
+	else document.getElementById('back').classList.add('disabled');
+	if (histIndex) document.getElementById('forward').classList.remove('disabled');
+	else document.getElementById('forward').classList.add('disabled');
 }
 
 Array.prototype.random = function () { return this[Math.floor((Math.random()*this.length))]; }

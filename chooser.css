@@ -25,9 +25,30 @@ a.button, button, input[type='submit'] {
 	text-decoration: none;
 }
 button:disabled, .picked button { opacity: 0.25; }
-button.picked:disabled, .picked button.picked, #pick:disabled { opacity: 1; }
+button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #sinfo { position: relative; }
+#sinfo #actions {
+	background: transparent;
+	position: absolute;
+	margin: 1em 0 0;
+	padding: 0;
+	display: flex;
+	justify-content: space-between;
+}
+#actions a {
+	height: 3em; width: 3em;
+	text-indent: -9999px;
+	opacity: 0.5;
+}
+#actions a:hover { opacity: 0.75; }
+#actions a.disabled {
+	opacity: 0.1;
+	pointer-events: none;
+}
+#actions #back { background: url("icon/svg.php?icon=caret-left-fill&color=FFF") left/2.5em 2.5em no-repeat; }
+#actions #forward { background: url("icon/svg.php?icon=caret-right-fill&color=FFF") right/2.5em 2.5em no-repeat; }
+
 #sinfo > div {
 	margin: 80px auto 0;
 	background: rgba(255,255,255,0.15);
@@ -56,14 +77,14 @@ button.picked:disabled, .picked button.picked, #pick:disabled { opacity: 1; }
 	height: 1.5em;
 }
 
-#actions {
+#sinfo ul {
 	padding: 0; margin: 0;
 	list-style: none;
 	display: flex;
 	margin: 1.5em 0 0;
 }
-#actions li { flex: 1; }
-#actions button {
+#sinfo li { flex: 1; }
+#sinfo button {
 	width: 100%;
 	font-size: 4em;
 	padding: 10px 0;
@@ -73,12 +94,12 @@ button.picked:disabled, .picked button.picked, #pick:disabled { opacity: 1; }
 	background-position: center;
 	color: #FFF;
 }
-#actions li:first-child button { border-radius: 0 0 0 10px; }
-#actions li:last-child button { border-radius: 0 0 10px 0; }
+#sinfo li:first-child button { border-radius: 0 0 0 10px; }
+#sinfo li:last-child button { border-radius: 0 0 10px 0; }
 
 #pickwrap {
 	position: absolute;
-	bottom: 10vh;
+	bottom: 8vh;
 	left: 40px; right: 40px;
 }
 #pick {
@@ -89,6 +110,7 @@ button.picked:disabled, .picked button.picked, #pick:disabled { opacity: 1; }
 	font-size: 28px;
 }
 #pick:hover { background: #292;}
+#pick:active { background: #181; }
 
 #classlist {
 	margin: 0; padding: 0;

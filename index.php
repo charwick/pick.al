@@ -44,7 +44,12 @@ if ($classid) {
 		<a href="." title="Back" id="backbutton">←</a>
 		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
 
-		<div id="sinfo"></div>
+		<div id="sinfo">
+			<div id="actions">
+				<a href="#" id="back" class="disabled">Back</a>
+				<a href="#" id="forward" class="disabled">Forward</a>
+			</div>
+		</div>
 	
 		<div id="pickwrap">
 			<button id="pick">Choose Student</button>
