@@ -4,47 +4,9 @@ var hist = [], //Reverse coded: current student = index[0]
 	currentAnim = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-	
-	//Chooser button
-	document.getElementById('pick')?.addEventListener('click', function(e) {
-		if (currentAnim) return;
-		currentAnim = true;
-		setTimeout(() => { currentAnim = false; }, 250);
-
-		const student = new StudentEvent(studentSelect(roster));
-		if (histIndex != null) hist[histIndex].exit();
-		if (hist[0]?.event) hist.unshift(student);
-		else hist[0] = student;
-		histIndex = 0;
-		student.enter();
-		setButtons();
-	});
-
-	//Back button
-	document.getElementById('back')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		if (currentAnim) return;
-		currentAnim = true;
-		setTimeout(() => { currentAnim = false; }, 250);
-
-		hist[histIndex].exit(true);
-		histIndex++;
-		hist[histIndex].enter(true);
-		setButtons();
-	});
-	
-	//Forward button
-	document.getElementById('forward')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		if (currentAnim) return;
-		currentAnim = true;
-		setTimeout(() => { currentAnim = false; }, 250);
-
-		hist[histIndex].exit();
-		histIndex--;
-		hist[histIndex].enter();
-		setButtons();
-	});
+	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
+	document.getElementById('back')?.addEventListener('click', buttonFunc('back'));
+	document.getElementById('forward')?.addEventListener('click', buttonFunc('forward'));
 });
 
 function StudentEvent(student) {
@@ -54,6 +16,7 @@ function StudentEvent(student) {
 	
 	//Create the HTML
 	this.element = document.createElement('div');
+	this.element.classList.add('studentinfo');
 	const h2 = document.createElement('h2'),
 		note = document.createElement('p'),
 		actionlist = document.createElement('ul'),
@@ -78,6 +41,26 @@ function StudentEvent(student) {
 		actions.push(btn);
 	}
 	this.element.append(h2, note, actionlist);
+
+	//Touch event handlers
+	this.element.addEventListener('touchstart', (e) => {
+		this.swipetime = new Date().getTime();
+		this.swipepos = e.changedTouches[0].pageX;
+		this.element.style.transition = 'none';
+	});
+	this.element.addEventListener('touchmove', (e) => {
+		if (new Date().getTime() > this.swipetime + 100)
+			this.element.style.left = 'calc(50% + '+(e.changedTouches[0].pageX-this.swipepos)+'px)';
+	});
+	this.element.addEventListener('touchend', (e) => {
+		if (e.changedTouches[0].pageX-this.swipepos < -this.element.offsetWidth/3) {
+			if (histIndex) buttonFunc('forward')();
+			else buttonFunc('choose')();
+		} else if (histIndex < hist.length-1 && e.changedTouches[0].pageX-this.swipepos > this.element.offsetWidth/3)
+			buttonFunc('back')();
+		this.element.style.transition = null;
+		this.element.style.left = null;
+	});
 
 	this.send = function(result) {
 		const req = new XMLHttpRequest(),
@@ -127,7 +110,42 @@ function StudentEvent(student) {
 	this.exit = function(right) {
 		right = right ?? false;
 		this.element.classList.add(right ? 'in' : 'out');
-		setTimeout(() => { this.element.remove(); }, 250);
+		setTimeout(() => {
+			this.element.remove();
+			this.element.classList.remove(right ? 'in' : 'out');
+		}, 250);
+	}
+}
+
+//=================
+// BUTTON BEHAVIOR
+//=================
+
+function buttonFunc(action) {
+	return function(e) {
+		if (currentAnim) return;
+		currentAnim = true;
+		setTimeout(() => { currentAnim = false; }, 250);
+
+		if (action=='choose') {
+			const student = new StudentEvent(studentSelect(roster));
+			if (histIndex != null) hist[histIndex].exit();
+			if (hist[0]?.event) hist.unshift(student);
+			else hist[0] = student;
+			histIndex = 0;
+			student.enter();
+		
+		} else if (action=='back') {
+			hist[histIndex].exit(true);
+			histIndex++;
+			hist[histIndex].enter(true);
+		
+		} else if (action=='forward') {
+			hist[histIndex].exit();
+			histIndex--;
+			hist[histIndex].enter();
+		}
+		setButtons();
 	}
 }
 
