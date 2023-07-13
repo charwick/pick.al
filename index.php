@@ -59,7 +59,7 @@ if ($classid) {
 		</div>
 
 	<?php } else { ?>
-		<a href="admin/" id="adminbutton" class="button hollow">Admin</a>
+		<a href="admin/" id="adminbutton" class="button hollow">Manage Classes</a>
 
 		<h1 id="logo">Pick.al</h1>
 		

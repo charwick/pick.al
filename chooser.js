@@ -1,16 +1,20 @@
 "use strict";
-var currentStudent = null,
-	lastEvent = null;
+var hist = [], //Reverse coded: current student = index[0]
+	histIndex = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
 	const actions = document.querySelectorAll('#actions button');
 	
 	//Chooser button
 	document.getElementById('pick')?.addEventListener('click', function(e) {
-		currentStudent = studentSelect(roster);
+		const student = new StudentEvent(studentSelect(roster));
+		if (hist[0]?.event) hist.unshift(student);
+		else hist[0] = student;
+		histIndex = 0;
+
 		document.getElementById('sinfo').style.visibility = 'visible';
-		document.getElementById('sname').textContent = currentStudent.fname+' '+currentStudent.lname;
-		document.querySelector('.note').textContent = currentStudent.note;
+		document.getElementById('sname').innerHTML = student.info.fname+' '+student.info.lname;
+		document.querySelector('.note').innerHTML = student.info.note;
 		for (const btn of actions) btn.classList.remove('picked');
 		document.getElementById('actions').classList.remove('picked');
 	});
@@ -21,35 +25,56 @@ document.addEventListener('DOMContentLoaded', () => {
 			btn2.disabled = true;
 			btn2.classList.remove('picked');
 		}
-		const req = new XMLHttpRequest();
-		
+		hist[histIndex].send(schema[this.dataset.schema].value)
+	});
+
+});
+
+function StudentEvent(student) {
+	this.info = student; //This will update the original roster data too
+	this.event = null;
+	this.result = null;
+
+	this.send = function(result) {
+		const req = new XMLHttpRequest(),
+			actions = document.querySelectorAll('#actions button'),
+			that = this;
+		let btn;
+		for (const s in schema) if (schema[s].value==result) {
+			btn = document.querySelector('#actions button[data-schema="'+s+'"]');
+			break;
+		}
+
 		//Re-do button press (edit event)
-		if (btn.parentNode.parentNode.classList.contains('picked')) {
-			req.open('GET', 'ajax.php?req=updateevent&event='+lastEvent+'&result='+schema[this.dataset.schema].value, true);
+		if (this.event) {
+			req.open('GET', 'ajax.php?req=updateevent&event='+this.event+'&result='+result, true);
 			req.onload = function() {
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
+				that.info.score += result - that.result;
+				that.result = result;
 			}
 		
 		//Send event (create new)
 		} else {
-			req.open('GET', 'ajax.php?req=writeevent&rosterid='+currentStudent.id+'&result='+schema[this.dataset.schema].value, true);
+			req.open('GET', 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, true);
 			req.onload = function() {
 				btn.parentNode.parentNode.classList.add('picked');
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
-				lastEvent = parseInt(this.response);
-				if (currentStudent.score == null) currentStudent.score = 0;
-				currentStudent.score += schema[btn.dataset.schema].value;
-				currentStudent.denominator++;
+				that.event = parseInt(this.response);
+				that.result = result;
+				if (that.info.score == null) that.info.score = 0;
+				that.info.score += result;
+				that.info.denominator++;
 			};
 		}
+
 		req.onerror = () => { console.log('There was an error'); };
 		req.send();
-	});
-
-});
+	};
+}
 
 Array.prototype.random = function () { return this[Math.floor((Math.random()*this.length))]; }
 
