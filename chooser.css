@@ -4,11 +4,12 @@ body {
 	color: #EEE;
 	font: 1em/1.5em 'Lucida Grande', Calibri, sans-serif;
 	margin: 40px 20px;
+	overflow: hidden;
 }
 
 h1 {
 	font-weight: normal;
-	margin: 8vh 0 0;
+	margin: 6vh 0 0;
 	font-size: 2.5em;
 }
 p.subtitle {
@@ -24,16 +25,23 @@ a.button, button, input[type='submit'] {
 	text-decoration: none;
 }
 button:disabled, .picked button { opacity: 0.25; }
-button.picked:disabled, .picked button.picked { opacity: 1; }
+button.picked:disabled, .picked button.picked, #pick:disabled { opacity: 1; }
 
-#sinfo {
+#sinfo { position: relative; }
+#sinfo > div {
 	margin: 80px auto 0;
 	background: rgba(255,255,255,0.15);
 	padding: 2.25em 0 0;
 	border-radius: 10px;
-	visibility: hidden;
+	position: absolute;
+	transition: left 0.25s;
+	width: 100%;
+	left: 50%;
+	transform: translateX(-50%);
 }
-#sinfo, #pick, #classlist a { max-width: 800px; }
+#sinfo > .out { left: -420px; }
+#sinfo > .in { left: calc(100vw + 380px); } /* Asymmetric because of our centering trick with translateX */
+#sinfo > div, #pick, #classlist a { max-width: 800px; }
 #sinfo h2 {
 	margin: 0;
 	font-size: 1.75em;

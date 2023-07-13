@@ -43,16 +43,8 @@ if ($classid) {
 		<h1 id="classname"><?php echo $class->name; ?></h1>
 		<a href="." title="Back" id="backbutton">←</a>
 		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
-	
-		<div id="sinfo">
-			<h2 id="sname"><!-- Filled in by JS --></h2>
-			<p class="note"></p>
-		
-			<ul id="actions">
-				<?php foreach ($class->schema->items as $id => $item)
-					echo "<li><button data-schema='{$id}'>{$item['text']}</button></li>"; ?>
-			</ul>
-		</div>
+
+		<div id="sinfo"></div>
 	
 		<div id="pickwrap">
 			<button id="pick">Choose Student</button>

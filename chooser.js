@@ -1,47 +1,70 @@
 "use strict";
 var hist = [], //Reverse coded: current student = index[0]
-	histIndex = 0;
+	histIndex = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-	const actions = document.querySelectorAll('#actions button');
 	
 	//Chooser button
 	document.getElementById('pick')?.addEventListener('click', function(e) {
 		const student = new StudentEvent(studentSelect(roster));
+		if (histIndex != null) {
+			let element = hist[histIndex].element;
+			element.classList.add('out');
+			setTimeout(function() { element.remove(); }, 250);
+		}
 		if (hist[0]?.event) hist.unshift(student);
 		else hist[0] = student;
 		histIndex = 0;
 
-		document.getElementById('sinfo').style.visibility = 'visible';
-		document.getElementById('sname').innerHTML = student.info.fname+' '+student.info.lname;
-		document.querySelector('.note').innerHTML = student.info.note;
-		for (const btn of actions) btn.classList.remove('picked');
-		document.getElementById('actions').classList.remove('picked');
+		document.getElementById('sinfo').append(student.element);
+		setTimeout(function() { student.element.classList.remove('in'); }, 1); //JS will skip the animation without the timeout
+		this.disabled = true;
+		setTimeout(() => { this.disabled = false; }, 250);
+		
 	});
-
-	//Result buttons
-	for (const btn of actions) btn.addEventListener('click', function(e) {
-		for (const btn2 of actions) {
-			btn2.disabled = true;
-			btn2.classList.remove('picked');
-		}
-		hist[histIndex].send(schema[this.dataset.schema].value)
-	});
-
 });
 
 function StudentEvent(student) {
 	this.info = student; //This will update the original roster data too
 	this.event = null;
 	this.result = null;
+	
+	//Create the HTML
+	this.element = document.createElement('div');
+	const h2 = document.createElement('h2'),
+		note = document.createElement('p'),
+		actionlist = document.createElement('ul'),
+		actions = [];
+	h2.id = 'sname';
+	h2.innerHTML = this.info.fname+' '+this.info.lname;
+	note.classList.add('note');
+	note.innerHTML = this.info.note;
+	actionlist.id = 'actions';
+	for (const s in schema) {
+		const li = document.createElement('li'),
+			btn = document.createElement('button');
+		btn.dataset.schema = s;
+		btn.innerHTML = schema[s].text;
+		btn.addEventListener('click', (e) => {
+			for (const btn2 of actions) {
+				btn2.disabled = true;
+				btn2.classList.remove('picked');
+			}
+			this.send(schema[s].value)
+		});
+		li.append(btn);
+		actionlist.append(li);
+		actions.push(btn);
+	}
+	this.element.append(h2, note, actionlist);
+	this.element.classList.add('in');
 
 	this.send = function(result) {
 		const req = new XMLHttpRequest(),
-			actions = document.querySelectorAll('#actions button'),
 			that = this;
 		let btn;
 		for (const s in schema) if (schema[s].value==result) {
-			btn = document.querySelector('#actions button[data-schema="'+s+'"]');
+			btn = actionlist.querySelector('button[data-schema="'+s+'"]');
 			break;
 		}
 
