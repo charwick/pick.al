@@ -50,7 +50,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #actions #forward { background: url("icon/svg.php?icon=caret-right-fill&color=FFF") right/2.5em 2.5em no-repeat; }
 
 #sinfo > div {
-	margin: 80px auto 0;
+	margin: 5em auto 0;
 	background: rgba(255,255,255,0.15);
 	padding: 2.25em 0 0;
 	border-radius: 10px;
@@ -107,7 +107,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	background: #3A3;
 	padding: 30px;
 	border-radius: 50px;
-	font-size: 28px;
+	font-size: 1.75em;
 }
 #pick:hover { background: #292;}
 #pick:active { background: #181; }
@@ -164,6 +164,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	background: url("icon/svg.php?icon=logo&color=FFF") center no-repeat;
 	text-indent: -9999px;
 	opacity: 0.8;
+	height: 1.5rem;
 }
 h1#logo { height: 60px; }
 
@@ -192,4 +193,16 @@ h1#logo { height: 60px; }
 	left: 30px; top: 40px;
 	font-size: 3em;
 	font-weight: bold;
+}
+
+/* Small phones */
+
+@media screen and (max-height: 640px) {
+	body {
+		margin: 20px;
+		font-size: 0.8em;
+	}
+	#backbutton { top: 20px; }
+	#pickwrap { bottom: 6vh; }
+	#pick { padding: 20px; }
 }

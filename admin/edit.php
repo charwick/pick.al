@@ -166,7 +166,7 @@ if (isset($_POST['name'])) {
 				</table>
 			</section>
 			
-			<form id="deleteform" action="/" method="post">
+			<form id="deleteform" action="." method="post">
 				<input type="hidden" name="action" value="delete" />
 				<input type="hidden" name="class" value="<?php echo $classid; ?>" />
 			</form>
