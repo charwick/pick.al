@@ -108,6 +108,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	padding: 30px;
 	border-radius: 50px;
 	font-size: 1.75em;
+	display: inline-block;
 }
 #pick:hover { background: #292;}
 #pick:active { background: #181; }

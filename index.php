@@ -19,11 +19,12 @@ if ($classid) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<?php if ($classid) { ?>
+	<?php if ($classid) {
+		$roster = $sql->get_roster($classid); ?>
 		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
-				roster = <?php echo json_encode($sql->get_roster($classid)); ?>;
+				roster = <?php echo json_encode($roster); ?>;
 			<?php echo $class->schema->output_js(true); ?>
 		</script>
 		<?php 
@@ -49,10 +50,12 @@ if ($classid) {
 				<a href="#" id="back" class="disabled">Back</a>
 				<a href="#" id="forward" class="disabled">Forward</a>
 			</div>
+			<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
 		</div>
 	
 		<div id="pickwrap">
-			<button id="pick">Choose Student</button>
+			<?php if ($roster) echo '<button id="pick">Choose Student</button>';
+			else echo '<a href="/admin/edit.php?class='.$classid.'" id="pick" class="button">Add Students</a>'; ?>			
 		</div>
 
 	<?php } else { ?>
