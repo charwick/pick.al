@@ -83,4 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			oid.querySelector('.actions').remove();
 		});
 	});
+
+	//Delete user
+	document.querySelector('h1 .delete').addEventListener('click', function(e) {
+		e.preventDefault();
+		let confirm = '@@@';
+		while (confirm && confirm.toLowerCase()!=document.querySelector('h1 .num').textContent.toLowerCase())
+			confirm = prompt('Are you sure you want to PERMANENTLY delete this account? All classes, students, and participation records will also be deleted.\n\nType your username to confirm.');
+		if (confirm.toLowerCase()==document.querySelector('h1 .num').textContent.toLowerCase())
+			document.getElementById('deleteform').submit();
+	})
 });

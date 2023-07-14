@@ -21,6 +21,11 @@ function validate() {
 	} elseif (str_contains($_POST['username'], '@')) return 'Username cannot contain \'@\'.';
 }
 
+if (isset($_SESSION['message'])) {
+	$message = $_SESSION['message'];
+	unset($_SESSION['message']);
+}
+
 if (isset($_GET['action']) && $_GET['action']=='logout') {
 	session_start();
 	$_SESSION = [];

@@ -30,6 +30,13 @@ if (isset($_GET['code']) && !$user->orcid) {
 			$user->options->orcid_data = $orcid_data;
 		}
 	}
+
+//Delete account
+} elseif (isset($_POST['delete']) && $_POST['delete']) {
+	if ($sql->delete_user()) {
+		$_SESSION['message'] = "User '{$user->username}' successfully deleted.";
+		header("Location: /");
+	} else $message = 'Failed to delete user. Please try again shortly.';
 } ?>
 
 <!DOCTYPE html>
@@ -48,7 +55,11 @@ if (isset($_GET['code']) && !$user->orcid) {
 		<a href="http://gravatar.com/" id="gravatar-link" target="_gravatar">
 			<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=160&d=mp" class="gravatar" />
 		</a>
-		<h1>User profile  <span class="num"><?php echo $user->username; ?></span></h1>
+		<h1>
+			User profile
+			<span class="num"><?php echo $user->username; ?></span>
+			<span class="actions"><a href="#" class="delete" title="Delete account"></a></span>
+		</h1>
 
 		<p>Email: <span id="email"><?php echo $user->email; ?></span></p>
 		<p id="password" data-date="<?php echo $user->password ? date('F j, Y \a\t H:i', strtotime($user->pwchanged)) : 'never'; ?>">
@@ -63,6 +74,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 			<a class="button" href="<?php echo $orcid->auth_url('https://pick.al/admin/user.php'); ?>">Connect</a>
 		</p>
 	</main>
+	<form id="deleteform" action="" method="post"><input type="hidden" name="delete" value="true" /></form>
 	<?php footer(); ?>
 </body>
 </html>

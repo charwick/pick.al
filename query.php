@@ -253,6 +253,17 @@ class chooser_query extends mysqli {
 		return $affect;
 	}
 
+	function delete_user(): int {
+		$q='DELETE classes, students, events FROM classes
+			LEFT JOIN students ON students.class=classes.id
+			LEFT JOIN events ON events.student=students.id
+			WHERE classes.user = ?';
+		$this->execute_query($q, [$_SESSION['user']]);
+		$this->execute_query('DELETE FROM schemae WHERE user=?', [$_SESSION['user']]);
+		$this->execute_query('DELETE FROM users WHERE id=?', [$_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
 	function generate_reset_link(int $userid) {
 		$user = $this->get_user_by(str_contains($userid, '@') ? 'email' : 'username', $userid);
 		if (!$user) return 0;
