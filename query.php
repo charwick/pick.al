@@ -359,7 +359,8 @@ class Schema {
 // HELPER FUNCTIONS
 //==================
 
-function sanitize(string $string): string {
+function sanitize(?string $string): ?string {
+	if ($string===null) return null;
 	return trim(htmlspecialchars($string));
 }
 

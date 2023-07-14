@@ -96,7 +96,7 @@ switch ($req) {
 					exit;
 				}
 			} else {
-				$note = $notekey ? $row[$notekey] : null;
+				$note = $notekey!==false ? $row[$notekey] : null;
 				$id = $sql->add_student($_POST['class'], $row[$fnkey], $row[$lnkey], $note);
 				if ($id) $added[] = ['id'=>$id, 'fname'=>$row[$fnkey], 'lname'=>$row[$lnkey], 'note'=>$note];
 			}
