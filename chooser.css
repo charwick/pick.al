@@ -27,6 +27,14 @@ a.button, button, input[type='submit'] {
 button:disabled, .picked button { opacity: 0.25; }
 button.picked:disabled, .picked button.picked { opacity: 1; }
 
+#sinfowrap { /* Necessary because of a dumb Samsung Browser bug */
+	position: relative;
+	overflow-x: hidden; 
+    min-height: 50em;
+    left: -20px;
+	width: 100%;
+	padding: 0 20px;
+}
 #sinfo { position: relative; }
 #sinfo #actions {
 	background: transparent;
@@ -198,7 +206,7 @@ h1#logo { height: 1.5em; }
 
 /* Small phones */
 
-@media screen and (max-height: 640px) {
+@media screen and (max-height: 42em) {
 	body {
 		margin: 20px;
 		font-size: 0.8em;
