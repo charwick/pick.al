@@ -388,7 +388,7 @@ function makeSortable(table, defaultsort, defaultdesc) {
 }
 
 function updateScore(student, opts) {
-	const evcell = document.querySelector('#modal td.numtotal'),
+	const evcell = document.querySelector('dialog td.numtotal'),
 		rostercell = document.querySelector('#roster tr[data-id="'+student+'"] .score'),
 		scoretext = rostercell.textContent;
 	let num, den;
@@ -415,7 +415,7 @@ function updateScore(student, opts) {
 	//Update modal totals if necessary
 	if (evcell) {
 		evcell.textContent = den ? Math.round(num/den*100)+'%' : '—'
-		const spannum = document.querySelector('#modal span.num');
+		const spannum = document.querySelector('dialog span.num');
 		if (spannum) spannum.textContent = den;
 	}
 }
@@ -463,10 +463,6 @@ function eventActions(e) {
 	}
 }
 
-document.addEventListener('keyup', function(e) {
-	if (e.code=='Escape') clearModal();
-});
-
 //===================================
 // Generate boilerplate HTML elements
 //===================================
@@ -510,26 +506,20 @@ function eventRow(event, namecol) {
 }
 
 function modal(title, content) {
-	const modalbg = document.createElement('div'),
-		modal = document.createElement('div'),
+	const modal = document.createElement('dialog'),
+		mwrap = document.createElement('div'),
 		h2 = document.createElement('h2');
-	modalbg.id = 'modalbg';
-	modal.id = 'modal';
 	h2.innerHTML = title;
-	modal.append(h2, content);
-	modalbg.addEventListener('click', clearModal);
-	document.body.classList.add('modal-active');
-	document.body.append(modalbg);
+	mwrap.append(h2, content);
+	modal.append(mwrap);
 	document.body.append(modal);
+	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
+		if (e.target.nodeName === 'DIALOG') modal.remove();
+	});
+	modal.addEventListener('close', function(e) { modal.remove(); });
+	modal.showModal();
+	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
-}
-
-function clearModal() {
-	if (document.body.classList.contains('modal-active')) {
-		document.body.classList.remove('modal-active');
-		document.getElementById('modal').remove();
-		document.getElementById('modalbg').remove();
-	}
 }
 
 function editEvent(row, selected) {
@@ -560,7 +550,7 @@ function editEvent(row, selected) {
 			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schemae[schema][result].value, true);
 			
 			//Save new event
-			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.getElementById('modal').student+'&result='+schemae[schema][result].value, true);
+			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+schemae[schema][result].value, true);
 			
 			req.onload = function() {
 				for (const b of resultsCell.querySelectorAll('.result-button')) {
@@ -637,7 +627,7 @@ function uploadCSV(e) {
 					tr.dataset.id = row['id'];
 				}
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
-				clearModal();
+				document.getElementsByTagName('dialog')[0].remove();
 			}
 		};
 		req.onerror = function() {

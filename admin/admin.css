@@ -316,24 +316,19 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
    Events modal
    ============ */
 
-#modalbg {
-	position: fixed;
-	height: 100%; width: 100%;
-	top: 0; left: 0;
+dialog {
+	width: 540px;
+	padding: 0;
+	background: #FFF;
+	border: none;
+	border-radius: 12px;
+	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+dialog > div { padding: 15px 30px; }
+dialog::backdrop {
 	background: rgba(0,0,0,0.1);
 	backdrop-filter: blur(1px);
 	cursor: pointer;
-}
-
-#modal {
-	width: 540px;
-	padding: 15px 30px;
-	position: fixed;
-	background: #FFF;
-	top: 100px; left: 50%;
-	margin-left: -300px;
-	border-radius: 12px;
-	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 }
 .schemalist { margin-left: 0.5em; }
 .result-button {
