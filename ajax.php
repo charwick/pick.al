@@ -75,7 +75,7 @@ switch ($req) {
 		break;
 	
 	case 'studentexcused':
-		echo $sql->student_excused($_GET['id'], $_GET['excused']);
+		echo $sql->student_excused($_GET['id'], $_GET['excused'] ?: null);
 		break;
 
 	case 'uploadroster':

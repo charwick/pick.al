@@ -87,13 +87,12 @@ class chooser_query extends mysqli {
 	//==========
 
 	//Get the roster for a class. Returns an array of objects
-	//Doesn't return excused students by default
-	function get_roster(int $classid, bool $all=false): array {
-		$wand = $all ? '' : " AND (excuseduntil IS NULL OR NOW() > DATE_ADD(excuseduntil, INTERVAL 1 DAY))";
+	function get_roster(int $classid): array {
+		//$wand = $all ? '' : " AND (excuseduntil IS NULL OR NOW() > DATE_ADD(excuseduntil, INTERVAL 1 DAY))";
 		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
 			FROM students
 			LEFT JOIN events ON events.student=students.id
-			WHERE class=? AND user=? $wand
+			WHERE class=? AND user=?
 			GROUP BY students.id
 			ORDER BY students.lname";
 		$students = $this->execute_query($q, [$classid, $_SESSION['user']]);

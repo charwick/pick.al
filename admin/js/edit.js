@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if ('excused' in td.parentNode.dataset) {
 				const exc = new Date(td.parentNode.dataset.excused),
 					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
-				td.querySelector('.excuses').title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+				td.querySelector('.excuses').title = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 			}
 		}
 	
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			
 				tr.classList.add('nottip');
 				lname.classList.add('editing');
-				popup.textContent = 'Excused until ';
+				popup.textContent = 'Excused through ';
 				popup.classList.add('popup');
 				inp.type = 'date';
 				inp.value = tr.dataset.excused;
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
 							if (modDate > now) {
 								tr.dataset.excused = inp.value;
-								e.target.title = "Excused until "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+								e.target.title = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 							} else {
 								delete tr.dataset.excused;
 								e.target.title = "Set excused absences";

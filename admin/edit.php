@@ -108,7 +108,7 @@ if (isset($_POST['name'])) {
 		</form>
 		
 		<?php if ($classid) {
-			$roster = $sql->get_roster($classid, true); ?>
+			$roster = $sql->get_roster($classid); ?>
 			<section id="students">
 				<h2>
 					Student Roster <span class="num" id="num_students"><?php echo count($roster); ?></span>

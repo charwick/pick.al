@@ -45,12 +45,14 @@ if ($classid) {
 		<a href="." title="Back" id="backbutton">←</a>
 		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
 
+		<div id="actions">
+			<a href="#" id="back" class="disabled">Back</a>
+			<a href="#" id="snooze" class="disabled">Snooze</a>
+			<a href="#" id="forward" class="disabled">Forward</a>
+		</div>
 		<div id="sinfowrap">
 			<div id="sinfo">
-				<div id="actions">
-					<a href="#" id="back" class="disabled">Back</a>
-					<a href="#" id="forward" class="disabled">Forward</a>
-				</div>
+
 				<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
 			</div>
 		</div>

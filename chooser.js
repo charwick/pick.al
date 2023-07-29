@@ -4,15 +4,45 @@ var hist = [], //Reverse coded: current student = index[0]
 	currentAnim = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+	if ('roster' in window) for (const s in roster) if (roster[s].excuseduntil != null) {
+		const exc = new Date(roster[s].excuseduntil);
+		roster[s].excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
+	}
+	document.getElementById('actions')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		if (e.target.id=='back') buttonFunc('back')(e);
+		else if (e.target.id=='forward') buttonFunc('forward')(e);
+		else if (e.target.id=='snooze') {
+			const now = new Date(),
+				req = new XMLHttpRequest();
+			let excdate, fn;
+			if (!isExcused(hist[histIndex].info)) { //Set excused
+				excdate = now.toISOString().split('T')[0];
+				fn = function() {
+					now.setHours(23); now.setMinutes(59);
+					hist[histIndex].info.excuseduntil = now;
+					e.target.dataset.excused = 'Excused until tomorrow';
+				}
+			} else { //Clear excused
+				excdate = '';
+				fn = function() {
+					hist[histIndex].info.excuseduntil = null;
+					delete e.target.dataset.excused
+				}
+			}
+			req.open('GET', 'ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, true);
+			req.onload = fn;
+			req.send();
+		}
+	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
-	document.getElementById('back')?.addEventListener('click', buttonFunc('back'));
-	document.getElementById('forward')?.addEventListener('click', buttonFunc('forward'));
 });
 
 function StudentEvent(student) {
 	this.info = student; //This will update the original roster data too
 	this.event = null;
 	this.result = null;
+	this.excused = false;
 	
 	//Create the HTML
 	this.element = document.createElement('div');
@@ -105,6 +135,12 @@ function StudentEvent(student) {
 		left = left ?? false;
 		this.element.classList.add(left ? 'out' : 'in')
 		document.getElementById('sinfo').append(this.element);
+
+		const snoozeElement = document.getElementById('snooze');
+		snoozeElement.classList.remove('disabled');
+		if (isExcused(student)) snoozeElement.dataset.excused = 'Excused through '+student.excuseduntil.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+		else delete snoozeElement.dataset.excused;
+
 		setTimeout(() => { this.element.classList.remove(left ? 'out' : 'in'); }, 1); //JS will skip the animation without the timeout
 	}
 	this.exit = function(right) {
@@ -160,11 +196,21 @@ Array.prototype.random = function () { return this[Math.floor((Math.random()*thi
 
 //Random choice among students that have been called on the least so far
 function studentSelect(list) {
-	list.sort((a,b) => { return a.denominator > b.denominator });
 	const smallerList = [];
+	list.sort((a,b) => {
+		if (isExcused(a)) return 1; //Move excused to the end of the list
+		if (isExcused(b)) return -1;
+		return a.denominator > b.denominator ? 1 : -1;
+	});
 	for (const student of list)
-		if (student.denominator == list[0].denominator)
+		if (student.denominator == list[0].denominator && !isExcused(student))
 			smallerList.push(student);
 	
+	console.log(smallerList);
 	return smallerList.random();
+}
+
+function isExcused(student) {
+	const now = new Date();
+	return student.excuseduntil?.getTime() > now.getTime();
 }
