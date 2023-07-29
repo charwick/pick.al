@@ -141,7 +141,8 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 	<link rel="stylesheet" href="admin/admin.css" type="text/css" media="all">
 	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
 	<script type="text/javascript" src="login/login.js"></script>
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1">
+	<meta name="description" content="Pick.al is a lightweight app for selecting students at random and recording participation.">
 </head>
 
 <body id="login" class="<?php echo $bodyclass; ?>">
