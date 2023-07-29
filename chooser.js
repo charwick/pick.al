@@ -101,21 +101,35 @@ function StudentEvent(student) {
 			break;
 		}
 
-		//Re-do button press (edit event)
 		if (this.event) {
-			req.open('GET', 'ajax.php?req=updateevent&event='+this.event+'&result='+result, true);
-			req.onload = function() {
-				for (const btn2 of actions) btn2.disabled = false;
-				btn.classList.add('picked');
-				that.info.score += result - that.result;
-				that.result = result;
+			//Undo button press
+			if (result==this.result) {
+				req.open('GET', 'ajax.php?req=deleteevent&event='+this.event, true);
+				req.onload = function() {
+					that.info.score -= that.result;
+					that.info.denominator--;
+					that.event = null;
+					that.result = null;
+					btn.classList.remove('picked');
+					btn.parentNode.parentNode.classList.remove('picked');
+					for (const btn2 of actions) btn2.disabled = false;
+				}
+
+			//Re-do button press (edit event)
+			} else {
+				req.open('GET', 'ajax.php?req=updateevent&event='+this.event+'&result='+result, true);
+				req.onload = function() {
+					for (const btn2 of actions) btn2.disabled = false;
+					btn.classList.add('picked');
+					that.info.score += result - that.result;
+					that.result = result;
+				}
 			}
 		
 		//Send event (create new)
 		} else {
 			req.open('GET', 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, true);
 			req.onload = function() {
-				btn.parentNode.parentNode.classList.add('picked');
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
@@ -206,7 +220,6 @@ function studentSelect(list) {
 		if (student.denominator == list[0].denominator && !isExcused(student))
 			smallerList.push(student);
 	
-	console.log(smallerList);
 	return smallerList.random();
 }
 
