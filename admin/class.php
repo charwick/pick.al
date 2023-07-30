@@ -23,7 +23,7 @@ $error = false;
 if (isset($_POST['name'])) {
 	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['schema']);
 	if ($id) {
-		$url = "edit.php?class={$id}";
+		$url = "class.php?class={$id}";
 		header("Location: {$url}");
 		exit;
 	} else $error = true;
@@ -45,7 +45,7 @@ if (isset($_POST['name'])) {
 		echo '}, schemabuttons = {};'; ?>
 	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
-	<script type="text/javascript" src="js/edit.js"></script>
+	<script type="text/javascript" src="js/class.js"></script>
 	<?php if ($classid) echo $class->schema->output_css(true, false);
 	else {
 		echo '<style type="text/css" class="schema-css">';

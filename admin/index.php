@@ -26,7 +26,7 @@ function classlist(array $classes, string $title): void {
 	echo '<ul class="classes">';
 		foreach ($classes as $class) {
 			echo "<li>";
-				echo "<a href='edit.php?class={$class->id}'>{$class->name}</a> — ";
+				echo "<a href='class.php?class={$class->id}'>{$class->name}</a> — ";
 				echo "<span class='semester'>".ucwords($class->semester)." {$class->year}</span> / ";
 				echo "<span class='students'>{$class->students} students</span>";
 			echo "</li>";
@@ -43,7 +43,7 @@ function classlist(array $classes, string $title): void {
 </head>
 
 <body>
-	<?php userbar($sql, '../', 'Back to Chooser'); ?>
+	<?php userbar($sql, '../', 'Back to Picker'); ?>
 	<main>
 		<h1>Pick.al Admin Panel</h1>
 		
@@ -52,7 +52,7 @@ function classlist(array $classes, string $title): void {
 		if ($active) classlist($active, 'Active Classes');
 		if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
 		
-		<p><a class="button" href="edit.php">New class</a></p>
+		<p><a class="button" href="class.php">New class</a></p>
 	</main>
 
 	<?php footer(); ?>

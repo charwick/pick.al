@@ -34,8 +34,8 @@ if ($classid) {
 	<?php } ?>
 	
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
-	<link rel="stylesheet" href="chooser.css" type="text/css" media="all">
-	<script type="text/javascript" src="chooser.js"></script>
+	<link rel="stylesheet" href="picker.css" type="text/css" media="all">
+	<script type="text/javascript" src="picker.js"></script>
 </head>
 
 <body>
@@ -59,7 +59,7 @@ if ($classid) {
 	
 		<div id="pickwrap">
 			<?php if ($roster) echo '<button id="pick">Choose Student</button>';
-			else echo '<a href="/admin/edit.php?class='.$classid.'" id="pick" class="button">Add Students</a>'; ?>			
+			else echo '<a href="/admin/class.php?class='.$classid.'" id="pick" class="button">Add Students</a>'; ?>			
 		</div>
 
 	<?php } else { ?>
@@ -69,7 +69,7 @@ if ($classid) {
 		
 		<ul id="classlist">
 			<?php $classes = $sql->get_classes(true);
-			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/edit.php" class="button" id="pick">New Class</a></li>';
+			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/class.php" class="button" id="pick">New Class</a></li>';
 			else {
 				echo "<li><h2>Active Classes <span>/ {$user->username}</span></h2></li>";
 				foreach ($classes as $class)
