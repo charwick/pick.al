@@ -40,23 +40,30 @@ if ($classid) {
 
 <body>
 	<?php if ($classid) { ?>
-		<div id="logo">Pick.al</div>
-		<h1 id="classname"><?php echo $class->name; ?></h1>
-		<a href="." title="Back" id="backbutton">←</a>
-		<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
+		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
-		<div id="actions">
-			<a href="#" id="back" class="disabled">Back</a>
-			<a href="#" id="snooze" class="disabled">Snooze</a>
-			<a href="#" id="forward" class="disabled">Forward</a>
-		</div>
-		<div id="sinfowrap">
+			<div id="logo">Pick.al</div>
+			<h1 id="classname"><?php echo $class->name; ?></h1>
+			<a href="." title="Back" id="backbutton">←</a>
+			<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
+			<a href="#" title="Roster" id="rosterlist">Roster</a>
+
+			<div id="actions">
+				<a href="#" id="back" class="disabled">Back</a>
+				<a href="#" id="snooze" class="disabled">Snooze</a>
+				<a href="#" id="forward" class="disabled">Forward</a>
+			</div>
+
 			<div id="sinfo">
-
 				<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
 			</div>
+
+			<ul id="roster">
+				<li id="rosterclose"><a href="#">×</a></li>
+				<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
+			</ul>
 		</div>
-	
+
 		<div id="pickwrap">
 			<?php if ($roster) echo '<button id="pick">Choose Student</button>';
 			else echo '<a href="/admin/class.php?class='.$classid.'" id="pick" class="button">Add Students</a>'; ?>			

@@ -36,6 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
+
+	//=============
+	// ROSTER LIST
+	//=============
+
+	document.getElementById('rosterlist')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		document.getElementById('roster').style.right = 0;
+	});
+
+	document.getElementById('roster')?.addEventListener('click', function(e) {
+		for (const s of roster) if (s.id==e.target.dataset.id) {
+			new StudentEvent(s);
+			this.style.right = null;
+			break;
+		}
+	});
+	document.querySelector('#rosterclose a')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		document.getElementById('roster').style.right = null;
+	});
 });
 
 function StudentEvent(student) {
@@ -165,6 +186,13 @@ function StudentEvent(student) {
 			this.element.classList.remove(right ? 'in' : 'out');
 		}, 250);
 	}
+
+	//Make our entrance
+	if (histIndex != null) hist[histIndex].exit();
+	if (hist[0]?.event) hist.unshift(this);
+	else hist[0] = this;
+	histIndex = 0;
+	this.enter();
 }
 
 //=================
@@ -177,15 +205,9 @@ function buttonFunc(action) {
 		currentAnim = true;
 		setTimeout(() => { currentAnim = false; }, 250);
 
-		if (action=='choose') {
-			const student = new StudentEvent(studentSelect(roster));
-			if (histIndex != null) hist[histIndex].exit();
-			if (hist[0]?.event) hist.unshift(student);
-			else hist[0] = student;
-			histIndex = 0;
-			student.enter();
+		if (action=='choose') new StudentEvent(studentSelect(roster));
 		
-		} else if (action=='back') {
+		else if (action=='back') {
 			hist[histIndex].exit(true);
 			histIndex++;
 			hist[histIndex].enter(true);

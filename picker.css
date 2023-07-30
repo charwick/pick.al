@@ -3,8 +3,16 @@ body {
 	text-align: center;
 	color: #EEE;
 	font: 1em/1.5em 'Lucida Grande', Calibri, sans-serif;
-	margin: 40px 20px;
+	margin: 0;
 	overflow: hidden;
+}
+#bodywrap { /* Necessary because of a dumb Samsung Browser bug */
+	overflow-x: hidden;
+	padding: 40px 20px;
+	height: 100vh; height: 100svh; /* incl. fallback */
+	width: 100vw;
+	box-sizing: border-box;
+	position: relative;
 }
 
 h1 {
@@ -71,16 +79,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	left: 1.5em; top: 0.75em;
 }
 
-#sinfowrap { /* Necessary because of a dumb Samsung Browser bug */
-	position: relative;
-	overflow-x: hidden; 
-    min-height: 50em;
-    left: -20px;
-	width: 100%;
-	padding: 0 20px;
-}
 #sinfo { position: relative; }
-
 #sinfo > div {
 	margin: 1em auto 0;
 	background: rgba(255,255,255,0.15);
@@ -216,26 +215,73 @@ h1#logo { height: 1.5em; }
 	border-color: rgba(255,255,255,0.35);
 	color: #BBB;
 }
-#backbutton:hover {
-	color: #999;
+#backbutton, #rosterlist, #rosterclose a {
+	color: #FFF;
+	opacity: 0.25;
+	position: absolute;
+	top: 40px;
+	text-decoration: none;
 }
 #backbutton {
-	color: #777;
-	text-decoration: none;
-	position: absolute;
-	left: 30px; top: 40px;
+	left: 30px;
 	font-size: 3em;
 	font-weight: bold;
 }
+#backbutton:hover, #rosterlist:hover, #rosterclose a:hover { opacity: 0.4; }
+
+/* Roster list */
+
+#rosterlist {
+	background: url("icon/svg.php?icon=list&color=FFF") center/2em 2em no-repeat;
+	height: 2em; width: 2em;
+	right: 30px;
+	text-indent: -9999em;
+}
+
+#roster {
+	list-style: none;
+	text-align: left;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 0; right: -18em;
+	height: 100%; width: 18em;
+	background: rgba(75,75,75,0.85);
+	backdrop-filter: blur(10px);
+	overflow-y: scroll;
+	transition: 0.2s right;
+	z-index: 10;
+}
+
+#roster li[data-id] {
+	padding: 0.5em 1.5em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
+	font-size: 1.2em;
+	color: rgba(255,255,255,0.75);
+}
+#roster li[data-id]:hover {
+	background: rgba(255,255,255,0.1);
+	color: #FFF;
+}
+#rosterclose {
+	position: sticky;
+	top: 0;
+	text-align: right;
+	padding: 30px 30px 0 0;
+	backdrop-filter: blur(10px);
+	font-size: 2em;
+}
+#rosterclose a { position: static; }
 
 /* Small phones */
 
 @media screen and (max-height: 42em) {
-	body {
-		margin: 20px;
-		font-size: 0.8em;
-	}
-	#backbutton { top: 20px; }
+	body {font-size: 0.8em; }
+	#bodywrap { padding: 20px; }
+	#backbutton, #rosterlist { top: 20px; }
 	#pickwrap { bottom: 6vh; }
 	#pick { padding: 20px; }
 }
