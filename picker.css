@@ -248,7 +248,8 @@ h1#logo { height: 1.5em; }
 	height: 100%; width: 18em;
 	background: rgba(75,75,75,0.85);
 	backdrop-filter: blur(10px);
-	overflow-y: scroll;
+	overflow-y: auto;
+	scrollbar-color: rgba(255,255,255,0.25) rgba(75,75,75,0.85);
 	transition: 0.2s right;
 	z-index: 10;
 }

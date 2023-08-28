@@ -85,6 +85,7 @@ switch ($req) {
 		foreach ($rows as $row) {
 			if (!$row) continue;
 			$row = str_getcsv($row);
+			foreach ($row as &$cell) $cell = trim($cell);
 			if (!$i) {
 				$fnkey = array_search('fname', $row);
 				$lnkey = array_search('lname', $row);
