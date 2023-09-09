@@ -79,12 +79,13 @@ li#orcid {
 	color: #777;
 }
 
-#resetlink {
+#formbody > a {
 	float: right;
 	font-size: small;
 	margin: 1.5em 1em 0 0;
 	opacity: 0.5;
 }
+dialog { font-size: 0.8em; }
 
 @media only screen and (max-width : 975px) {
 	#split { display: block; }

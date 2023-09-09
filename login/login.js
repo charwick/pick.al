@@ -106,6 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			req.send();
 		});
 	}
+
+	const dialog = document.getElementsByTagName('dialog')[0];
+	document.getElementById('terms').addEventListener('click', (e) => {
+		e.preventDefault();
+		dialog.showModal();
+	});
+	//Click the backdrop to close (requires a div wrapper)
+	dialog.addEventListener('click', (e) => {
+		if (e.target.nodeName === 'DIALOG') dialog.close();
+	});
 });
 
 function whichTab() {
@@ -122,9 +132,11 @@ function switchInputs(clearInfo=true) {
 	if (val=='login') {
 		drawInputs(inpContainer, ['uoremail', 'password']);
 		document.getElementById('resetlink').style.display = 'inline';
+		document.getElementById('terms').style.display = 'none';
 	} else if (val=='register') {
 		drawInputs(inpContainer, ['username', 'email', 'password', 'confirm']);
 		document.getElementById('resetlink').style.display = 'none';
+		document.getElementById('terms').style.display = 'inline';
 	}
 
 	document.querySelector('input[type="submit"]').value = (val=='login' ? 'Log in' : 'Register');

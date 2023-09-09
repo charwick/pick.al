@@ -206,6 +206,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 						<ul id="entries"><!--Filled by JS--></ul>
 						
 						<a href="/?action=resetpw" id="resetlink">Forgot password?</a>
+						<a href="#" id="terms">Terms & Conditions</a>
 						<input type="submit" value="Register" />
 					</div>
 
@@ -217,5 +218,6 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 
 	<?php require_once('admin/parts.php');
 	footer(); ?>
+	<dialog><div><?php include('terms.html'); ?></div></dialog>
 </body>
 </html>
