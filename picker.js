@@ -37,13 +37,35 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
 
+	//Keyboard Navigation
+	document.addEventListener('keydown', function(e) {
+		if (!window.classid) return;
+		if (e.key == ' ') buttonFunc('choose')();
+		else if (e.key == 'ArrowLeft' && histIndex < hist.length-1) buttonFunc('back')();
+		else if (e.key == 'ArrowRight' && histIndex) buttonFunc('forward')();
+		else if (['1','2','3','4','5'].includes(e.key)) {
+			const i = parseInt(e.key),
+				buttons = hist[histIndex].element.querySelectorAll('button');
+			if (buttons.length < i) return;
+			buttons[i-1].click();
+		} else if (e.key == '0') hist[histIndex].element.querySelector('button.picked')?.click();
+		else if (e.key == 'x') document.getElementById('snooze').click();
+		else if (e.key == 'r') {
+			const roster = document.getElementById('roster');
+			if (roster.classList.contains('open')) roster.classList.remove('open');
+			else roster.classList.add('open');
+		}
+		else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
+	});
+
 	//=============
 	// ROSTER LIST
 	//=============
 
+	//Open
 	document.getElementById('rosterlist')?.addEventListener('click', function(e) {
 		e.preventDefault();
-		document.getElementById('roster').style.right = 0;
+		document.getElementById('roster').classList.add('open');
 	});
 
 	document.getElementById('roster')?.addEventListener('click', function(e) {
@@ -53,9 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			break;
 		}
 	});
+	//Close
 	document.querySelector('#rosterclose a')?.addEventListener('click', function(e) {
 		e.preventDefault();
-		document.getElementById('roster').style.right = null;
+		document.getElementById('roster').classList.remove('open');
 	});
 });
 

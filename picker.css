@@ -253,6 +253,7 @@ h1#logo { height: 1.5em; }
 	transition: 0.2s right;
 	z-index: 10;
 }
+#roster.open { right: 0; }
 
 #roster li[data-id] {
 	padding: 0.5em 1.5em;
