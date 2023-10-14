@@ -2,7 +2,7 @@
 	global $user;
 	$user = $sql->current_user(); ?>
 	<div id="userbar">
-		<?php if ($backlink) echo "<a href='{$backlink}' id='backlink'>← {$backtext}</a>"; ?>
+		<?php if ($backlink) echo "<a href='{$backlink}' id='backlink'>← <span>Back to</span> {$backtext}</a>"; ?>
 		<a href="/" id="logo">Pick.al</a>
 		<div id="rightside">
 			<a href="user.php">

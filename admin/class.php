@@ -56,7 +56,7 @@ if (isset($_POST['name'])) {
 </head>
 
 <body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
-	<?php userbar($sql, '.', 'Back to Admin'); ?>
+	<?php userbar($sql, '.', 'Admin'); ?>
 	<main>
 		<form id="classinfo" action="" method="post">
 			<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';

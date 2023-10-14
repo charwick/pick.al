@@ -43,7 +43,7 @@ function classlist(array $classes, string $title): void {
 </head>
 
 <body>
-	<?php userbar($sql, '../', 'Back to Picker'); ?>
+	<?php userbar($sql, '../', 'Picker'); ?>
 	<main>
 		<h1>Pick.al Admin Panel</h1>
 		
