@@ -98,6 +98,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	margin: 0;
 	font-size: 1.75em;
 }
+.dupename { border-bottom: 3px dotted rgba(255,255,255,0.15); }
 .note {
 	margin: 0.5em 2em 0;
 	font-style: italic;

@@ -94,8 +94,21 @@ function StudentEvent(student) {
 	const h2 = document.createElement('h2'),
 		note = document.createElement('p'),
 		actionlist = document.createElement('ul'),
+		lnspan = document.createElement('span'),
 		actions = [];
-	h2.innerHTML = this.info.fname+' '+this.info.lname;
+	h2.innerHTML = this.info.fname+' ';
+	lnspan.innerHTML = this.info.lname;
+
+	//Check for duplicate first names, alert to read last name
+	for (const n of roster) {
+		if (this.info.id == n.id) continue;
+		if (this.info.fname == n.fname) {
+			lnspan.classList.add('dupename');
+			break;
+		}
+	}
+
+	h2.append(lnspan);
 	note.classList.add('note');
 	note.innerHTML = this.info.note;
 	for (const s in schema) {
