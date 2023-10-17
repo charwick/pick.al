@@ -57,16 +57,16 @@ class chooser_query extends mysqli {
 		$this->execute_query($q, [sanitize($val), $class, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
-	
+
+	//Students cascade delete in SQL
 	function delete_class(int $class): int {
-		foreach ($this->get_roster($class) as $student) $this->delete_student($student->id);
 		$q = "DELETE FROM classes WHERE id=? AND user=?";
 		$this->execute_query($q, [$class, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 
 	function get_schema(string $name): Schema {
-		$q="SELECT * FROM schemae WHERE `schema`=? AND (user=? OR user=0) ORDER BY value DESC";
+		$q="SELECT * FROM schemae WHERE `schema`=? AND (user=? OR user IS NULL) ORDER BY value DESC";
 		$pq = $this->execute_query($q, [$name, $_SESSION['user']]);
 		$result = [];
 		while ($item = $pq->fetch_object()) $result[] = $item;
@@ -74,7 +74,7 @@ class chooser_query extends mysqli {
 	}
 
 	function get_available_schemae(): array {
-		$q = "SELECT * FROM schemae WHERE user=0 OR user=?";
+		$q = "SELECT * FROM schemae WHERE user IS NULL OR user=?";
 		$schemae = $this->execute_query($q, [$_SESSION['user']]);
 		$result = []; $return = [];
 		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item;
@@ -114,15 +114,11 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 	
+	//Events cascade delete in SQL
 	function delete_student(int $id): int {
 		$q1 = "DELETE FROM students WHERE id=? AND user=?";
 		$this->execute_query($q1, [$id, $_SESSION['user']]);
-		$affect = $this->affected_rows;
-		if ($affect) {
-			$q2 = "DELETE FROM events WHERE student=?";
-			$this->execute_query($q2, [$id]);
-		}
-		return $affect;
+		return $this->affected_rows;
 	}
 	
 	function student_excused(int $id, ?string $excused): int {
@@ -252,13 +248,8 @@ class chooser_query extends mysqli {
 		return $affect;
 	}
 
+	//Students, classes, and events deleted by SQL cascade
 	function delete_user(): int {
-		$q='DELETE classes, students, events FROM classes
-			LEFT JOIN students ON students.class=classes.id
-			LEFT JOIN events ON events.student=students.id
-			WHERE classes.user = ?';
-		$this->execute_query($q, [$_SESSION['user']]);
-		$this->execute_query('DELETE FROM schemae WHERE user=?', [$_SESSION['user']]);
 		$this->execute_query('DELETE FROM users WHERE id=?', [$_SESSION['user']]);
 		return $this->affected_rows;
 	}
@@ -297,7 +288,7 @@ class Schema {
 
 	function __construct($data) {
 		$this->name = $data[0]->schema;
-		$this->global = $data[0]->user==0;
+		$this->global = $data[0]->user==null;
 		foreach ($data as $key => $item) $this->items[$item->id] = [
 			'color' => $item->color,
 			'hovercolor' => adjustBrightness($item->color, -0.15),

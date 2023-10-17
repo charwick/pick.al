@@ -393,12 +393,12 @@ function updateScore(student, opts) {
 		scoretext = rostercell.textContent;
 	let num, den;
 	
-	if (scoretext=='—') {
-		num = 0; den = 0;
-	} else {
+	if (scoretext) {
 		const match = scoretext.match(/^(\d+(\.\d+)?)\/(\d+)\s+\(\d+%?\)$/);
 		num = parseFloat(match[1]);
 		den = parseInt(match[3]);
+	} else {
+		num = 0; den = 0;
 	}
 
 	if (opts.action=='delete') {

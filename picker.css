@@ -137,9 +137,9 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #pick {
 	width: 100%;
 	background: #3A3;
-	padding: 30px;
+	padding: 28px;
 	border-radius: 50px;
-	font-size: 1.75em;
+	font-size: 2rem;
 	display: inline-block;
 }
 #pick:hover { background: #292;}

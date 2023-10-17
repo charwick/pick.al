@@ -56,7 +56,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 			<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=160&d=mp" class="gravatar" />
 		</a>
 		<h1>
-			User profile
+			Profile
 			<span class="num"><?php echo $user->username; ?></span>
 			<span class="actions"><a href="#" class="delete" title="Delete account"></a></span>
 		</h1>
