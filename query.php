@@ -39,7 +39,7 @@ class chooser_query extends mysqli {
 		$q = "SELECT * FROM classes WHERE id=? and user=?";
 		$pq = $this->execute_query($q, [$id, $_SESSION['user']]);
 		$obj = $pq->fetch_object();
-		$obj->schema = $this->get_schema($obj->schema);
+		if ($obj) $obj->schema = $this->get_schema($obj->schema);
 		return $obj;
 	}
 	
