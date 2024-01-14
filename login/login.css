@@ -87,6 +87,21 @@ li#orcid {
 }
 dialog { font-size: 0.8em; }
 
+/* Demo video */
+#demo, #demo img {
+	position: relative;
+	width: 200px;
+}
+#demo {
+	transform: rotate(-8deg);
+	margin: 1em auto 0;
+}
+#demo video {
+	width: 194px;
+	position: absolute;
+	left: 3px; top: 23px;
+}
+
 @media only screen and (max-width : 975px) {
 	#split { display: block; }
 	main { width: auto; }
@@ -96,6 +111,7 @@ dialog { font-size: 0.8em; }
 		margin-bottom: 1em;
 		padding-right: 0;
 	}
+	#demo { display: none; }
 }
 
 @media only screen and (max-width : 600px) {

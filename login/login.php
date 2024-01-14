@@ -153,7 +153,15 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 				<?php if ($bodyclass=='orcid_register') echo 'One more step to complete your registration.';
 				elseif ($bodyclass=='resetpw') echo 'Enter your username or email and we\'ll send you a link to reset your password.';
 				elseif ($bodyclass=='choosepw') echo "Welcome back, {$user->username}. Choose a new password and you'll be on your way.";
-				else echo 'is a lightweight app for selecting students at random and recording participation.'; ?>
+				else { ?>
+					is a lightweight app for selecting students at random and recording participation.
+					<div id="demo">
+						<video autoplay muted loop disablePictureInPicture="true">
+							<source src="/login/pickal.mp4" type="video/mp4">
+						</video>
+						<img src="/login/phone-mask.png" alt="Phone">
+					</div>
+				<?php } ?>
 			</div>
 
 			<form action="/" method="post">
