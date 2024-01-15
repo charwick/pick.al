@@ -510,14 +510,25 @@ function modal(title, content) {
 		mwrap = document.createElement('div'),
 		h2 = document.createElement('h2');
 	h2.innerHTML = title;
+	modal.style.marginBottom = '-10em';
+	modal.style.opacity = '0';
 	mwrap.append(h2, content);
 	modal.append(mwrap);
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
-		if (e.target.nodeName === 'DIALOG') modal.remove();
+		if (e.target.nodeName === 'DIALOG') {
+			//Only slide if vw<48em
+			if (window.innerWidth / parseFloat(getComputedStyle(document.querySelector('body'))['font-size']) < 48 ) modal.style.marginBottom = '-10em';
+			modal.style.opacity = '0';
+			setTimeout(() => { modal.remove(); }, 250);
+		}
 	});
-	modal.addEventListener('close', function(e) { modal.remove(); });
+	modal.addEventListener('close', function(e) {
+		modal.remove();
+	});
 	modal.showModal();
+	modal.style.marginBottom = null;
+	modal.style.opacity = null;
 	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
 }
