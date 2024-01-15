@@ -28,7 +28,7 @@ function classlist(array $classes, string $title): void {
 			echo "<li>";
 				echo "<a href='class.php?class={$class->id}'>{$class->name}</a> — ";
 				echo "<span class='semester'>".ucwords($class->semester)." {$class->year}</span> / ";
-				echo "<span class='students'>{$class->students} students</span>";
+				echo "<span class='students'>{$class->students}</span>";
 			echo "</li>";
 		}
 	echo "</ul>";

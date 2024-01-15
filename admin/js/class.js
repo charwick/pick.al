@@ -523,9 +523,7 @@ function modal(title, content) {
 			setTimeout(() => { modal.remove(); }, 250);
 		}
 	});
-	modal.addEventListener('close', function(e) {
-		modal.remove();
-	});
+	modal.addEventListener('close', function(e) { modal.remove(); });
 	modal.showModal();
 	modal.style.marginBottom = null;
 	modal.style.opacity = null;
