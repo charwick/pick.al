@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 			
-			//Event detail modal
+			//Student details modal
 			} else if (e.target.classList.contains('score')) {
 				tr = e.target.parentNode;
 				if (tr.querySelector('.lname').classList.contains('editing')) return;
@@ -157,7 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					const events = JSON.parse(this.response),
 						table = document.createElement('table'),
 						tbody = document.createElement('tbody'),
-						tfoot = document.createElement('tfoot');
+						tfoot = document.createElement('tfoot'),
+						snote = document.createElement('span');
 					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
 					table.classList.add('events');
 					let num=0, den=0;
@@ -171,6 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					tbody.addEventListener('click', eventActions); //Event action buttons
 					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 					table.append(tbody, tfoot);
+					snote.classList.add('note');
+					snote.innerHTML = tr.querySelector('.note').innerHTML;
 					
 					//Add new event
 					tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
@@ -186,7 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
 						tbody.prepend(evtr);
 					});
 					
-					modal(tr.querySelector('.fname').innerHTML+' '+tr.querySelector('.lname').innerHTML + ' <span class="num">'+events.length+'</span>', table).student = tr.dataset.id;
+					modal(
+						tr.querySelector('.fname').innerHTML+' '+tr.querySelector('.lname').innerHTML + ' <span class="num">'+events.length+'</span>',
+						snote, table
+					).student = tr.dataset.id;
 				};
 				req.onerror = () => {  };
 				req.send();
@@ -505,28 +511,24 @@ function eventRow(event, namecol) {
 	return evtr;
 }
 
-function modal(title, content) {
+function modal(title, ...content) {
 	const modal = document.createElement('dialog'),
 		mwrap = document.createElement('div'),
 		h2 = document.createElement('h2');
 	h2.innerHTML = title;
-	modal.style.marginBottom = '-10em';
-	modal.style.opacity = '0';
-	mwrap.append(h2, content);
+	modal.classList.add('transit');
+	mwrap.append(h2, ...content);
 	modal.append(mwrap);
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
 		if (e.target.nodeName === 'DIALOG') {
-			//Only slide if vw<48em
-			if (window.innerWidth / parseFloat(getComputedStyle(document.querySelector('body'))['font-size']) < 48 ) modal.style.marginBottom = '-10em';
-			modal.style.opacity = '0';
+			modal.classList.add('transit');
 			setTimeout(() => { modal.remove(); }, 250);
 		}
 	});
 	modal.addEventListener('close', function(e) { modal.remove(); });
 	modal.showModal();
-	modal.style.marginBottom = null;
-	modal.style.opacity = null;
+	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
 }

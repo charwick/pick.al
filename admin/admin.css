@@ -91,7 +91,7 @@ table th {
 	text-align: left;
 }
 table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
-.score:empty::before, .note:empty::before {
+.score:empty::before, #roster .note:empty::before {
 	content: '—';
 	color: #AAA;
 }
@@ -337,11 +337,24 @@ dialog {
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 	transition: 0.2s opacity;
 }
+dialog.transit { opacity: 0; }
 dialog > div { padding: 15px 30px; }
 dialog::backdrop {
 	background: rgba(0,0,0,0.1);
 	backdrop-filter: blur(1px);
 	cursor: pointer;
+	transition: 0.2s background, 0.2s backdrop-filter;
+}
+dialog.transit::backdrop {
+	background: transparent;
+	backdrop-filter: blur(0);
+	pointer-events: none;
+}
+dialog .note {
+	font-size: 0.8em;
+	position: relative;
+	top: -1.2em;
+	color: #555;
 }
 .schemalist { margin-left: 0.5em; }
 .result-button {
@@ -506,6 +519,7 @@ main .gravatar {
 		box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
 		transition: 0.25s margin-bottom, 0.25s opacity;
 	}
+	dialog.transit { margin-bottom: -10em; }
 }
 @media screen and (max-width: 30em) {
 	#backlink span { display: none; }
