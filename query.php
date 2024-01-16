@@ -26,7 +26,7 @@ class chooser_query extends mysqli {
 			LEFT JOIN students ON students.class=classes.id
 			WHERE classes.user=? {$aw}
 			GROUP BY id
-			ORDER BY year DESC";
+			ORDER BY year DESC, semester DESC, activeuntil DESC";
 		$result = $this->execute_query($q, [$_SESSION['user']]);
 		
 		$classes = [];
