@@ -356,6 +356,13 @@ dialog .note {
 	top: -1.2em;
 	color: #555;
 }
+dialog table {
+	margin: 0 -30px;
+	width: calc(100% + 60px);
+}
+dialog table tr th:first-child, dialog table tr td:first-child, dialog table tbody:empty::before { padding-left: 30px; }
+dialog table:last-child { margin-bottom: -15px; }
+dialog h2 { margin-top: 0.5em; }
 .schemalist { margin-left: 0.5em; }
 .result-button {
 	height: 16px; width: 16px;
@@ -508,7 +515,7 @@ main .gravatar {
 		padding-left: 12px;
 		padding-right: 12px;
 	}
-	table tr th:first-child, table tr td:first-child { padding-left: 20px; }
+	table tr th:first-child, table tr td:first-child, #roster tbody:empty::before { padding-left: 20px; }
 	table.sortable th::after { margin-right: -5px; }
 
 	dialog {
