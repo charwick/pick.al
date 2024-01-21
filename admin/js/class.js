@@ -74,19 +74,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				
 				clearPopups();
-				const popup = document.createElement('div'),
-					inp = document.createElement('input'),
+				const popup = dce('div', 'popup'),
+					inp = dce('input'),
 					erect = e.target.getBoundingClientRect(),
-					subactions = document.createElement('span');
+					subactions = dce('span', 'actions');
 			
 				tr.classList.add('nottip');
 				lname.classList.add('editing');
 				popup.textContent = 'Excused through ';
-				popup.classList.add('popup');
 				inp.type = 'date';
 				inp.value = tr.dataset.excused;
 				inp.oldValue = inp.value;
-				subactions.classList.add('actions');
 				subactions.append(...actionButtons(['save', 'cancel']))
 				popup.append(inp, subactions);
 				popup.style.top = (erect.top+window.pageYOffset-40)+'px';
@@ -155,10 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
 				req.onload = function() {
 					const events = JSON.parse(this.response),
-						table = document.createElement('table'),
-						tbody = document.createElement('tbody'),
-						tfoot = document.createElement('tfoot'),
-						snote = document.createElement('span');
+						table = dce('table'),
+						tbody = dce('tbody'),
+						tfoot = dce('tfoot'),
+						snote = dce('span', 'note');
 					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
 					table.classList.add('events');
 					let num=0, den=0;
@@ -172,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					tbody.addEventListener('click', eventActions); //Event action buttons
 					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 					table.append(tbody, tfoot);
-					snote.classList.add('note');
 					snote.innerHTML = tr.querySelector('.note').innerHTML;
 					
 					//Add new event
@@ -181,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						if (this.classList.contains('disabled')) return;
 						this.classList.add('disabled');
 						
-						const evtr = document.createElement('tr'),
+						const evtr = dce('tr'),
 							date = new Date();
 						evtr.dataset.student = tr.dataset.id;
 						evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
@@ -191,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					
 					modal(
 						tr.querySelector('.fname').innerHTML+' '+tr.querySelector('.lname').innerHTML + ' <span class="num">'+events.length+'</span>',
-						snote, table
+						actions, snote, table
 					).student = tr.dataset.id;
 				};
 				req.onerror = () => {  };
@@ -202,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		//CSV Upload
 		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
 			e.preventDefault();
-			let content = document.createElement('div');
+			const content = dce('div');
 			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.</p>'
 				+'<p><label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>';
 			
@@ -272,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		req.open('GET', '../ajax.php?req=schemae&class='+classid, true);
 		req.onload = function() {
 			const actions = schemaselect.querySelector('.actions'),
-				select = document.createElement('select');
+				select = dce('select');
 			select.stop = false;
 			actions.textContent = '';
 			// actions.append(...actionButtons(['cancel', 'save']));
@@ -474,8 +471,7 @@ function eventActions(e) {
 //===================================
 
 function infoElement(message, classname, tag) {
-	const info = document.createElement(tag || 'p');
-	info.classList.add('info');
+	const info = dce(tag || 'p', 'info');
 	if (classname) info.classList.add(classname);
 	info.textContent = message;
 	return info;
@@ -483,7 +479,7 @@ function infoElement(message, classname, tag) {
 
 function studentRow(col1, col2, col3, actions=[]) {
 	const stable = document.getElementById('roster').querySelector('tbody'),
-		tr = document.createElement('tr');
+		tr = dce('tr');
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="actions"></td><td class="score"></td>';
 	tr.querySelector('.actions').append(...actionButtons(actions));
 	stable.append(tr);
@@ -491,7 +487,7 @@ function studentRow(col1, col2, col3, actions=[]) {
 }
 
 function eventRow(event, namecol) {
-	const evtr = document.createElement('tr'),
+	const evtr = dce('tr'),
 		exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
 		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
 		res = invertSchema()[event.result];
@@ -499,7 +495,7 @@ function eventRow(event, namecol) {
 	evtr.dataset.student = event.student;
 
 	let tds = [];
-	for (let i=0; i<4; i++) tds.push(document.createElement('td'));
+	for (let i=0; i<4; i++) tds.push(dce('td'));
 	tds[0].textContent = modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime();
 	tds[2].dataset.result = res;
 	tds[2].innerHTML = '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>';
@@ -512,11 +508,10 @@ function eventRow(event, namecol) {
 }
 
 function modal(title, ...content) {
-	const modal = document.createElement('dialog'),
-		mwrap = document.createElement('div'),
-		h2 = document.createElement('h2');
+	const modal = dce('dialog', 'transit'),
+		mwrap = dce('div'),
+		h2 = dce('h2');
 	h2.innerHTML = title;
-	modal.classList.add('transit');
 	mwrap.append(h2, ...content);
 	modal.append(mwrap);
 	document.body.append(modal);
@@ -541,13 +536,11 @@ function editEvent(row, selected) {
 	actionsCell.textContent = '';
 	resultsCell.textContent = '';
 	actionsCell.append(...actionButtons(['cancel']));
-	const numspan = document.createElement('span');
-	numspan.classList.add('numspan');
+	const numspan = dce('span', 'numspan');
 	if (selected) numspan.textContent = schemae[schema][selected].value;
 	
 	for (const i in schemae[schema]) {
-		const a = document.createElement('a');
-		a.classList.add('result-button');
+		const a = dce('a', 'result-button');
 		a.textContent = schemae[schema][i].text;
 		a.dataset.schema = i;
 		if (i!=selected) a.classList.add('unselected');

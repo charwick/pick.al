@@ -1,4 +1,10 @@
 "use strict";
+function dce(tag, classname) {
+	const e = document.createElement(tag);
+	if (classname) e.classList.add(classname);
+	return e;
+}
+
 function makeEditable(element, attrs) {
 	if (!element) return;
 	const actions = document.createElement('span'),

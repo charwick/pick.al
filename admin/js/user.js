@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const password = document.querySelector('#password');
 
 	function inlineError(element, message) {
-		let error = document.createElement('span');
-		error.classList.add('inlineError');
+		let error = dce('span', 'inlineError');
 		error.textContent = message;
 		element.append(error);
 	}
