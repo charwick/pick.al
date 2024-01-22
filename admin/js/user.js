@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (e.target.classList.contains('edit')) {
 			let pwnone = false;
 			if (document.getElementById('oldpw').textContent == 'None') pwnone = true;
-			makeInput(fields, {type: 'password', placeholder: ['Current Password', 'New Password', 'Confirm New Password']});
+			makeInput(fields, {
+				type: 'password',
+				placeholder: ['Current Password', 'New Password', 'Confirm New Password'],
+				actionsbox: document.querySelector('#password .actions')
+			});
 			if (pwnone) {
 				const opwi = element.querySelector('#oldpw input');
 				opwi.style.display = 'none';

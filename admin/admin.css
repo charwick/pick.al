@@ -47,6 +47,16 @@ a.button.small {
 	border-bottom-width: 2px;
 }
 
+input[type="text"], input[type="password"], input[type="date"] {
+	box-sizing: border-box;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #AAA #BBB #CCC;
+	box-shadow: inset 0 2px 2px rgba(0,0,0,0.1);
+	padding: 5px 10px;
+}
+input[type="password"] { margin-right: 1em; }
+
 #name input {
 	font-size: 1.25em;
 	padding: 10px 25px;
@@ -55,6 +65,11 @@ a.button.small {
 	width: 4.5em;
 	display: inline-block;
 }
+h2 input {
+	font-size: 1em;
+	width: 38%;
+}
+.note input, input.note { width: 100%; }
 #selector-desc {
 	color: #777;
 	font-size: smaller;
@@ -103,7 +118,6 @@ td.note {
 	white-space: nowrap;
 	font-size: small;
 }
-td input { max-width: 100%; }
 
 td.addnew, #roster tfoot td { padding: 0 !important; } /* Replace with :has(a) when Firefox gets support */
 tfoot a {
@@ -128,6 +142,7 @@ tfoot a.disabled {
 	cursor: default;
 }
 tfoot a.disabled:hover { background: none; }
+dialog tfoot td:last-child a { border-bottom-right-radius: 12px; }
 .events tfoot .addnew { border-left: none; }
 .uploadcsv a {
 	font-weight: normal;
@@ -157,14 +172,11 @@ table tbody:empty::before {
 
 input.error { box-shadow: 0 0 3px 1px #D22; }
 
-td.score:hover, table.sortable th:hover {
+#roster tbody tr:hover td, table.sortable th:hover {
 	cursor: pointer;
-	background: rgba(0,0,0,0.05);
+	background: rgba(160,180,230,0.2);
 }
-td.editing ~ td.score {
-	cursor: auto;
-	background: none;
-}
+table.sortable th:hover { background: rgba(0,0,0,0.05); }
 
 .events tfoot {
 	font-weight: bold;
@@ -233,35 +245,34 @@ span.num::before { content: ' / '; }
 .cancel { background: url('../icon/x-lg.svg') center no-repeat; }
 .delete { background: url('../icon/trash3-fill.svg') center no-repeat; }
 .excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
-.popup .save { background-image: url('../icon/svg.php?icon=check-lg&color=FFF'); }
-.popup .cancel { background-image: url('../icon/svg.php?icon=x-lg&color=FFF'); }
-.popup .actions { margin-left: 10px; }
-.popup .actions a {
-	opacity: 0.5;
-	height: 16px; width: 16px;
-	background-size: 16px 16px;
-	margin-bottom: -3px;
-}
 
-.edit, .actions a {
-	color: #AAA;
+.edit, .actions a, #roster .excuses {
+	color: #000;
 	display: inline-block;
-	padding: 0 0.5em;
+	margin: 0 0.5em;
 	position: relative;
-	height: 12px; width: 12px;
-	background-size: 12px 12px;
+	height: 1em; width: 1em;
+	background-size: 1em 1em;
 	opacity: 0.25;
-	font-size: 0.75rem;
-	line-height: 1.5rem;
+	font-size: 0.75em;
 	font-weight: normal;
+	background-position: right;
+	line-height: 1;
 }
-h1 .actions a {
-	height: 16px; width: 16px;
-	background-size: 16px 16px;
+#roster .excuses {
+	float: right;
+	position: relative;
+	top: 6px; right: -15px;
 }
+h1 .actions { padding-left: 0.25em; }
+h1 .actions a { font-size: 0.5em; }
+.actions.expand a {
+	width: auto;
+	padding-right: 1.25em;
+}
+.actions.expand a::before { content: attr(title); }
 
-
-.edit:hover, .actions a:hover { opacity: 0.75; }
+.edit:hover, .actions a:hover, #roster .excuses:hover { opacity: 0.75; }
 table .actions {
 	border-left-color: transparent;
 	padding: 0 5px;
@@ -282,7 +293,7 @@ table.sortable th::after {
 table.sortable th[data-sort="desc"]::after { content: '↓'; }
 table.sortable th[data-sort="asc"]::after { content: '↑'; }
 
-.actions a:hover::after {
+.actions:not(.expand) a:hover::after, #roster .excuses:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -291,12 +302,13 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	background: #000;
 	border-radius: 3px;
 	padding: 0px 10px;
-	font-size: 0.9em;
+	font-size: 0.7rem;
 	color: #CCC;
 	white-space: nowrap;
 	pointer-events: none;
+	line-height: 2;
 }
-.actions a:hover::before, .popup::after {
+.actions:not(.expand) a:hover::before, #roster .excuses:hover::before {
 	content: '';
 	display: block;
 	position: absolute;
@@ -305,23 +317,6 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	border-width: 5px;
 	pointer-events: none;
 	top: -6px;
-}
-.nottip .actions a:hover::after, .nottip .actions a:hover::before { display: none; }
-.popup {
-	background: rgba(0,0,0,0.8);
-	text-align: center;
-	display: inline-block;
-	padding: 5px 10px;
-	border-radius: 4px;
-	color: #CCC;
-	font-size: 0.75em;
-	position: absolute;
-}
-.popup::after {
-	left: 50%; bottom: -10px;
-	top: auto;
-	margin-left: -6px;
-	border-top-color: rgba(0,0,0,0.8);
 }
 
 /* ============
@@ -336,6 +331,7 @@ dialog {
 	border-radius: 12px;
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 	transition: 0.2s opacity;
+	overflow: visible;
 }
 dialog.transit { opacity: 0; }
 dialog > div { padding: 15px 30px; }
@@ -350,11 +346,12 @@ dialog.transit::backdrop {
 	backdrop-filter: blur(0);
 	pointer-events: none;
 }
-dialog .note {
+dialog .note, dialog .excused {
 	font-size: 0.8em;
 	position: relative;
 	top: -1.2em;
 	color: #555;
+	margin: 0;
 }
 dialog table {
 	margin: 0 -30px;
@@ -392,6 +389,13 @@ dialog h2 { margin-top: 0.5em; }
 .result-button.unselected:hover {
 	opacity: 0.5;
 }
+
+dialog div > .actions {
+	position: absolute;
+	right: 10px; top: 1.35em;
+	font-size: 1.25em;
+}
+.excused .actions { font-size: 1.25em; } /* Cancels out the 0.8 */
 
 /* =================
    Header and Footer

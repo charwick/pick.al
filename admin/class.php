@@ -74,7 +74,7 @@ if (isset($_POST['name'])) {
 					<span id="semester"> <?php echo ucwords($class->semester); ?></span>
 					<span id="year"><?php echo $class->year; ?></span>
 					<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
-					<span id="activeuntil"><?php echo $class->activeuntil; ?></span>
+					<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
 				</p>
 				<p id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
 					Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
@@ -120,19 +120,20 @@ if (isset($_POST['name'])) {
 						<tr>
 							<th class="fname">First name</th>
 							<th class="lname">Last name</th>
-							<th class="note" colspan="2">Note</th>
+							<th class="note">Note</th>
 							<th class="score">Score</th>
 						</tr>
 					</thead>
 					<tbody><?php
 						 $row=0;
 						foreach ($roster as $student) {
-							if ($student->excuseduntil && strtotime($student->excuseduntil) > time()) $trclasses[] = 'excused';
-							echo "<tr data-id='{$student->id}'".($student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time() ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
+							$excused = $student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time();
+							echo "<tr data-id='{$student->id}'".($excused ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
 								echo "<td class='fname'>{$student->fname}</td>";
-								echo "<td class='lname'>{$student->lname}</td>";
+								echo "<td class='lname'>{$student->lname}";
+									if ($excused) echo '<span class="excuses" title="Excused until '.date('M j, Y', strtotime($student->excuseduntil)).'"></span>';
+								echo "</td>";
 								echo "<td class='note'>{$student->note}</td>";
-								echo '<td class="actions"></td>';
 								echo '<td class="score'.($student->score===null ? ' nullscore' : '').'">';
 									if ($student->score!==null) echo "{$student->score}/{$student->denominator} (".round($student->score/$student->denominator*100)."%)";
 								echo "</td>";
@@ -142,7 +143,7 @@ if (isset($_POST['name'])) {
 					?></tbody>
 					<tfoot>
 						<tr>
-							<td colspan="4" class="addnew"><a href="#" title="New Student">+</a></td>
+							<td colspan="3" class="addnew"><a href="#" title="New Student">+</a></td>
 							<td class="uploadcsv"><a href="#" title="Upload CSV">CSV</a></td>
 						</tr>
 					</tfoot>

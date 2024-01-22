@@ -1,7 +1,7 @@
 "use strict";
 function dce(tag, classname) {
 	const e = document.createElement(tag);
-	if (classname) e.classList.add(classname);
+	if (classname) e.classList.add(...(typeof classname == 'string' ? [classname] : classname));
 	return e;
 }
 
@@ -26,17 +26,17 @@ function makeEditable(element, attrs) {
 function makeInput(elements, attrs) {
 	let inps = [], i=0;
 	if (!(elements instanceof Array)) elements = [elements];
+	attrs = attrs || {};
 
 	//Keep track of what actions to put back when we solidify
 	if (!('actions' in attrs)) {
 		attrs['actions'] = [];
-		const container = elements.length==1 ? elements[0] : elements[0].parentNode;
-		for (const a of container.querySelectorAll('.actions a'))
+		if (!('actionsbox' in attrs)) attrs['actionsbox'] = elements[0].querySelector('.actions');
+		for (const a of attrs['actionsbox'].querySelectorAll('a'))
 			attrs['actions'].push(a.getAttribute('class'));
 	}
 	if (!('required' in attrs)) attrs['required'] = true;
 
-	clearPopups();
 	for (const element of elements) {
 		let inp;	
 		if (attrs.type=='select') {
@@ -48,7 +48,8 @@ function makeInput(elements, attrs) {
 		} else {
 			inp = document.createElement('input');
 			inp.type = attrs.type || 'text';
-			inp.value = element.textContent.replace('✎','');
+			if (inp.type=='date') inp.value = element.dataset.date;
+			else inp.value = element.textContent.replace('✎','');
 			for (const attr of ['min', 'max', 'placeholder', 'required'])
 				if (attr in attrs) {
 					const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
@@ -74,17 +75,18 @@ function makeInput(elements, attrs) {
 		element.cancel = function() {
 			for (const input of inps) input.value = input.oldValue;
 			solidify(elements, attrs['actions']);
-			document.querySelector('#roster .addnew a')?.classList.remove('disabled');
 			element.parentNode.querySelector('.inlineError')?.remove();
+			if ('cancel' in attrs) attrs.cancel();
 		}
 		element.save = function() {
 			element.parentNode.querySelector('.inlineError')?.remove();
 			sendInfo(elements, attrs.data(inps), attrs['actions'], 'after' in attrs ? attrs.after : null);
 		};
 
-		if (elements.length==1) inp.addEventListener('blur', elements[0].save);
-		else {
-			const actions = element.parentNode.querySelector('.actions');
+		if (elements.length==1) {
+			if  (!('blur' in attrs && !attrs['blur'])) inp.addEventListener('blur', elements[0].save);
+		} else {
+			const actions = attrs['actionsbox'];
 			actions.textContent = '';
 			actions.append(...actionButtons(['save', 'cancel']));
 		}
@@ -107,7 +109,10 @@ function solidify(els, actionList) {
 		el.classList.remove('editing');
 		const inp = el.querySelector('input, select');
 		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
-		else inp.parentNode.textContent = inp.value;
+		else if (inp.type == 'date') {
+			inp.parentNode.dataset.date = inp.value;
+			inp.parentNode.textContent = datetostr(inp.value);
+		} else inp.parentNode.textContent = inp.value;
 	}
 	
 	let actions;
@@ -116,23 +121,14 @@ function solidify(els, actionList) {
 		actions.classList.add('actions');
 		els[0].append(actions);
 	} else if (els.length > 1) {
-		actions = els[0].parentNode.querySelector('.actions');
+		actions = els[0].pickalAttrs['actionsbox'];
 		actions.textContent = '';
 	}
 	actions.append(...actionButtons(actionList));
 }
 
-function clearPopups() {
-	for (const pp of document.querySelectorAll('.popup')) pp.remove();
-	for (const tr of document.querySelectorAll('#roster tr')) {
-		tr.classList.remove('nottip');
-		for (const td of tr.querySelectorAll('td'))
-			if (td.classList.contains('editing') && !td.querySelector('input'))
-				td.classList.remove('editing');
-	}
-}
-
 function actionButtons(list) {
+	if (!list) return [];
 	const buttons = {
 		edit: {title: 'Edit'},
 		save: {title: 'Save'},
@@ -162,32 +158,44 @@ Date.prototype.clockTime = function() {
 	return this.getHours()+':'+mins;
 }
 
+//Returns a timezone-adjusted Month Day, Year string from a YYYY-MM-DD
+function datetostr(datestr) {
+	const exc = new Date(datestr),
+		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+	return modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+}
+
+//Returns 1=valid, 0=invalid, null=no change for each element
+function validate(elements) {
+	let blank, changed;
+	for (let element of elements) {
+		if (!['INPUT', 'SELECT'].includes(element.tagName)) element = element.querySelector('input,select');
+		element.classList.remove('error');
+		if (element.value != element.oldValue) changed = true;
+		if (Object.hasOwn(element, 'validate') && !element.validate) continue; //Let fields be skipped
+		if (element.required && element.value == '') {
+			element.classList.add('error');
+			element.focus();
+			blank = true; //Don't return quite yet, so we can check all our inputs
+		}
+	}
+	if (blank) return 0;	//Fail
+	if (changed) return 1;	//Pass
+	return null;			//Nothing changed
+}
+
 //============================
 // Communicate with the server
 //============================
 
 function sendInfo(elements, data, actions, after, errorfn) {
-	let blank, changed, inputs=[];
 	if (elements == null) elements = [];
 	else if (!(elements instanceof Array)) elements = [elements];
 	
-	//Check for blank values
-	for (const element of elements) {
-		const inp = element.querySelector('input,select');
-		inp.classList.remove('error');
-		if (Object.hasOwn(inp, 'validate') && !inp.validate) continue;
-		if (inp.required && inp.value == '') {
-			inp.classList.add('error');
-			inp.focus();
-			blank = true; //Don't return quite yet, so we can check all our inputs
-		}
-		if (inp.value != inp.oldValue) changed = true;
-		inputs.push(inp);
-	}
-	if (blank) return;
-		
-	//Only make a request if the value has changed
-	if (changed || !elements.length) {
+	//Check for blank values and only make a request if the value has changed
+	const valid = validate(elements);
+	if (valid===0) return;
+	if (valid!=null || !elements.length) {
 		const req = new XMLHttpRequest();
 		req.open('GET', '../ajax.php?'+data.join('&'), true);
 		req.onload = function() {
@@ -197,7 +205,12 @@ function sendInfo(elements, data, actions, after, errorfn) {
 				if (after instanceof Function) after(parseInt(this.response));
 			}
 		};
-		req.onerror = () => {
+		
+		req.onerror = function()  {
+			const inputs = [];
+			for (const inp of elements)
+				if (['INPUT', 'SELECT'].includes(inp.tagName)) inputs.push(inp);
+				else inputs.push(inp.querySelector('input,select'));
 			if (errorfn) errorfn(this.response, inputs);
 			else for (const inp of inputs) inp.classList.add('error');
 		};

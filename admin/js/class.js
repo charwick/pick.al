@@ -27,179 +27,178 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (roster) {
 		makeSortable(document.getElementById('roster'), 'lname', 'desc');
 		for (const td of roster.querySelectorAll('.actions')) {
-			td.append(...actionButtons(['edit', 'excuses', 'delete']));
-			if ('excused' in td.parentNode.dataset) {
-				const exc = new Date(td.parentNode.dataset.excused),
-					modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
-				td.querySelector('.excuses').title = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-			}
+			td.append(...actionButtons(['excuses']));
+			if ('excused' in td.parentNode.dataset)
+				td.querySelector('.excuses').title = "Excused through "+datetostr(td.parentNode.dataset.excused);
 		}
 	
+		//Student details modal
 		roster.addEventListener('click', function(e) {
-			if (!e.target.matches('.actions a, .score')) return;
-			e.preventDefault();
-			let tr = e.target.parentNode.parentNode,
-				td_fn = tr.querySelector('.fname'),
-				td_ln = tr.querySelector('.lname'),
-				td_note = tr.querySelector('.note');
-			if (e.target.classList.contains('edit'))
-				makeInput([td_fn, td_ln, td_note], {placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false], data: function(inputs) {
-					return ['req=editstudent', 'student='+inputs[0].parentNode.parentNode.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value];
-				}});
-			else if (e.target.classList.contains('save')) td_fn.save();
-			else if (e.target.classList.contains('cancel')) td_fn.cancel();
-			
-			else if (e.target.classList.contains('delete')) {
-				if (!confirm('Are you sure you want to delete the student '+tr.querySelector('.fname').textContent+' '+tr.querySelector('.lname').textContent+'?')) return;
-				const req = new XMLHttpRequest();
-				req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
-				req.onload = function() {
-					if (parseInt(this.response) != 1) req.onerror();
-					else {
-						const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
-						for (const evrow of evrows) evrow.remove();
-						tr.remove();
-						const snum = document.getElementById('num_students');
-						snum.textContent = parseInt(snum.textContent)-1;
-					}
-				};
-				req.onerror = () => {  };
-				req.send();
-			
-			} else if (e.target.classList.contains('excuses')) {
-				const lname = tr.querySelector('.lname')
-				if (lname.classList.contains('editing')) {
-					clearPopups();
-					return;
+			let tr = e.target;
+			while (tr.tagName != 'TR') tr = tr.parentNode;
+						
+			const req = new XMLHttpRequest();
+			req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
+			req.onload = function() {
+				const events = JSON.parse(this.response),
+					table = dce('table'),
+					tbody = dce('tbody'),
+					tfoot = dce('tfoot'),
+					snote = dce('p', 'note'),
+					excused = dce('p', 'excused'),
+					actions = dce('div', 'actions'),
+					fname = dce('span', 'fname'),
+					lname = dce('span', 'lname'),
+					numspan = dce('span', 'num'),
+					h2 = dce('h2');
+				table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
+				table.classList.add('events');
+				let num=0, den=0;
+				for (const event of events) {
+					event.student = tr.dataset.id;
+					tbody.append(eventRow(event, false));
+					num += event.result;
+					den++;
 				}
 				
-				clearPopups();
-				const popup = dce('div', 'popup'),
-					inp = dce('input'),
-					erect = e.target.getBoundingClientRect(),
-					subactions = dce('span', 'actions');
-			
-				tr.classList.add('nottip');
-				lname.classList.add('editing');
-				popup.textContent = 'Excused through ';
-				inp.type = 'date';
-				inp.value = tr.dataset.excused;
-				inp.oldValue = inp.value;
-				subactions.append(...actionButtons(['save', 'cancel']))
-				popup.append(inp, subactions);
-				popup.style.top = (erect.top+window.pageYOffset-40)+'px';
-				document.body.append(popup);
-				popup.style.left = Math.round(erect.left+window.pageXOffset-popup.getBoundingClientRect().width/2+erect.width/2)+'px';
-				inp.focus();
+				tbody.addEventListener('click', eventActions); //Event action buttons
+				tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
+				table.append(tbody, tfoot);
+				snote.innerHTML = tr.querySelector('.note').innerHTML;
+				actions.append(...actionButtons(['edit', 'excuses', 'delete']));
 
-				popup.save = function() {
-					if (inp.value == inp.oldValue) {
-						popup.solidify();
-						return;
+				fname.innerHTML = tr.querySelector('.fname').innerHTML;
+				lname.innerHTML = tr.querySelector('.lname').innerHTML;
+				numspan.textContent = events.length;
+				h2.append(fname, ' ', lname, ' ', numspan);
+				if ('excused' in tr.dataset)
+					excused.innerHTML = 'Excused through <span data-date="'+tr.dataset.excused+'">'+datetostr(tr.dataset.excused)+'</span>';
+
+				actions.addEventListener('click', function(e) {
+					e.preventDefault();
+
+					//Edit student
+					if (e.target.classList.contains('edit')) {
+						makeInput([fname, lname, snote], {
+							placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false],
+							data: function(inputs) {
+								return ['req=editstudent', 'student='+tr.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value];
+							},
+							actionsbox: actions,
+							after: function(response) {
+								tr.querySelector('.fname').innerHTML = fname.innerHTML;
+								tr.querySelector('.lname').innerHTML = lname.innerHTML;
+								tr.querySelector('.note').innerHTML = snote.innerHTML;
+							}
+						});
 					}
 
-					const req = new XMLHttpRequest();
-					req.open('GET', '../ajax.php?req=studentexcused&id='+tr.dataset.id+'&excused='+inp.value, true);
-					req.onload = function() {
-						if (parseInt(this.response) != 1) inp.classList.add('error');
-						else {
-							const exc = new Date(inp.value),
+					//Delete student
+					else if (e.target.classList.contains('delete')) {
+						if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
+						const req = new XMLHttpRequest();
+						req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
+						req.onload = function() {
+							if (parseInt(this.response) != 1) req.onerror();
+							else {
+								//Delete recent participation events
+								const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
+								for (const evrow of evrows) evrow.remove();
+
+								tr.remove(); //Delete roster row
+								const snum = document.getElementById('num_students');
+								snum.textContent = parseInt(snum.textContent)-1;
+								document.querySelector('dialog').remove();
+							}
+						};
+						req.onerror = () => {  };
+						req.send();
+
+					} else if (e.target.classList.contains('save')) fname.save();
+					else if (e.target.classList.contains('cancel')) fname.cancel();
+
+					//Set Excused Absences
+					else if (e.target.classList.contains('excuses')) {
+						if (!excused.textContent) excused.innerHTML = 'Excused through <span></span>';
+						const qspan = excused.querySelector('span');
+
+						const xacts = dce('span','actions');
+						function clearExcuse() {
+							excused.textContent = '';
+							delete tr.dataset.excused;
+							tr.querySelector('.lname .excuses')?.remove();
+						}
+						xacts.append(...actionButtons(['save', 'cancel', 'delete']));
+						excused.append(xacts);
+						xacts.addEventListener('click', function(e) {
+							e.preventDefault();
+							if (e.target.classList.contains('cancel')) qspan.cancel();
+							else if (e.target.classList.contains('save')) qspan.save();
+							else if (e.target.classList.contains('delete')) {
+								const inp = qspan.querySelector('input');
+								inp.value = '';
+								inp.validate = false;
+								qspan.save();
+								clearExcuse();
+							}
+						});
+
+						function clearacts() {
+							xacts.remove();
+							if (!('excused' in tr.dataset)) excused.textContent = '';
+						};
+						function updateRosterExcuse(response) {
+							const exc = new Date(qspan.dataset.date),
 								now = new Date(),
 								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
 							if (modDate > now) {
-								tr.dataset.excused = inp.value;
-								e.target.title = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-							} else {
-								delete tr.dataset.excused;
-								e.target.title = "Set excused absences";
-							}
-							popup.solidify();
+								tr.dataset.excused = qspan.dataset.date;
+								const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+								let excbut = tr.querySelector('.lname .excuses');
+								if (!excbut) {
+									excbut = dce('span', 'excuses');
+									tr.querySelector('.lname').append(excbut);
+								}
+								excbut.title = through;
+							} else clearExcuse();
+							clearacts();
 						}
-					};
-					req.onerror = () => { inp.classList.add('error'); };
-					req.send();
-				}
-
-				popup.solidify = function() {
-					tr.classList.remove('nottip');
-					tr.querySelector('.lname').classList.remove('editing')
-					popup.remove();
-				}
-			
-				inp.addEventListener('keydown', function(e2) {
-					if (e2.key == "Enter") {
-						e2.preventDefault();
-						popup.save();
-					} else if (e2.key == "Escape") {
-						e2.preventDefault();
-						popup.solidify();
+						makeInput(qspan, {
+							data: (inps) => { return ['req=studentexcused', 'id='+tr.dataset.id, 'excused='+inps[0].value]; },
+							actions: null,
+							type: 'date',
+							blur: false, //Don't save on blur since we're adding action buttons
+							after: updateRosterExcuse, cancel: clearacts
+						});
 					}
 				});
-				popup.addEventListener('click', function(e2) {
-					if (e2.target.classList.contains('save')) {
-						e2.preventDefault();
-						popup.save();
-					} else if (e2.target.classList.contains('cancel')) {
-						e2.preventDefault();
-						popup.solidify();
-					}
+				
+				//Add new event
+				tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
+					e.preventDefault();
+					if (this.classList.contains('disabled')) return;
+					this.classList.add('disabled');
+					
+					const evtr = dce('tr'),
+						date = new Date();
+					evtr.dataset.student = tr.dataset.id;
+					evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+					editEvent(evtr);
+					tbody.prepend(evtr);
 				});
-			
-			//Student details modal
-			} else if (e.target.classList.contains('score')) {
-				tr = e.target.parentNode;
-				if (tr.querySelector('.lname').classList.contains('editing')) return;
-				const req = new XMLHttpRequest();
-				req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
-				req.onload = function() {
-					const events = JSON.parse(this.response),
-						table = dce('table'),
-						tbody = dce('tbody'),
-						tfoot = dce('tfoot'),
-						snote = dce('span', 'note');
-					table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
-					table.classList.add('events');
-					let num=0, den=0;
-					for (const event of events) {
-						event.student = tr.dataset.id;
-						tbody.append(eventRow(event, false));
-						num += event.result;
-						den++;
-					}
-					
-					tbody.addEventListener('click', eventActions); //Event action buttons
-					tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
-					table.append(tbody, tfoot);
-					snote.innerHTML = tr.querySelector('.note').innerHTML;
-					
-					//Add new event
-					tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
-						e.preventDefault();
-						if (this.classList.contains('disabled')) return;
-						this.classList.add('disabled');
-						
-						const evtr = dce('tr'),
-							date = new Date();
-						evtr.dataset.student = tr.dataset.id;
-						evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
-						editEvent(evtr);
-						tbody.prepend(evtr);
-					});
-					
-					modal(
-						tr.querySelector('.fname').innerHTML+' '+tr.querySelector('.lname').innerHTML + ' <span class="num">'+events.length+'</span>',
-						actions, snote, table
-					).student = tr.dataset.id;
-				};
-				req.onerror = () => {  };
-				req.send();
-			}
+				
+				modal(h2, actions, snote, excused, table).student = tr.dataset.id;
+			};
+			req.onerror = () => {  };
+			req.send();
 		});
 
 		//CSV Upload
 		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
 			e.preventDefault();
-			const content = dce('div');
+			const content = dce('div'),
+				h2 = dce('h2');
+			h2.textContent = 'Upload Students';
 			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.</p>'
 				+'<p><label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>';
 			
@@ -210,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
 			label.addEventListener('drop', uploadCSV);
 			csvElement.addEventListener('change', uploadCSV);
-			modal('Upload Students', content);
+			modal(h2, content);
 		});
 	}
 
@@ -226,25 +225,68 @@ document.addEventListener('DOMContentLoaded', () => {
 	const addStudent = document.querySelector('#roster .addnew a');
 	if (addStudent) addStudent.addEventListener('click', function(e) {
 		e.preventDefault();
-		clearPopups();
-		if (this.classList.contains('disabled')) return;
-		this.classList.add('disabled');
+
+		const title = dce('h2'),
+			h2 = dce('h2'),
+			note = dce('input', 'note'),
+			actions = dce('div', ['actions', 'expand']);
+		note.placeholder = 'Note';
+		title.textContent = 'New Student';
+		note.type = 'text';
+		h2.innerHTML = '<input type="text" class="fname" placeholder="First Name" required="true" /> <input type="text" class="lname" placeholder="Last Name" required="true" />';
+		actions.append(...actionButtons(['save', 'cancel']));
+		const fname = h2.querySelector('.fname'),
+			lname = h2.querySelector('.lname');
 		
-		const tr = studentRow('','','', ['cancel', 'save']),
-			tds = [tr.querySelector('.fname'), tr.querySelector('.lname'), tr.querySelector('.note')],
-			after = (response) => {
-				tr.dataset.id = response;
-				const snum = document.getElementById('num_students');
-				snum.textContent = parseInt(snum.textContent)+1;
-				document.querySelector('#roster .addnew a').classList.remove('disabled');
-			}
-		makeInput(tds, {placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false], actions: ['edit', 'excuses', 'delete'], after: after, data: function(inputs) { return ['req=addstudent', 'classid='+classid, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value]; }});
-		for (const td of tds) {
-			td.cancel = function() {
-				tr.remove();
-				document.querySelector('#roster .addnew a').classList.remove('disabled');
+		function studentSave() {
+			if (validate([fname, lname, note])) {
+				const req = new XMLHttpRequest();
+				req.open('GET', '../ajax.php?req=addstudent&classid='+classid+'&fname='+fname.value+'&lname='+lname.value+'&note='+note.value, true);
+				req.onload = function() {
+					const sid = parseInt(this.response);
+					if (!sid) req.onerror();
+					else {
+						const tr = dce('tr'),
+							td_fn = dce('td', 'fname'),
+							td_ln = dce('td', 'lname'),
+							td_nt = dce('td', 'note'),
+							td_sc = dce('td', 'score'),
+							snum = document.getElementById('num_students'),
+							roster = document.getElementById('roster');
+						td_fn.textContent = fname.value;
+						td_ln.textContent = lname.value;
+						td_nt.textContent = note.value;
+						tr.dataset.id = sid;
+						tr.append(td_fn, td_ln, td_nt, td_sc);
+						roster.querySelector('#roster tbody').append(tr);
+						roster.sort(roster.sortby, roster.direction);
+						snum.textContent = parseInt(snum.textContent)+1; //Increment roster counter
+						document.querySelector('dialog').close();
+					}
+				};
+				req.onerror = () => {
+					if (errorfn) errorfn(this.response, inputs);
+					else for (const inp of inputs) inp.classList.add('error');
+				};
+				req.send();
 			}
 		}
+		
+		for (const inp of [fname, lname, note]) inp.addEventListener('keydown', function(e2) {
+			if (e2.key == "Enter") {
+				e2.preventDefault();
+				studentSave();
+			}
+		});
+
+		actions.addEventListener('click', function(e) {
+			e.preventDefault();
+			if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
+			else if (e.target.classList.contains('save')) studentSave();
+		});
+
+		modal(title, actions, h2, note);
+		fname.focus();
 	});
 	
 	//Validate new class
@@ -507,16 +549,19 @@ function eventRow(event, namecol) {
 	return evtr;
 }
 
-function modal(title, ...content) {
+function modal(...content) {
 	const modal = dce('dialog', 'transit'),
-		mwrap = dce('div'),
-		h2 = dce('h2');
-	h2.innerHTML = title;
-	mwrap.append(h2, ...content);
+		mwrap = dce('div');
+	mwrap.append(...content);
 	modal.append(mwrap);
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
 		if (e.target.nodeName === 'DIALOG') {
+			if (
+				modal.querySelector('input[name="fname"], input.fname') &&
+				!confirm('Do you want to save the entered info? Press cancel to return or OK to close without saving.')
+			) return;
+
 			modal.classList.add('transit');
 			setTimeout(() => { modal.remove(); }, 250);
 		}
