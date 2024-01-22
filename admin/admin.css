@@ -521,6 +521,7 @@ main .gravatar {
 	}
 	table tr th:first-child, table tr td:first-child, #roster tbody:empty::before { padding-left: 20px; }
 	table.sortable th::after { margin-right: -5px; }
+	#roster .excuses { right: -10px; }
 
 	dialog {
 		margin: auto 0 0;

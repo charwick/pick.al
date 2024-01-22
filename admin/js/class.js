@@ -246,19 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 					const sid = parseInt(this.response);
 					if (!sid) req.onerror();
 					else {
-						const tr = dce('tr'),
-							td_fn = dce('td', 'fname'),
-							td_ln = dce('td', 'lname'),
-							td_nt = dce('td', 'note'),
-							td_sc = dce('td', 'score'),
-							snum = document.getElementById('num_students'),
+						studentRow(sid, fname.value, lname.value, note.value);
+						const snum = document.getElementById('num_students'),
 							roster = document.getElementById('roster');
-						td_fn.textContent = fname.value;
-						td_ln.textContent = lname.value;
-						td_nt.textContent = note.value;
-						tr.dataset.id = sid;
-						tr.append(td_fn, td_ln, td_nt, td_sc);
-						roster.querySelector('#roster tbody').append(tr);
 						roster.sort(roster.sortby, roster.direction);
 						snum.textContent = parseInt(snum.textContent)+1; //Increment roster counter
 						document.querySelector('dialog').close();
@@ -519,11 +509,11 @@ function infoElement(message, classname, tag) {
 	return info;
 }
 
-function studentRow(col1, col2, col3, actions=[]) {
+function studentRow(id, col1, col2, col3) {
 	const stable = document.getElementById('roster').querySelector('tbody'),
 		tr = dce('tr');
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="actions"></td><td class="score"></td>';
-	tr.querySelector('.actions').append(...actionButtons(actions));
+	tr.dataset.id = id;
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score"></td>';
 	stable.append(tr);
 	return tr;
 }
@@ -669,14 +659,13 @@ function uploadCSV(e) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 			} else {
-				const info = infoElement("Uploaded "+response.length+" students")
+				const info = infoElement("Uploaded "+response.length+" students"),
+					roster = document.getElementById('roster');
 				document.querySelector('#students h2').after(info);
-				for (const row of response) {
-					const tr = studentRow(row['fname'], row['lname'], row['note'], ['edit', 'excuses', 'delete']);
-					tr.dataset.id = row['id'];
-				}
+				for (const row of response) studentRow(row['id'], row['fname'], row['lname'], row['note']);
 				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
 				document.getElementsByTagName('dialog')[0].remove();
+				roster.sort(roster.sortby, roster.direction);
 			}
 		};
 		req.onerror = function() {
