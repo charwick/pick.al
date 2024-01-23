@@ -556,7 +556,7 @@ main .gravatar {
 	}
 	section > table {
 		margin: 0 -20px;
-		width: 100vw;
+		width: calc(100% + 40px);
 	}
 	table td, table th {
 		padding-left: 12px;

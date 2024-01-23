@@ -4,9 +4,10 @@ var hist = [], //Reverse coded: current student = index[0]
 	currentAnim = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-	if ('roster' in window) for (const s in roster) if (roster[s].excuseduntil != null) {
-		const exc = new Date(roster[s].excuseduntil);
-		roster[s].excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
+	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {
+		const exc = new Date(s.excuseduntil);
+		s.excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
+		if (isExcused(s)) document.querySelector('li[data-id="'+s.id+'"]').classList.add('excused');
 	}
 	document.getElementById('actions')?.addEventListener('click', function(e) {
 		e.preventDefault();

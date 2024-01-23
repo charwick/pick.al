@@ -278,6 +278,15 @@ h1#logo { height: 1.5em; }
 	font-size: 2em;
 }
 #rosterclose a { position: static; }
+#roster .excused { opacity: 0.5; }
+#roster .excused::after {
+	content: '';
+	background: url("icon/svg.php?icon=moon-fill&color=FFF") center/0.8em 0.8em no-repeat;
+	height: 0.8em; width: 0.8em;
+	float: right;
+	margin-top: 5px;
+	opacity: 0.75;
+}
 
 /* Small phones */
 
