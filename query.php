@@ -92,7 +92,8 @@ class chooser_query extends mysqli {
 		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
 			FROM students
 			LEFT JOIN events ON events.student=students.id
-			WHERE class=? AND user=?
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE class=? AND classes.user=?
 			GROUP BY students.id
 			ORDER BY students.lname";
 		$students = $this->execute_query($q, [$classid, $_SESSION['user']]);
@@ -103,26 +104,35 @@ class chooser_query extends mysqli {
 	}
 
 	function add_student(int $class, string $fname, string $lname, ?string $note=null): int {
-		$q = "INSERT INTO students (fname, lname, note, class, user) VALUES (?, ?, ?, ?, ?)";
-		$this->execute_query($q, [sanitize($fname), sanitize($lname), sanitize($note), $class, $_SESSION['user']]);
-		return $this->insert_id;
+		if ($this->get_class($class)->user==$_SESSION['user']) {
+			$q = "INSERT INTO students (fname, lname, note, class) VALUES (?, ?, ?, ?)";
+			$this->execute_query($q, [sanitize($fname), sanitize($lname), sanitize($note), $class]);
+			return $this->insert_id;
+		} else return 0;
 	}
 	
 	function edit_student(int $id, string $fname, string $lname, ?string $note=null): int {
-		$q = "UPDATE students SET fname=?, lname=?, note=? WHERE id=? AND user=?";
+		$q="UPDATE students
+			LEFT JOIN classes ON classes.id=students.class
+			SET fname=?, lname=?, note=?
+			WHERE students.id=? AND classes.user=?";
 		$this->execute_query($q, [sanitize($fname), sanitize($lname), sanitize($note), $id, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 	
 	//Events cascade delete in SQL
 	function delete_student(int $id): int {
-		$q1 = "DELETE FROM students WHERE id=? AND user=?";
+		$q1="DELETE students FROM students
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE students.id=? AND classes.user=?";
 		$this->execute_query($q1, [$id, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
 	
 	function student_excused(int $id, ?string $excused): int {
-		$q = "UPDATE students SET excuseduntil=? WHERE id=? AND user=?";
+		$q="UPDATE students
+			LEFT JOIN classes ON classes.id=students.class
+			SET excuseduntil=? WHERE students.id=? AND classes.user=?";
 		$this->execute_query($q, [$excused, $id, $_SESSION['user']]);
 		return $this->affected_rows;
 	}
@@ -138,31 +148,29 @@ class chooser_query extends mysqli {
 	}
 	
 	function edit_event(int $id, $result): int {
-		$q1="SELECT events.* FROM events
+		$q="UPDATE events
 			LEFT JOIN students ON students.id=events.student
-			WHERE events.id=? AND students.user=?";
-		if ($this->execute_query($q1, [$id, $_SESSION['user']])->num_rows) {
-			$q2 = "UPDATE events SET result=? WHERE id=?";
-			$this->execute_query($q2, [$result, $id]);
-			return $this->affected_rows;
-		} else return 0;
+			LEFT JOIN classes ON classes.id=students.class
+			SET result=?
+			WHERE events.id=? AND classes.user=?";
+		$this->execute_query($q, [$result, $id, $_SESSION['user']]);
+		return $this->affected_rows;
 	}
 	
 	function delete_event(int $id): int {
-		$q1="SELECT events.* FROM events
+		$q="DELETE events FROM events
 			LEFT JOIN students ON students.id=events.student
-			WHERE events.id=? AND students.user=?";
-		if ($this->execute_query($q1, [$id, $_SESSION['user']])->num_rows) {
-			$q2 = "DELETE FROM events WHERE id=?";
-			$this->execute_query($q2, [$id]);
-			return $this->affected_rows;
-		} else return 0;
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE events.id=? AND classes.user=?";
+		$this->execute_query($q, [$id, $_SESSION['user']]);
+		return $this->affected_rows;
 	}
 	
 	function get_events(int $student): array {
-		$q = "SELECT events.id, date, result FROM events
+		$q="SELECT events.id, date, result FROM events
 			LEFT JOIN students ON students.id=events.student
-			WHERE student=? and user=?
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE student=? and classes.user=?
 			ORDER BY date DESC";
 		$events = $this->execute_query($q, [$student, $_SESSION['user']]);
 
@@ -172,9 +180,10 @@ class chooser_query extends mysqli {
 	}
 
 	function get_events_by_class(int $class, int $limit=0): array {
-		$q = "SELECT events.id, date, result, student, students.fname, students.lname FROM events
+		$q="SELECT events.id, date, result, student, students.fname, students.lname FROM events
 			LEFT JOIN students ON students.id=events.student
-			WHERE class=? and user=?
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE class=? and classes.user=?
 			ORDER BY date DESC";
 		if ($limit) $q .= " LIMIT {$limit}";
 		$events = $this->execute_query($q, [$class, $_SESSION['user']]);

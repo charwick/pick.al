@@ -622,6 +622,7 @@ function editEvent(row, selected) {
 					if (recent) {
 						recent.dataset.result = result;
 						recent.querySelector('.result-button').dataset.schema = result;
+						recent.querySelector('.result-button').textContent = schemae[schema][result].text;
 						recent.querySelector('.numspan').textContent = schemae[schema][result].value;
 					}
 				}

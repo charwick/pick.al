@@ -47,22 +47,20 @@ a.button.small {
 	border-bottom-width: 2px;
 }
 
-input[type="text"], input[type="password"], input[type="date"] {
+input[type="text"], input[type="password"], input[type="date"], input[type="number"] {
 	box-sizing: border-box;
 	border-width: 1px;
 	border-style: solid;
 	border-color: #AAA #BBB #CCC;
 	box-shadow: inset 0 2px 2px rgba(0,0,0,0.1);
-	padding: 5px 10px;
+	padding: 0.3em 0.6em;
 }
 input[type="password"] { margin-right: 1em; }
+input[type="number"] { padding-right: 3px; }
 
-#name input {
-	font-size: 1.25em;
-	padding: 10px 25px;
-}
+#name input { font-size: 1.5rem; }
 #year, input[name="year"] {
-	width: 4.5em;
+	width: 5em;
 	display: inline-block;
 }
 h2 input {
@@ -369,7 +367,8 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 dialog {
 	width: 540px;
 	padding: 0;
-	background: #FFF;
+	background: rgba(255,255,255,0.9);
+	backdrop-filter: blur(5px);
 	border: none;
 	border-radius: 12px;
 	box-shadow: 0 5px 10px rgba(0,0,0,0.2);
