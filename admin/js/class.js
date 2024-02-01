@@ -511,10 +511,15 @@ function infoElement(message, classname, tag) {
 
 function studentRow(id, col1, col2, col3) {
 	const stable = document.getElementById('roster').querySelector('tbody'),
-		tr = dce('tr');
+		tr = dce('tr', 'new');
 	tr.dataset.id = id;
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score"></td>';
 	stable.append(tr);
+	setTimeout(() => {
+		tr.style.transition = '1s background';
+		tr.classList.remove('new');
+		setTimeout(() => { tr.style.transition = null; }, 1000);
+	}, 250);
 	return tr;
 }
 

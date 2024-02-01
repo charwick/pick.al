@@ -230,6 +230,7 @@ input.error { box-shadow: 0 0 3px 1px #D22; }
 	background: rgba(160,180,230,0.2);
 }
 table.sortable th:hover { background: rgba(0,0,0,0.05); }
+table tr.new { background: #FFF3C0; }
 
 .events tfoot {
 	font-weight: bold;
