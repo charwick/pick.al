@@ -329,6 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						el.dataset.schema = inv[oldschema[el.dataset.schema].value];
 						el.textContent = schemae[schema][el.dataset.schema].text;
 					}
+					for (const el of document.querySelectorAll('td[data-result]'))
+						el.dataset.result = inv[oldschema[el.dataset.result].value];
 					select.solidify();
 				}
 				savereq.send();
@@ -510,12 +512,11 @@ function infoElement(message, classname, tag) {
 }
 
 function studentRow(id, col1, col2, col3) {
-	const stable = document.getElementById('roster').querySelector('tbody'),
-		tr = dce('tr', 'new');
+	const tr = dce('tr', 'new');
 	tr.dataset.id = id;
 	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score"></td>';
-	stable.append(tr);
-	setTimeout(() => {
+	document.getElementById('roster').querySelector('tbody').append(tr);
+	setTimeout(() => { //Flash row
 		tr.style.transition = '1s background';
 		tr.classList.remove('new');
 		setTimeout(() => { tr.style.transition = null; }, 1000);
