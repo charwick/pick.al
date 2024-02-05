@@ -23,3 +23,13 @@ function footer(): void {
 		<?php } ?>
 	</footer>
 <?php }
+
+function headermeta($admin=false): void {
+	if ($admin) { ?><link rel="stylesheet" href="/admin/admin.css" type="text/css" media="all"><?php } ?>
+	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+	
+	<link rel="icon" type="image/png" sizes="32x32" href="/icon/icon-32.png">
+	<link rel="shortcut icon" sizes="196x196" href="/icon/icon-196.png">
+	<link rel="apple-touch-icon" href="/icon/icon-196.png">
+	<meta name="msapplication-TileImage" content="/icon/icon-196.png">
+<?php }

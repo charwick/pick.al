@@ -40,8 +40,7 @@ function classlist(array $classes, string $title): void {
 <html lang="en-US">
 <head>
 	<title>Pick.al Admin</title>
-	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+	<?php headermeta(true); ?>
 </head>
 
 <body>

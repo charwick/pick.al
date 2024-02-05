@@ -33,7 +33,6 @@ if (isset($_POST['name'])) {
 <html lang="en-US">
 <head>
 	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New Class"; ?> | Pick.al</title>
-	<link rel="stylesheet" href="admin.css" type="text/css" media="all">
 	<script type="text/javascript">
 		var classid = <?php echo $classid ?: 'null'; ?>;
 		<?php if ($classid) {
@@ -51,8 +50,9 @@ if (isset($_POST['name'])) {
 		echo '<style type="text/css" class="schema-css">';
 		foreach ($schemae as $schema) echo $schema->output_css(false, false);
 		echo '</style>';
-	} ?>
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+	}
+
+	headermeta(true); ?>
 </head>
 
 <body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">

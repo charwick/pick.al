@@ -132,16 +132,16 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 			$_SESSION['orcid'] = $response->orcid; //Don't do a hidden input so the user can't change the OrcID
 		}
 	}
-} ?>
+}
+require_once('admin/parts.php'); ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
 	<title>Pick.al | Login</title>
-	<link rel="stylesheet" href="admin/admin.css" type="text/css" media="all">
+	<?php headermeta(true); ?>
 	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
 	<script type="text/javascript" src="login/login.js"></script>
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1">
 	<meta name="description" content="Pick.al is a lightweight app for selecting students at random and recording participation.">
 </head>
 
@@ -224,8 +224,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 		</section>
 	</main>
 
-	<?php require_once('admin/parts.php');
-	footer(); ?>
+	<?php footer(); ?>
 	<dialog><div><?php include('terms.html'); ?></div></dialog>
 </body>
 </html>
