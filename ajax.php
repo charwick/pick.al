@@ -106,6 +106,10 @@ switch ($req) {
 		echo json_encode($added);
 		break;
 	
+	case 'searchstudent':
+		echo json_encode($sql->student_search($_GET['phrase']));
+		break;
+	
 	//========
 	// EVENTS
 	//========

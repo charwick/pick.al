@@ -33,7 +33,6 @@ if ($classid) {
 		<title>Available Classes | Pick.al</title>
 	<?php } ?>
 	
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	<link rel="stylesheet" href="picker.css" type="text/css" media="all">
 	<script type="text/javascript" src="picker.js"></script>
 

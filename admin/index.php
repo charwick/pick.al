@@ -41,12 +41,22 @@ function classlist(array $classes, string $title): void {
 <head>
 	<title>Pick.al Admin</title>
 	<?php headermeta(true); ?>
+	<script src="js/ajax.js" type="text/javascript"></script>
+	<script src="js/search.js" type="text/javascript"></script>
 </head>
 
 <body>
 	<?php userbar($sql, '../', 'Picker'); ?>
 	<main>
-		<h1>Pick.al Admin Panel</h1>
+		<h1>
+			Manage Classes
+			<div id="searchcontain">
+				<input type="text" placeholder="Search Students..." id="search" autocomplete="off" />
+				<div id="autocomplete"></div>
+			</div>
+		</h1>
+
+		
 		
 		<?php if (isset($message)) echo $message;
 		

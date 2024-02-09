@@ -358,6 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	document.querySelector('#schemaselect').addEventListener('change', function(e) { addSchemaButtons(); });
 
+
+	//Highlight student from autocomplete
+	if (window.location.hash.includes('#student-')) {
+		const student = parseInt(window.location.hash.replace('#student-', ''));
+		document.querySelector('#roster tr[data-id="'+student+'"]')?.classList.add('new');
+	}
 });
 
 function addSchemaButtons() {

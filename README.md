@@ -23,6 +23,7 @@ The picker (to be used on a phone in class) randomly selects a student from the 
 * Add notes to students that show up in the picker (e.g. "Sits in the back row")
 * View, edit, and delete individual participation events on a per-student basis
 * Set excused absences, so a student's name doesn't come up until a set date
+* Search for students across classes
 
 ### Other
 

@@ -137,6 +137,28 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
+	function student_search(string $search) {
+		$phrases = explode(' ', $search);
+		$conds = [];
+		foreach ($phrases as &$phrase) {
+			$phrase = "%{$phrase}%";
+			$conds[] = 'haystack LIKE LOWER(?)';
+		}
+		$conds = implode(' AND ', $conds);
+
+		$q="SELECT students.*, name, semester, year, activeuntil, classes.id AS classid, LOWER(CONCAT(fname,' ',lname,' ',COALESCE(note,''),' ',classes.name)) AS haystack
+			FROM students
+			LEFT JOIN classes ON classes.id=students.class
+			WHERE user=? HAVING {$conds}
+			ORDER BY year DESC, semester DESC, lname ASC
+			LIMIT 10";
+		$students = $this->execute_query($q, array_merge([$_SESSION['user']], $phrases));
+
+		$result = [];
+		while ($student = $students->fetch_object()) $result[] = $student;
+		return $result;
+	}
+
 	//========
 	// EVENTS
 	//========
