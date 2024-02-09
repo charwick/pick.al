@@ -60,8 +60,8 @@ function classlist(array $classes, string $title): void {
 		
 		<?php if (isset($message)) echo $message;
 		
-		if ($active) classlist($active, 'Active Classes');
-		if ($inactive) classlist($inactive, 'Inactive Classes'); ?>
+		if ($active) classlist($active, 'Active');
+		if ($inactive) classlist($inactive, 'Inactive'); ?>
 		
 		<p><a class="button" href="class.php">New class</a></p>
 	</main>

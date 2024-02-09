@@ -23,12 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
 					now.setHours(23); now.setMinutes(59);
 					hist[histIndex].info.excuseduntil = now;
 					e.target.dataset.excused = 'Excused until tomorrow';
+					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.add('excused');
 				}
 			} else { //Clear excused
 				excdate = '';
 				fn = function() {
 					hist[histIndex].info.excuseduntil = null;
 					delete e.target.dataset.excused
+					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.remove('excused');
 				}
 			}
 			req.open('GET', 'ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, true);
