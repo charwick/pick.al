@@ -62,4 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			list.append(span);
 		}
 	}
+
+	//Expand and collapse inactive classes
+	setInactives();
+	document.getElementById('collapse')?.addEventListener('click', function() {
+		localStorage['hide-inactive'] = localStorage['hide-inactive'] == 'true' ? 'false' : 'true';
+		setInactives();
+	});
 });
+
+function setInactives() {
+	const body = document.querySelector('body');
+	if (localStorage['hide-inactive'] == 'true') body.classList.add('hide-inactive');
+	else body.classList.remove('hide-inactive');
+}

@@ -172,13 +172,13 @@ h2 input {
 .classes {
 	list-style: none;
 	padding: 0;
-	margin: 0;
+	margin: 2.5em 0 0;
 	max-width: 51em;
 }
 
 .classes li { display: inline-block; }
 
-.classbox {
+.classbox, #collapse {
 	display: inline-block;
 	width: 18em;
 	border: 1px solid rgba(0,0,0,0.2);
@@ -186,23 +186,40 @@ h2 input {
 	text-align: center;
 	padding: 0.75em;
 	margin: 0 1em 1em 0;
-	background: rgba(255,255,255,0.25);
+	background-color: rgba(255,255,255,0.25);
 	color: #777;
 	font-size: 0.8em;
 	box-sizing: border-box;
 }
-.classbox:hover {
+.classbox:hover, #collapse:hover {
 	color: #333;
-	background: rgba(255,255,255,0.75);
+	background-color: rgba(255,255,255,0.75);
 	border: 2px solid #69C;
 	padding-top: calc(0.75em - 1px);
 	padding-bottom: calc(0.75em - 1px);
 }
+.classbox.inactive, #collapse {
+	opacity: 0.5;
+	background: none;
+}
+.classbox.inactive:hover, #collapse:hover { opacity: 0.75; }
+.hide-inactive .classbox.inactive { display: none; }
+
 .classbox .title {
 	display: block;
 	font-size: 1.25em;
 	color: #36A;
 }
+#collapse {
+	width: 2em; height: 5.4em;
+	background: url('/icon/svg.php?icon=caret-left-fill&color=777') center center no-repeat;
+	vertical-align: top;
+	cursor: pointer;
+	position: relative;
+}
+.hide-inactive #collapse { background-image: url('/icon/svg.php?icon=caret-right-fill&color=777'); }
+#collapse:hover::after { content: 'Hide inactive classes' !important; }
+.hide-inactive #collapse:hover::after { content: 'Show inactive classes' !important; }
 
 .classes .students::after {
 	display: inline-block;
@@ -412,7 +429,7 @@ table.sortable th::after {
 table.sortable th[data-sort="desc"]::after { content: '↓'; }
 table.sortable th[data-sort="asc"]::after { content: '↑'; }
 
-.actions:not(.expand) a:hover::after, #roster .excuses:hover::after {
+.actions:not(.expand) a:hover::after, #roster .excuses:hover::after, #collapse:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -427,7 +444,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	pointer-events: none;
 	line-height: 2;
 }
-.actions:not(.expand) a:hover::before, #roster .excuses:hover::before {
+.actions:not(.expand) a:hover::before, #roster .excuses:hover::before, #collapse:hover::before {
 	content: '';
 	display: block;
 	position: absolute;
