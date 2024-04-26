@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (e.target.id=='back') buttonFunc('back')(e);
 		else if (e.target.id=='forward') buttonFunc('forward')(e);
 		else if (e.target.id=='snooze') {
-			const now = new Date(),
-				req = new XMLHttpRequest();
+			const now = new Date();
 			let excdate, fn;
 			if (!isExcused(hist[histIndex].info)) { //Set excused
 				excdate = now.toISOString().split('T')[0];
@@ -33,9 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.remove('excused');
 				}
 			}
-			req.open('GET', 'ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, true);
-			req.onload = fn;
-			req.send();
+			fetch('ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, {method: 'get'})
+			.then(fn).catch(console.error);
 		}
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -153,8 +151,6 @@ function StudentEvent(student) {
 	});
 
 	this.send = function(result) {
-		const req = new XMLHttpRequest(),
-			that = this;
 		let btn;
 		for (const s in schema) if (schema[s].value==result) {
 			btn = actionlist.querySelector('button[data-schema="'+s+'"]');
@@ -164,45 +160,42 @@ function StudentEvent(student) {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				req.open('GET', 'ajax.php?req=deleteevent&event='+this.event, true);
-				req.onload = function() {
-					that.info.score -= that.result;
-					that.info.denominator--;
-					that.event = null;
-					that.result = null;
+				fetch('ajax.php?req=deleteevent&event='+this.event, {method: 'get'})
+				.then((response) => response.json()).then((id) => {
+					this.info.score -= this.result;
+					this.info.denominator--;
+					this.event = null;
+					this.result = null;
 					btn.classList.remove('picked');
 					btn.parentNode.parentNode.classList.remove('picked');
 					for (const btn2 of actions) btn2.disabled = false;
-				}
+				}).catch(console.error);
 
 			//Re-do button press (edit event)
 			} else {
-				req.open('GET', 'ajax.php?req=updateevent&event='+this.event+'&result='+result, true);
-				req.onload = function() {
+				fetch('ajax.php?req=updateevent&event='+this.event+'&result='+result, {method: 'get'})
+				.then((response) => response.json()).then((id) => {
 					for (const btn2 of actions) btn2.disabled = false;
 					btn.classList.add('picked');
-					that.info.score += result - that.result;
-					that.result = result;
-				}
+					this.info.score += result - this.result;
+					this.result = result;
+				}).catch(console.error);
 			}
 		
 		//Send event (create new)
 		} else {
-			req.open('GET', 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, true);
-			req.onload = function() {
+			fetch('ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, {method: 'get'})
+			.then((response) => response.json()).then((id) => {
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
-				that.event = parseInt(this.response);
-				that.result = result;
-				if (that.info.score == null) that.info.score = 0;
-				that.info.score += result;
-				that.info.denominator++;
-			};
+				this.event = id;
+				this.result = result;
+				if (this.info.score == null) this.info.score = 0;
+				this.info.score += result;
+				this.info.denominator++;
+			}).catch(console.error);
 		}
-
-		req.onerror = () => { console.log('There was an error'); };
-		req.send();
 	};
 
 	this.enter = function(left) {

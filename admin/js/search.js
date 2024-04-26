@@ -20,15 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		timeouts.push(setTimeout(() => {
-			const req = new XMLHttpRequest();
-			req.open('GET', '../ajax.php?req=searchstudent&phrase='+val, true);
-			req.onload = function() {
-				const response = JSON.parse(this.response);
+			fetch('../ajax.php?req=searchstudent&phrase='+val, {method: 'get'})
+			.then((response) => response.json()).then((response) => {
 				cache[val] = response;
 				drawList(response);
-			};
-			req.onerror = () => {  };
-			req.send();
+			}).catch(console.error);
 		}, 250));
 	});
 

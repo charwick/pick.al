@@ -37,11 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			let tr = e.target;
 			while (tr.tagName != 'TR') tr = tr.parentNode;
 						
-			const req = new XMLHttpRequest();
-			req.open('GET', '../ajax.php?req=events&student='+tr.dataset.id, true);
-			req.onload = function() {
-				const events = JSON.parse(this.response),
-					table = dce('table'),
+			fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
+			.then((response) => response.json()).then((events) => {
+				const table = dce('table'),
 					tbody = dce('tbody'),
 					tfoot = dce('tfoot'),
 					snote = dce('p', 'note'),
@@ -96,10 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
 					//Delete student
 					else if (e.target.classList.contains('delete')) {
 						if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
-						const req = new XMLHttpRequest();
-						req.open('GET', '../ajax.php?req=deletestudent&id='+tr.dataset.id, true);
-						req.onload = function() {
-							if (parseInt(this.response) != 1) req.onerror();
+						fetch('../ajax.php?req=deletestudent&id='+tr.dataset.id, {method: 'get'})
+						.then((response) => response.json()).then((response) => {
+							if (response != 1) console.error('There was an error deleting the student.');
 							else {
 								//Delete recent participation events
 								const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
@@ -110,9 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								snum.textContent = parseInt(snum.textContent)-1;
 								document.querySelector('dialog').remove();
 							}
-						};
-						req.onerror = () => {  };
-						req.send();
+						}).catch(console.error);
 
 					} else if (e.target.classList.contains('save')) fname.save();
 					else if (e.target.classList.contains('cancel')) fname.cancel();
@@ -188,9 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				});
 				
 				modal(h2, actions, snote, excused, table).student = tr.dataset.id;
-			};
-			req.onerror = () => {  };
-			req.send();
+			}).catch(console.error);
 		});
 
 		//CSV Upload
@@ -240,11 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		function studentSave() {
 			if (validate([fname, lname, note])) {
-				const req = new XMLHttpRequest();
-				req.open('GET', '../ajax.php?req=addstudent&classid='+classid+'&fname='+fname.value+'&lname='+lname.value+'&note='+note.value, true);
-				req.onload = function() {
-					const sid = parseInt(this.response);
-					if (!sid) req.onerror();
+				onerror = (response) => {
+					if (errorfn) errorfn(response, inputs);
+					else for (const inp of inputs) inp.classList.add('error');
+				};
+
+				fetch('../ajax.php?req=addstudent&classid='+classid+'&fname='+fname.value+'&lname='+lname.value+'&note='+note.value, {method: 'get'})
+				.then((response) => response.json()).then((sid) => {
+					if (!sid) onerror(sid);
 					else {
 						studentRow(sid, fname.value, lname.value, note.value);
 						const snum = document.getElementById('num_students'),
@@ -253,12 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						snum.textContent = parseInt(snum.textContent)+1; //Increment roster counter
 						document.querySelector('dialog').close();
 					}
-				};
-				req.onerror = () => {
-					if (errorfn) errorfn(this.response, inputs);
-					else for (const inp of inputs) inp.classList.add('error');
-				};
-				req.send();
+				});
 			}
 		}
 		
@@ -296,10 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('schemaselect').addEventListener('click', function(e) {
 		if (!e.target.classList.contains('edit')) return;
 		e.preventDefault();
-		const req = new XMLHttpRequest(),
-			schemaselect = this;
-		req.open('GET', '../ajax.php?req=schemae&class='+classid, true);
-		req.onload = function() {
+		const schemaselect = this;
+		fetch('../ajax.php?req=schemae&class='+classid, {method: 'get'})
+		.then((response) => response.json()).then((response) => {
 			const actions = schemaselect.querySelector('.actions'),
 				select = dce('select');
 			select.stop = false;
@@ -307,18 +297,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			// actions.append(...actionButtons(['cancel', 'save']));
 			
 			let html = '';
-			for (const schema of JSON.parse(this.response))
+			for (const schema of response)
 				html += '<option value="'+schema.name+'"'+(schema.compatible ? '' : ' disabled')+(schema.name==schemaselect.dataset.schemaname ? ' selected' : '')+'>'+schema.name+'</option>'
 			html += '<option disabled>Custom schemae coming soon</option>';
 			select.innerHTML = html;
 			schemaselect.insertBefore(select, schemaselect.querySelector('.schemalist'));
 
 			select.save = function() {
-				const savereq = new XMLHttpRequest();
-				savereq.open('GET', '../ajax.php?req=editschema&class='+classid+'&schema='+select.value, true);
-				savereq.onload = function() {
-					const response = JSON.parse(this.response),
-						oldschema = schemae[schema];
+				fetch('../ajax.php?req=editschema&class='+classid+'&schema='+select.value, {method: 'get'})
+				.then((response) => response.json()).then((response) => {
+					const oldschema = schemae[schema];
 					document.querySelector('.schema-css').textContent = response.css;
 					window.schema = select.value;
 					window.schemae[schema] = response.weights;
@@ -332,8 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					for (const el of document.querySelectorAll('td[data-result]'))
 						el.dataset.result = inv[oldschema[el.dataset.result].value];
 					select.solidify();
-				}
-				savereq.send();
+				});
 			}
 			select.solidify = function() {
 				select.remove();
@@ -353,8 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				onchange();
 			});
 			select.focus();
-		};
-		req.send();
+		});
 	});
 	document.querySelector('#schemaselect').addEventListener('change', function(e) { addSchemaButtons(); });
 
@@ -378,13 +364,11 @@ function addSchemaButtons() {
 	
 	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
 	else {
-		const req = new XMLHttpRequest();
-		req.open('GET', '../ajax.php?req=getschemabuttons&schema='+schema, true);
-		req.onload = function() {
-			schemabuttons[schema] = this.response;
-			drawButtons(this.response);
-		}
-		req.send();
+		fetch('../ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
+		.then((response) => response.text()).then((response) => {
+			schemabuttons[schema] = response;
+			drawButtons(response);
+		});
 	}
 }
 
@@ -478,17 +462,14 @@ function eventActions(e) {
 	//Delete event
 	else if (e.target.classList.contains('delete')) {
 		if (confirm('Are you sure you want to delete this event?')) {
-			const req = new XMLHttpRequest();
-			req.open('GET', '../ajax.php?req=deleteevent&event='+evrow.dataset.id, true);
-			req.onload = function() {
+			fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
+			.then((response) => {
 				const student = evrow.dataset.student,
 					result = evrow.querySelector('td[data-result]').dataset.result,
 					evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
 				for (const row of evrows) row.remove();
 				updateScore(student, {action: 'delete', oldval: result});
-			}
-			req.onerror = () => {  };
-			req.send();
+			}).catch(console.error);
 		}
 	
 	//Cancel event edits
@@ -594,16 +575,10 @@ function editEvent(row, selected) {
 		resultsCell.append(a);
 		
 		a.addEventListener('click', function(e) {
-			const req = new XMLHttpRequest(),
-				result = this.dataset.schema;
+			const result = this.dataset.schema;
+			let url;
 			
-			//Save event edits
-			if (selected) req.open('GET', '../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schemae[schema][result].value, true);
-			
-			//Save new event
-			else req.open('GET', '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+schemae[schema][result].value, true);
-			
-			req.onload = function() {
+			const solidifyEvent = function(response) {
 				for (const b of resultsCell.querySelectorAll('.result-button')) {
 					if (b.dataset.schema == result) b.classList.remove('unselected');
 					else b.remove();
@@ -619,7 +594,7 @@ function editEvent(row, selected) {
 				//Add to or update class events table
 				if (!selected) {
 					opts = {action: 'new', newval: result};
-					row.dataset.id = parseInt(this.response); //Save new event ID if necessary
+					row.dataset.id = response; //Save new event ID if necessary
 					const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
 					document.querySelector('#recentevents tbody').prepend(eventRow({
 						id: row.dataset.id,
@@ -642,9 +617,11 @@ function editEvent(row, selected) {
 				row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
 				updateScore(row.dataset.student, opts);
 			};
-			
-			req.onerror = () => {  };
-			req.send();
+
+			if (selected) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schemae[schema][result].value; //Save event edits
+			else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+schemae[schema][result].value; //Save new event
+
+			fetch(url, {method: 'get'}).then((response) => response.json()).then(solidifyEvent);
 		});
 	}
 	resultsCell.append(numspan);
@@ -659,15 +636,12 @@ function uploadCSV(e) {
 	document.querySelector('.info')?.remove();
 	
 	reader.onload = function(e) {
-		const formData = new FormData(),
-			req = new XMLHttpRequest();
-		
+		const formData = new FormData();
 		formData.append("csv", e.target.result);
 		formData.append("req", "uploadroster");
 		formData.append("class", ''+classid);
-		req.open("POST", "../ajax.php", true);
-		req.onload = function() {
-			const response = JSON.parse(this.response);
+		fetch("../ajax.php", {method: 'post', body: formData})
+		.then((response) => response.json()).then((response) => {
 			if (!response) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
@@ -680,12 +654,10 @@ function uploadCSV(e) {
 				document.getElementsByTagName('dialog')[0].remove();
 				roster.sort(roster.sortby, roster.direction);
 			}
-		};
-		req.onerror = function() {
+		}).catch((response) => {
 			const error = infoElement('There was an error uploading this CSV.', 'error');
 			csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
-		}
-		req.send(formData);
+		});
 	};
 	let file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
 	document.querySelector('label[for="csvfile"]').classList.remove('active');

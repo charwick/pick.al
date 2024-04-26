@@ -196,24 +196,23 @@ function sendInfo(elements, data, actions, after, errorfn) {
 	const valid = validate(elements);
 	if (valid===0) return;
 	if (valid!=null || !elements.length) {
-		const req = new XMLHttpRequest();
-		req.open('GET', '../ajax.php?'+data.join('&'), true);
-		req.onload = function() {
-			if (!parseInt(this.response)) req.onerror();
-			else {
-				solidify(elements, actions);
-				if (after instanceof Function) after(parseInt(this.response));
-			}
-		};
-		
-		req.onerror = function()  {
+		onerror = function(response)  {
 			const inputs = [];
 			for (const inp of elements)
 				if (['INPUT', 'SELECT'].includes(inp.tagName)) inputs.push(inp);
 				else inputs.push(inp.querySelector('input,select'));
-			if (errorfn) errorfn(this.response, inputs);
+			if (errorfn) errorfn(response, inputs);
 			else for (const inp of inputs) inp.classList.add('error');
 		};
-		req.send();
+
+		fetch('../ajax.php?'+data.join('&'), {method: 'get'})
+		.then((response) => response.json()).then((response) => {
+			if (!response) onerror(response);
+			else {
+				solidify(elements, actions);
+				if (after instanceof Function) after(response);
+			}
+		}).catch(onerror);
+		
 	} else solidify(elements, actions);
 }
