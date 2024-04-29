@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					lname = dce('span', 'lname'),
 					numspan = dce('span', 'num'),
 					h2 = dce('h2');
-				table.innerHTML = '<thead><tr><th>Date</th><th colspan="2">Result</th></tr></thead>';
+				table.innerHTML = '<thead><tr><th class="m-date">Date</th><th colspan="2">Result</th></tr></thead>';
 				table.classList.add('events');
 				let num=0, den=0;
 				for (const event of events) {
@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				tbody.addEventListener('click', eventActions); //Event action buttons
 				tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 				table.append(tbody, tfoot);
+				makeSortable(table, 'm-date', false);
 				snote.innerHTML = tr.querySelector('.note').innerHTML;
 				actions.append(...actionButtons(['edit', 'excuses', 'delete']));
 
@@ -177,9 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					const evtr = dce('tr'),
 						date = new Date();
 					evtr.dataset.student = tr.dataset.id;
-					evtr.innerHTML = '<td>'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+					evtr.innerHTML = '<td class="m-date" data-sort="'+Math.round(date.getTime()/1000)+'">'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
 					editEvent(evtr);
-					tbody.prepend(evtr);
+					if (table.direction) tbody.append(evtr);
+					else tbody.prepend(evtr);
 				});
 				
 				modal(h2, actions, snote, excused, table).student = tr.dataset.id;
@@ -386,20 +388,14 @@ function makeSortable(table, defaultsort, defaultdesc) {
 		const tbody = table.querySelector('tbody');
 		let rows = Array.from(tbody.querySelectorAll('tr'));
 		rows.sort(function(a,b) {
-			if (sortby!='score') {
-				const atext = a.querySelector('.'+sortby).textContent, btext = b.querySelector('.'+sortby).textContent;
-				if (!atext && btext) return (desc ? 1 : -1);
-				else if (atext && !btext) return (desc ? -1 : 1);
-				else return atext.localeCompare(btext) * (desc ? 1 : -1);
-			} else {
-				const regex = /^(\d+(\.\d+)?)\/(\d+)\s+\((\d+)%?\)$/;
-				let vals = [];
-				for (const element of [a, b]) {
-					const text = element.querySelector('.'+sortby).textContent;
-					vals.push(text=='' ? -1 : parseInt(text.match(regex)[4]));
-				}
-				return (vals[1] - vals[0])  * (desc ? 1 : -1);
-			}
+			const acell = a.querySelector('.'+sortby),
+				bcell = b.querySelector('.'+sortby),
+				atext = 'sort' in acell.dataset ? acell.dataset.sort : acell.textContent,
+				btext = 'sort' in bcell.dataset ? bcell.dataset.sort : bcell.textContent;
+			if (!atext && btext) return (desc ? 1 : -1);
+			else if (atext && !btext) return (desc ? -1 : 1);
+			// else if (typeof atext=='number' && typeof btext=='number') return atext-btext * (desc ? -1 : 1);
+			else return atext.localeCompare(btext) * (desc ? 1 : -1);
 		});
 		for (const row of rows) tbody.append(row);
 	}
@@ -408,6 +404,7 @@ function makeSortable(table, defaultsort, defaultdesc) {
 
 	table.querySelector('thead').addEventListener('click', function(e) {
 		const sortby = e.target.getAttribute('class');
+		if (!sortby) return;
 		let desc = true;
 		if (sortby == table.sortby) desc = !table.direction;
 		table.sort(sortby, desc);
@@ -421,7 +418,7 @@ function updateScore(student, opts) {
 	let num, den;
 	
 	if (scoretext) {
-		const match = scoretext.match(/^(\d+(\.\d+)?)\/(\d+)\s+\(\d+%?\)$/);
+		const match = scoretext.match(/^(\d+(\.\d+)?)\/(\d+)$/);
 		num = parseFloat(match[1]);
 		den = parseInt(match[3]);
 	} else {
@@ -436,7 +433,8 @@ function updateScore(student, opts) {
 		num += schemae[schema][opts.newval].value;
 	} else if (opts.action=='update') num += schemae[schema][opts.newval].value - schemae[schema][opts.oldval].value;
 
-	rostercell.textContent = den ? num+'/'+den+' ('+Math.round(num/den*100)+'%)' : '';
+	rostercell.textContent = den ? num+'/'+den : '';
+	rostercell.dataset.sort = den ? Math.round(num/den*100) : -1;
 	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
 
 	//Update modal totals if necessary
@@ -501,7 +499,7 @@ function infoElement(message, classname, tag) {
 function studentRow(id, col1, col2, col3) {
 	const tr = dce('tr', 'new');
 	tr.dataset.id = id;
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score"></td>';
+	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score" data-sort="-1"></td>';
 	document.getElementById('roster').querySelector('tbody').append(tr);
 	setTimeout(() => { //Flash row
 		tr.style.transition = '1s background';
@@ -522,6 +520,8 @@ function eventRow(event, namecol) {
 	let tds = [];
 	for (let i=0; i<4; i++) tds.push(dce('td'));
 	tds[0].textContent = modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime();
+	tds[0].classList.add('m-date');
+	tds[0].dataset.sort = modDate.getTime()/1000;
 	tds[2].dataset.result = res;
 	tds[2].innerHTML = '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>';
 	tds[3].classList.add('actions');

@@ -253,6 +253,13 @@ table th {
 	text-align: left;
 }
 table tr:nth-child(even) { background: rgba(0,0,0,0.05); }
+tbody .score { font-size: 0.75rem; }
+td.score::before {
+	content: attr(data-sort) '%';
+	float: left;
+	width: 3.75em;
+	font-size: 0.85rem;
+}
 .score:empty::before, #roster .note:empty::before {
 	content: '—';
 	color: #AAA;
@@ -319,11 +326,11 @@ table tbody:empty::before {
 
 input.error { box-shadow: 0 0 3px 1px #D22; }
 
-#roster tbody tr:hover td, table.sortable th:hover {
+#roster tbody tr:hover td, table.sortable th[class]:hover {
 	cursor: pointer;
 	background: rgba(160,180,230,0.2);
 }
-table.sortable th:hover { background: rgba(0,0,0,0.05); }
+table.sortable th[class]:hover { background: rgba(0,0,0,0.05); }
 table tr.new { background: #FFF3C0; }
 
 .events tfoot {
