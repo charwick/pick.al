@@ -43,6 +43,8 @@ if (isset($_GET['code']) && !$user->orcid) {
 <html lang="en-US">
 <head>
 	<title>User profile: <?php echo $user->username; ?> | Pick.al</title>
+	<script type="text/javascript" src="js/ajax.js"></script>
+	<script type="text/javascript" src="js/user.js"></script>
 	<?php headermeta(true); ?>
 </head>
 
