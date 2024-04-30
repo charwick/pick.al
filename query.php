@@ -285,7 +285,7 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function generate_reset_link(int $userid) {
+	function generate_reset_link($userid) {
 		$user = $this->get_user_by(str_contains($userid, '@') ? 'email' : 'username', $userid);
 		if (!$user) return 0;
 

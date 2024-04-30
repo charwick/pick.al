@@ -55,13 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		//Check for existing email and/or username
 		if (document.body.classList.contains('choosepw')) document.querySelector('form').submit();
 		else {
-			const req = new XMLHttpRequest(),
-				un = inpContainer.querySelector('input[name="username"]');
+			const un = inpContainer.querySelector('input[name="username"]');
 			let data = [(un.value.includes('@') ? 'email' : 'username')+'='+un.value]
 			if (tab == 'register') data.push('email='+inpContainer.querySelector('input[name="email"]').value);
-			req.open('GET', 'ajax.php?req=userexists&'+data.join('&'), true);
-			req.onload = function() {
-				const result = JSON.parse(this.response);
+			fetch('ajax.php?req=userexists&'+data.join('&'), {method: 'get'})
+			.then((response) => response.json()).then((result) => {
 				let pass = true;
 				
 				if (tab=='register') {
@@ -80,9 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				
 				if (pass) document.querySelector('form').submit();
-			};
-			req.onerror = () => { for (const inp of inpContainer.querySelectorAll('input')) inp.classList.add('error'); };
-			req.send();
+			}).catch((response) => { for (const inp of inpContainer.querySelectorAll('input')) inp.classList.add('error'); });
 		}
 	});
 
@@ -93,22 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			if (rpwform.submitted) return; //Don't allow to hit more than once
 			rpwform.submitted = true;
-			const req = new XMLHttpRequest();
-			req.open('GET', 'ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, true);
-			req.onload = function() {
-				if (this.status != 200) {
-					req.onerror();
+			fetch('ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
+			.then((response) => {
+				if (response.status != 200) {
+					infoElement('There was an error sending the reset email. Please try again later.', 'error')
 					return;
 				}
 				infoElement('Check your email for the reset link. It will be valid for 24 hours.');
-			};
-			req.onerror = () => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); };
-			req.send();
+			}).catch((response) => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); });
 		});
 	}
 
 	const dialog = document.getElementsByTagName('dialog')[0];
-	document.getElementById('terms').addEventListener('click', (e) => {
+	document.getElementById('terms')?.addEventListener('click', (e) => {
 		e.preventDefault();
 		dialog.showModal();
 	});

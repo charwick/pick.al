@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				tbody.addEventListener('click', eventActions); //Event action buttons
 				tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
 				table.append(tbody, tfoot);
-				makeSortable(table, 'm-date', false);
+				makeSortable(table, 'm-date', true);
 				snote.innerHTML = tr.querySelector('.note').innerHTML;
 				actions.append(...actionButtons(['edit', 'excuses', 'delete']));
 
@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					evtr.dataset.student = tr.dataset.id;
 					evtr.innerHTML = '<td class="m-date" data-sort="'+Math.round(date.getTime()/1000)+'">'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
 					editEvent(evtr);
-					if (table.direction) tbody.append(evtr);
-					else tbody.prepend(evtr);
+					if (table.direction) tbody.prepend(evtr);
+					else tbody.append(evtr);
 				});
 				
 				modal(h2, actions, snote, excused, table).student = tr.dataset.id;
@@ -390,11 +390,11 @@ function makeSortable(table, defaultsort, defaultdesc) {
 		rows.sort(function(a,b) {
 			const acell = a.querySelector('.'+sortby),
 				bcell = b.querySelector('.'+sortby),
-				atext = 'sort' in acell.dataset ? acell.dataset.sort : acell.textContent,
-				btext = 'sort' in bcell.dataset ? bcell.dataset.sort : bcell.textContent;
-			if (!atext && btext) return (desc ? 1 : -1);
+				atext = 'sort' in acell.dataset ? parseInt(acell.dataset.sort) : acell.textContent,
+				btext = 'sort' in bcell.dataset ? parseInt(bcell.dataset.sort) : bcell.textContent;
+			if (typeof atext=='number' && typeof btext=='number') return (atext-btext) * (desc ? -1 : 1);
+			else if (!atext && btext) return (desc ? 1 : -1);
 			else if (atext && !btext) return (desc ? -1 : 1);
-			// else if (typeof atext=='number' && typeof btext=='number') return atext-btext * (desc ? -1 : 1);
 			else return atext.localeCompare(btext) * (desc ? 1 : -1);
 		});
 		for (const row of rows) tbody.append(row);
