@@ -58,7 +58,12 @@ input[type="text"], input[type="password"], input[type="date"], input[type="numb
 input[type="password"] { margin-right: 1em; }
 input[type="number"] { padding-right: 3px; }
 
-#name input { font-size: 1.5rem; }
+#name input {
+	margin: calc(-0.3em - 1px) calc(-0.6em - 1px);
+	font: bold 1em 'Lucida Grande',Calibri,sans-serif;
+	max-width: 100%;
+}
+.admin-new #name input { font-size: 1.5em; }
 #year, input[name="year"] {
 	width: 5em;
 	display: inline-block;
@@ -680,6 +685,11 @@ main .gravatar {
 		display: block;
 		margin-left: 0;
 	}
+
+	#name input {
+		padding: 0.3em 0.4em;
+		margin: calc(-0.3em - 1px) calc(-0.4em - 1px);
+	  }
 }
 @media screen and (max-width: 30em) {
 	#backlink span { display: none; }
