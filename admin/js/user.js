@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const password = document.querySelector('#password');
 
 	function inlineError(element, message) {
-		let error = dce('span', 'inlineError');
-		error.textContent = message;
+		let error = markup({tag: 'span', attrs: {class: 'inlineError'}, children: [message]});
 		element.append(error);
 	}
 
@@ -62,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						newpw.classList.add('error');
 						return inlineError(element, 'Password cannot contain the username.');
 					}
-					sendInfo(fields, ['req=editpw', 'current='+(oldpw ? oldpw.value : ''), 'new='+newpw.value], ['edit'], pwafter, pwerror);
+					sendInfo(fields, {req: 'editpw', current: (oldpw ? oldpw.value : ''), new: newpw.value}, ['edit'], pwafter, pwerror);
 				}
 			}
 		
@@ -81,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
 
-		sendInfo(null, ['req=deleteorcid'], null, function() {
+		sendInfo(null, {req: 'deleteorcid'}, null, function() {
 			oid.querySelector('a').remove();
 			oid.querySelector('.actions').remove();
 		});

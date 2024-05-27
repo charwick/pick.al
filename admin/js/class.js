@@ -39,18 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
 						
 			fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
 			.then((response) => response.json()).then((events) => {
-				const table = dce('table'),
-					tbody = dce('tbody'),
-					tfoot = dce('tfoot'),
-					snote = dce('p', 'note'),
-					excused = dce('p', 'excused'),
-					actions = dce('div', 'actions'),
-					fname = dce('span', 'fname'),
-					lname = dce('span', 'lname'),
-					numspan = dce('span', 'num'),
-					h2 = dce('h2');
-				table.innerHTML = '<thead><tr><th class="m-date">Date</th><th colspan="2">Result</th></tr></thead>';
-				table.classList.add('events');
+				const tbody = markup({tag: 'tbody'}),
+					snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
+					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [])}),
+					actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
+					fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
+					lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]});
 				let num=0, den=0;
 				for (const event of events) {
 					event.student = tr.dataset.id;
@@ -58,20 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
 					num += event.result;
 					den++;
 				}
+				const table = markup({tag: 'table', attrs: {class: 'events'}, children: [
+						{tag: 'thead', children: [{tag: 'tr', children: [
+							{tag: 'th', attrs: {class: 'm-date'}, children: ['Date']},
+							{tag: 'th', attrs: {colspan: 2}, children: ['Result']}
+						]}]}, tbody,
+						{tag: 'tfoot', children: [{tag: 'tr', children: [
+							{tag: 'td', children: ['Total']},
+							{tag: 'td', attrs: {class: 'numtotal'}, children: [(den ? Math.round(num/den*100)+'%' : '—')]},
+							{tag: 'td', attrs: {class: 'addnew'}, children: [{tag: 'a', attrs: {href: '#'}, children: ['+']}]}
+						]}]}
+					]});
 				
 				tbody.addEventListener('click', eventActions); //Event action buttons
-				tfoot.innerHTML = '<tr><td>Total</td><td class="numtotal">'+(den ? Math.round(num/den*100)+'%' : '—')+'</td><td class="addnew"><a href="#">+</a></td></tr>';
-				table.append(tbody, tfoot);
 				makeSortable(table, 'm-date', true);
-				snote.innerHTML = tr.querySelector('.note').innerHTML;
-				actions.append(...actionButtons(['edit', 'excuses', 'delete']));
-
-				fname.innerHTML = tr.querySelector('.fname').innerHTML;
-				lname.innerHTML = tr.querySelector('.lname').innerHTML;
-				numspan.textContent = events.length;
-				h2.append(fname, ' ', lname, ' ', numspan);
-				if ('excused' in tr.dataset)
-					excused.innerHTML = 'Excused through <span data-date="'+tr.dataset.excused+'">'+datetostr(tr.dataset.excused)+'</span>';
 
 				actions.addEventListener('click', function(e) {
 					e.preventDefault();
@@ -80,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					if (e.target.classList.contains('edit')) {
 						makeInput([fname, lname, snote], {
 							placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false],
-							data: function(inputs) {
-								return ['req=editstudent', 'student='+tr.dataset.id, 'fname='+inputs[0].value, 'lname='+inputs[1].value, 'note='+inputs[2].value];
+							data: (inputs) => {
+								return {req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value};
 							},
 							actionsbox: actions,
 							after: function(response) {
@@ -118,13 +112,12 @@ document.addEventListener('DOMContentLoaded', () => {
 						if (!excused.textContent) excused.innerHTML = 'Excused through <span></span>';
 						const qspan = excused.querySelector('span');
 
-						const xacts = dce('span','actions');
+						const xacts = markup({tag: 'span', attrs: {class: 'actions'}, children: actionButtons(['save', 'cancel', 'delete'])});
 						function clearExcuse() {
 							excused.textContent = '';
 							delete tr.dataset.excused;
 							tr.querySelector('.lname .excuses')?.remove();
 						}
-						xacts.append(...actionButtons(['save', 'cancel', 'delete']));
 						excused.append(xacts);
 						xacts.addEventListener('click', function(e) {
 							e.preventDefault();
@@ -152,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 								let excbut = tr.querySelector('.lname .excuses');
 								if (!excbut) {
-									excbut = dce('span', 'excuses');
+									excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
 									tr.querySelector('.lname').append(excbut);
 								}
 								excbut.title = through;
@@ -160,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							clearacts();
 						}
 						makeInput(qspan, {
-							data: (inps) => { return ['req=studentexcused', 'id='+tr.dataset.id, 'excused='+inps[0].value]; },
+							data: (inps) => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; },
 							actions: null,
 							type: 'date',
 							blur: false, //Don't save on blur since we're adding action buttons
@@ -170,34 +163,39 @@ document.addEventListener('DOMContentLoaded', () => {
 				});
 				
 				//Add new event
-				tfoot.querySelector('.addnew a').addEventListener('click', function(e) {
+				table.querySelector('.addnew a').addEventListener('click', function(e) {
 					e.preventDefault();
 					if (this.classList.contains('disabled')) return;
 					this.classList.add('disabled');
 					
-					const evtr = dce('tr'),
-						date = new Date();
-					evtr.dataset.student = tr.dataset.id;
-					evtr.innerHTML = '<td class="m-date" data-sort="'+Math.round(date.getTime()/1000)+'">'+date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()+'</td><td></td><td class="actions"></td>';
+					const date = new Date(),
+						evtr = markup({tag: 'tr', attrs: {'data-student': tr.dataset.id}, children: [
+							{tag: 'td', attrs: {class: 'm-date', 'data-sort': Math.round(date.getTime()/1000)}, children: [date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()]},
+							{tag: 'td'},
+							{tag: 'td', attrs: {class: 'actions'}}
+						]});
 					editEvent(evtr);
 					if (table.direction) tbody.prepend(evtr);
 					else tbody.append(evtr);
 				});
 				
-				modal(h2, actions, snote, excused, table).student = tr.dataset.id;
+				modal({tag: 'h2', children: [
+						fname, ' ', lname, ' ',
+						{tag: 'span', attrs: {class: 'num'}, children: [events.length]}
+					]}, actions, snote, excused, table
+				).student = tr.dataset.id;
 			}).catch(console.error);
 		});
 
 		//CSV Upload
 		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
 			e.preventDefault();
-			const content = dce('div'),
-				h2 = dce('h2');
-			h2.textContent = 'Upload Students';
-			content.innerHTML = '<p>Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.</p>'
-				+'<p><label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv"></p>';
-			
-			const csvElement = content.querySelector('#csvfile'),
+			const content = markup({tag: 'div', children: [
+					{tag: 'p', children: 'Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.'},
+					{tag: 'p', children: '<label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv">'}
+				]}),
+				h2 = markup({tag: 'h2', children: ['Upload Students']}),
+				csvElement = content.querySelector('#csvfile'),
 				label = content.querySelector('label[for="csvfile"]');
 			label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
 			label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
@@ -221,16 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (addStudent) addStudent.addEventListener('click', function(e) {
 		e.preventDefault();
 
-		const title = dce('h2'),
-			h2 = dce('h2'),
-			note = dce('input', 'note'),
-			actions = dce('div', ['actions', 'expand']);
-		note.placeholder = 'Note';
-		title.textContent = 'New Student';
-		note.type = 'text';
-		h2.innerHTML = '<input type="text" class="fname" placeholder="First Name" required="true" /> <input type="text" class="lname" placeholder="Last Name" required="true" />';
-		actions.append(...actionButtons(['save', 'cancel']));
-		const fname = h2.querySelector('.fname'),
+		const title = markup({tag: 'h2', children: ['New Student']}),
+			h2 = markup({tag: 'h2', children: [
+				{tag: 'input', attrs: {type: 'text', class: 'fname', placeholder: 'First Name', required: 'true'}}, ' ',
+				{tag: 'input', attrs: {type: 'text', class: 'lname', placeholder: 'Last Name', required: 'true'}},
+			]}),
+			note = markup({tag: 'input', attrs: {class: 'note', placeholder: 'Note', type: 'text'}}),
+			actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])}),
+			fname = h2.querySelector('.fname'),
 			lname = h2.querySelector('.lname');
 		
 		function studentSave() {
@@ -240,7 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					else for (const inp of inputs) inp.classList.add('error');
 				};
 
-				fetch('../ajax.php?req=addstudent&classid='+classid+'&fname='+fname.value+'&lname='+lname.value+'&note='+note.value, {method: 'get'})
+				const params = new URLSearchParams({req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}).toString()
+				fetch('../ajax.php?'+params, {method: 'get'})
 				.then((response) => response.json()).then((sid) => {
 					if (!sid) onerror(sid);
 					else {
@@ -292,9 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const schemaselect = this;
 		fetch('../ajax.php?req=schemae&class='+classid, {method: 'get'})
 		.then((response) => response.json()).then((response) => {
-			const actions = schemaselect.querySelector('.actions'),
-				select = dce('select');
-			select.stop = false;
+			const actions = schemaselect.querySelector('.actions');
 			actions.textContent = '';
 			// actions.append(...actionButtons(['cancel', 'save']));
 			
@@ -302,7 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			for (const schema of response)
 				html += '<option value="'+schema.name+'"'+(schema.compatible ? '' : ' disabled')+(schema.name==schemaselect.dataset.schemaname ? ' selected' : '')+'>'+schema.name+'</option>'
 			html += '<option disabled>Custom schemae coming soon</option>';
-			select.innerHTML = html;
+			const select = markup({tag: 'select', children: html});
+			select.stop = false
 			schemaselect.insertBefore(select, schemaselect.querySelector('.schemalist'));
 
 			select.save = function() {
@@ -490,16 +486,18 @@ function eventActions(e) {
 //===================================
 
 function infoElement(message, classname, tag) {
-	const info = dce(tag || 'p', 'info');
+	const info = markup({tag: tag || 'p', attrs: {class: 'info'}, children: [message]});
 	if (classname) info.classList.add(classname);
-	info.textContent = message;
 	return info;
 }
 
 function studentRow(id, col1, col2, col3) {
-	const tr = dce('tr', 'new');
-	tr.dataset.id = id;
-	tr.innerHTML = '<td class="fname">'+col1+'</td><td class="lname">'+col2+'</td><td class="note">'+(col3 ?? '')+'</td><td class="score" data-sort="-1"></td>';
+	const tr = markup({tag: 'tr', attrs: {class: 'new', 'data-id': id}, children: [
+		{tag: 'td', attrs: {class: 'fname'}, children: [col1]},
+		{tag: 'td', attrs: {class: 'lname'}, children: [col2]},
+		{tag: 'td', attrs: {class: 'note'}, children: [col3 ?? '']},
+		{tag: 'td', attrs: {class: 'score', 'data-sort': -1}},
+	]});
 	document.getElementById('roster').querySelector('tbody').append(tr);
 	setTimeout(() => { //Flash row
 		tr.style.transition = '1s background';
@@ -510,33 +508,22 @@ function studentRow(id, col1, col2, col3) {
 }
 
 function eventRow(event, namecol) {
-	const evtr = dce('tr'),
-		exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
+	const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
 		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
-		res = invertSchema()[event.result];
-	evtr.dataset.id = event.id;
-	evtr.dataset.student = event.student;
-
-	let tds = [];
-	for (let i=0; i<4; i++) tds.push(dce('td'));
-	tds[0].textContent = modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime();
-	tds[0].classList.add('m-date');
-	tds[0].dataset.sort = modDate.getTime()/1000;
-	tds[2].dataset.result = res;
-	tds[2].innerHTML = '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>';
-	tds[3].classList.add('actions');
-	tds[3].append(...actionButtons(['edit', 'delete']));
+		res = invertSchema()[event.result],
+		tds = [
+			markup({tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()}),
+			markup({tag: 'td'}),
+			markup({tag: 'td', attrs: {'data-result': res}, children: '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>'}),
+			markup({tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])})
+		];
 	if (namecol) tds[1].innerHTML = event.fname+' '+event.lname; //Use InnerHTML so the HTML entities evaluate
 	else tds.splice(1,1);
-	evtr.append(...tds);
-	return evtr;
+	return markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: tds});
 }
 
 function modal(...content) {
-	const modal = dce('dialog', 'transit'),
-		mwrap = dce('div');
-	mwrap.append(...content);
-	modal.append(mwrap);
+	const modal = markup({tag: 'dialog', attrs: {class: 'transit'}, children: [markup({tag: 'div', children: content})]});
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
 		if (e.target.nodeName === 'DIALOG') {
@@ -564,13 +551,10 @@ function editEvent(row, selected) {
 	actionsCell.textContent = '';
 	resultsCell.textContent = '';
 	actionsCell.append(...actionButtons(['cancel']));
-	const numspan = dce('span', 'numspan');
-	if (selected) numspan.textContent = schemae[schema][selected].value;
+	const numspan = markup({tag: 'span', attrs: {class: 'numspan'}, children: (selected ? [schemae[schema][selected].value] : [])});
 	
 	for (const i in schemae[schema]) {
-		const a = dce('a', 'result-button');
-		a.textContent = schemae[schema][i].text;
-		a.dataset.schema = i;
+		const a = markup({tag: 'a', attrs: {class: 'result-button', 'data-schema': i}, children: [schemae[schema][i].text]});
 		if (i!=selected) a.classList.add('unselected');
 		resultsCell.append(a);
 		

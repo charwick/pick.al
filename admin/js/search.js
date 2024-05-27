@@ -45,18 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	function drawList(response) {
 		list.textContent = ''; //Clear existing results
 		for (const student of response) {
-			const li = dce('a');
+			const li = markup({tag: 'a', attrs: {href: '/admin/class.php?class='+student.classid+'#student-'+student.id}, children: [
+				{tag: 'span', attrs: {class: 'student'}, children: [student.fname+' '+student.lname]},
+				{tag: 'span', attrs: {class: 'class'}, children: student.name+'<span class="semester">'+student.semester+' '+student.year+'</span>'},
+			]});
 			student.semester = student.semester[0].toUpperCase() + student.semester.slice(1);
-			li.href = '/admin/class.php?class='+student.classid+'#student-'+student.id;
-			li.innerHTML = '<span class="student">'+student.fname+' '+student.lname+'</span>'+
-				'<span class="class">'+student.name+'<span class="semester">'+student.semester+' '+student.year+'</span></span>';
 			list.append(li);
 		}
-		if (!response.length) {
-			const span = dce('span', 'none');
-			span.textContent = 'No students';
-			list.append(span);
-		}
+		if (!response.length)
+			list.append(markup({tag: 'span', attrs: {class: 'none'}, children: ['No students']}));
 	}
 
 	//Expand and collapse inactive classes

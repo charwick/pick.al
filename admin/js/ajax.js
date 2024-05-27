@@ -1,8 +1,17 @@
 "use strict";
-function dce(tag, classname) {
-	const e = document.createElement(tag);
-	if (classname) e.classList.add(...(typeof classname == 'string' ? [classname] : classname));
-	return e;
+function markup(element) {
+	let el;
+	if (element instanceof HTMLElement) el = element;
+	else if (['string', 'number'].includes(typeof element)) el = document.createTextNode(element);
+	else {
+		el = document.createElement(element.tag);
+		if ('attrs' in element) for (const a in element.attrs) el.setAttribute(a, element.attrs[a]);
+		if ('children' in element) {
+			if (typeof element.children == 'string') el.innerHTML = element.children;
+			else for (const c of element.children) el.append(markup(c));
+		}
+	}
+	return el;
 }
 
 function makeEditable(element, attrs) {
@@ -205,7 +214,7 @@ function sendInfo(elements, data, actions, after, errorfn) {
 			else for (const inp of inputs) inp.classList.add('error');
 		};
 
-		fetch('../ajax.php?'+data.join('&'), {method: 'get'})
+		fetch('../ajax.php?'+(new URLSearchParams(data).toString()), {method: 'get'})
 		.then((response) => response.json()).then((response) => {
 			if (!response) onerror(response);
 			else {

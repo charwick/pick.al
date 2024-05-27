@@ -11,6 +11,7 @@ use PHPMailer\PHPMailer\Exception;
 class chooser_query extends mysqli {
 	function __construct() {
 		parent::__construct(...connectionvars());
+		$this->set_charset("utf8mb4");
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 	}
 	

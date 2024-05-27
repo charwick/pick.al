@@ -90,7 +90,7 @@ h2 input {
 	height: .875rem; width: .875rem;
 	background-image: url("../icon/svg.php?icon=download&color=777");
 	background-size: .875rem .875rem;
-	margin: 0px 6px -2px 0;
+	margin: 0 6px -2px 0;
 }
 
 /* ======
@@ -449,7 +449,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	height: 24px;
 	background: #000;
 	border-radius: 3px;
-	padding: 0px 10px;
+	padding: 0 10px;
 	font-size: 0.7rem;
 	color: #CCC;
 	white-space: nowrap;
@@ -647,7 +647,7 @@ main .gravatar {
 	background: #ACDA53 url("/icon/orcid.svg") 10px center/12px 12px no-repeat;
 	color: #FFF;
 	font-size: small;
-	padding: 0px 13px 0px 30px;
+	padding: 0 13px 0 30px;
 	border-bottom-width: 2px;
 	margin: 0 0 0 0.5em;
 }
