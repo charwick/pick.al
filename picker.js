@@ -82,77 +82,83 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 });
 
-function StudentEvent(student) {
-	this.info = student; //This will update the original roster data too
-	this.event = null;
-	this.result = null;
-	this.excused = false;
-	
-	//Create the HTML
-	this.element = document.createElement('div');
-	this.element.classList.add('studentinfo');
-	const h2 = document.createElement('h2'),
-		note = document.createElement('p'),
-		actionlist = document.createElement('ul'),
-		lnspan = document.createElement('span'),
-		actions = [];
-	h2.innerHTML = this.info.fname+' ';
-	lnspan.innerHTML = this.info.lname;
+class StudentEvent {
+	event = null;
+	result = null;
+	excused = false;
+	#actionlist;
+	#actions = [];
 
-	//Check for duplicate first names, alert to read last name
-	for (const n of roster) {
-		if (this.info.id == n.id) continue;
-		if (this.info.fname == n.fname) {
+	constructor(student) {
+		this.info = student; //This will update the original roster data too
+		
+		//Create the HTML
+		this.element = document.createElement('div');
+		this.element.classList.add('studentinfo');
+		const h2 = document.createElement('h2'),
+			note = document.createElement('p'),
+			lnspan = document.createElement('span');
+		this.#actionlist = document.createElement('ul'),
+		h2.innerHTML = this.info.fname+' ';
+		lnspan.innerHTML = this.info.lname;
+
+		//Check for duplicate first names, alert to read last name
+		if (roster.some(n => this.info.id != n.id && this.info.fname == n.fname))
 			lnspan.classList.add('dupename');
-			break;
+
+		h2.append(lnspan);
+		note.classList.add('note');
+		note.innerHTML = this.info.note;
+		for (const s in schema) {
+			const li = document.createElement('li'),
+				btn = document.createElement('button');
+			btn.dataset.schema = s;
+			btn.innerHTML = schema[s].text;
+			btn.addEventListener('click', (e) => {
+				for (const btn2 of this.#actions) {
+					btn2.disabled = true;
+					btn2.classList.remove('picked');
+				}
+				this.send(schema[s].value)
+			});
+			li.append(btn);
+			this.#actionlist.append(li);
+			this.#actions.push(btn);
 		}
-	}
+		this.element.append(h2, note, this.#actionlist);
 
-	h2.append(lnspan);
-	note.classList.add('note');
-	note.innerHTML = this.info.note;
-	for (const s in schema) {
-		const li = document.createElement('li'),
-			btn = document.createElement('button');
-		btn.dataset.schema = s;
-		btn.innerHTML = schema[s].text;
-		btn.addEventListener('click', (e) => {
-			for (const btn2 of actions) {
-				btn2.disabled = true;
-				btn2.classList.remove('picked');
-			}
-			this.send(schema[s].value)
+		//Touch event handlers
+		this.element.addEventListener('touchstart', (e) => {
+			this.swipetime = new Date().getTime();
+			this.swipepos = e.changedTouches[0].pageX;
+			this.element.style.transition = 'none';
 		});
-		li.append(btn);
-		actionlist.append(li);
-		actions.push(btn);
+		this.element.addEventListener('touchmove', (e) => {
+			if (new Date().getTime() > this.swipetime + 100)
+				this.element.style.left = 'calc(50% + '+(e.changedTouches[0].pageX-this.swipepos)+'px)';
+		});
+		this.element.addEventListener('touchend', (e) => {
+			if (e.changedTouches[0].pageX-this.swipepos < -this.element.offsetWidth/3) {
+				if (histIndex) buttonFunc('forward')();
+				else buttonFunc('choose')();
+			} else if (histIndex < hist.length-1 && e.changedTouches[0].pageX-this.swipepos > this.element.offsetWidth/3)
+				buttonFunc('back')();
+			this.element.style.transition = null;
+			this.element.style.left = null;
+		});
+
+		//Make our entrance
+		if (histIndex != null) hist[histIndex].exit();
+		if (hist[0]?.event) hist.unshift(this);
+		else hist[0] = this;
+		histIndex = 0;
+		this.enter();
 	}
-	this.element.append(h2, note, actionlist);
 
-	//Touch event handlers
-	this.element.addEventListener('touchstart', (e) => {
-		this.swipetime = new Date().getTime();
-		this.swipepos = e.changedTouches[0].pageX;
-		this.element.style.transition = 'none';
-	});
-	this.element.addEventListener('touchmove', (e) => {
-		if (new Date().getTime() > this.swipetime + 100)
-			this.element.style.left = 'calc(50% + '+(e.changedTouches[0].pageX-this.swipepos)+'px)';
-	});
-	this.element.addEventListener('touchend', (e) => {
-		if (e.changedTouches[0].pageX-this.swipepos < -this.element.offsetWidth/3) {
-			if (histIndex) buttonFunc('forward')();
-			else buttonFunc('choose')();
-		} else if (histIndex < hist.length-1 && e.changedTouches[0].pageX-this.swipepos > this.element.offsetWidth/3)
-			buttonFunc('back')();
-		this.element.style.transition = null;
-		this.element.style.left = null;
-	});
-
-	this.send = function(result) {
+	send(result) {
 		let btn;
 		for (const s in schema) if (schema[s].value==result) {
-			btn = actionlist.querySelector('button[data-schema="'+s+'"]');
+			btn = this.#actionlist.querySelector('button[data-schema="'+s+'"]');
 			break;
 		}
 
@@ -166,13 +172,13 @@ function StudentEvent(student) {
 					this.result = null;
 					btn.classList.remove('picked');
 					btn.parentNode.parentNode.classList.remove('picked');
-					for (const btn2 of actions) btn2.disabled = false;
+					for (const btn2 of this.#actions) btn2.disabled = false;
 				});
 
 			//Re-do button press (edit event)
 			} else {
 				fetchif(!demo, 'ajax.php?req=updateevent&event='+this.event+'&result='+result, (id) => {
-					for (const btn2 of actions) btn2.disabled = false;
+					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
 					this.result = result;
@@ -182,7 +188,7 @@ function StudentEvent(student) {
 		//Send event (create new)
 		} else {
 			fetchif(!demo, 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, (id) => {
-				for (const btn2 of actions) btn2.disabled = false;
+				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
 				this.event = id;
@@ -194,19 +200,19 @@ function StudentEvent(student) {
 		}
 	};
 
-	this.enter = function(left) {
+	enter(left) {
 		left = left ?? false;
 		this.element.classList.add(left ? 'out' : 'in')
 		document.getElementById('sinfo').append(this.element);
 
 		const snoozeElement = document.getElementById('snooze');
 		snoozeElement.classList.remove('disabled');
-		if (isExcused(student)) snoozeElement.dataset.excused = 'Excused through '+student.excuseduntil.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+		if (isExcused(this.info)) snoozeElement.dataset.excused = 'Excused through '+this.info.excuseduntil.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 		else delete snoozeElement.dataset.excused;
 
 		setTimeout(() => { this.element.classList.remove(left ? 'out' : 'in'); }, 1); //JS will skip the animation without the timeout
 	}
-	this.exit = function(right) {
+	exit(right) {
 		right = right ?? false;
 		this.element.classList.add(right ? 'in' : 'out');
 		setTimeout(() => {
@@ -214,13 +220,6 @@ function StudentEvent(student) {
 			this.element.classList.remove(right ? 'in' : 'out');
 		}, 250);
 	}
-
-	//Make our entrance
-	if (histIndex != null) hist[histIndex].exit();
-	if (hist[0]?.event) hist.unshift(this);
-	else hist[0] = this;
-	histIndex = 0;
-	this.enter();
 }
 
 //=================

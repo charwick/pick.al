@@ -23,9 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		for (const i of inpContainer.querySelectorAll('input')) {
 			i.classList.remove('error');
-			if (tab=='register' && i.name=='username' && i.value.includes('@')) {
+			if (tab=='register' && i.name=='username' && ['@','&','?'].some(char=>i.value.includes(char))) {
 				i.classList.add('error');
-				infoElement('Username cannot contain \'@\'.', 'error');
+				infoElement('Username cannot contain @, &, or ?.', 'error');
 				pass = false;
 			}
 		}

@@ -142,7 +142,7 @@ require_once('admin/parts.php'); ?>
 	<?php headermeta(true); ?>
 	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
 	<script type="text/javascript" src="login/login.js"></script>
-	<meta name="description" content="Pick.al is a lightweight app for selecting students at random and recording participation.">
+	<meta name="description" content="Pick.al is a lightweight app for selecting students at random during class and recording participation.">
 </head>
 
 <body id="login" class="<?php echo $bodyclass; ?>">
@@ -154,13 +154,13 @@ require_once('admin/parts.php'); ?>
 				elseif ($bodyclass=='resetpw') echo 'Enter your username or email and we\'ll send you a link to reset your password.';
 				elseif ($bodyclass=='choosepw') echo "Welcome back, {$user->username}. Choose a new password and you'll be on your way.";
 				else { ?>
-					is a lightweight app for selecting students at random and recording participation.
-					<div id="demo">
+					is a lightweight app for selecting students at random during class and recording participation.
+					<a id="demo" href="/?try">
 						<video autoplay muted loop disablePictureInPicture="true">
 							<source src="/login/pickal.mp4" type="video/mp4">
 						</video>
 						<img src="/login/phone-mask.png" alt="Phone">
-					</div>
+				</a>
 				<?php } ?>
 			</div>
 

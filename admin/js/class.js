@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
 	if (document.body.classList.contains('admin-edit')) {
-		const title = document.getElementById('name');
-		function infoData(inps) { return ['req=updateclassinfo', 'class='+classid, 'k='+inps[0].name, 'v='+inps[0].value]; };
+		const title = document.getElementById('name'),
+			infoData = inps => ({req: 'updateclassinfo', class: classid, k: inps[0].name, v: inps[0].value});
 
 		makeEditable(title, {placeholder: 'Class Name', data: infoData})
 		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], data: infoData})
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								return {req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value};
 							},
 							actionsbox: actions,
-							after: function(response) {
+							after: (response) => {
 								tr.querySelector('.fname').innerHTML = fname.innerHTML;
 								tr.querySelector('.lname').innerHTML = lname.innerHTML;
 								tr.querySelector('.note').innerHTML = snote.innerHTML;
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			select.focus();
 		});
 	});
-	document.querySelector('#schemaselect').addEventListener('change', function(e) { addSchemaButtons(); });
+	document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
 
 
 	//Highlight student from autocomplete
@@ -536,7 +536,7 @@ function modal(...content) {
 			setTimeout(() => { modal.remove(); }, 250);
 		}
 	});
-	modal.addEventListener('close', function(e) { modal.remove(); });
+	modal.addEventListener('close', modal.remove);
 	modal.showModal();
 	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason
