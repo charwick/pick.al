@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.remove('excused');
 				}
 			}
-			fetch('ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, {method: 'get'})
-			.then(fn).catch(console.error);
+			fetchif(!demo, 'ajax.php?req=studentexcused&id='+hist[histIndex].info.id+'&excused='+excdate, fn);
 		}
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -160,8 +159,7 @@ function StudentEvent(student) {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				fetch('ajax.php?req=deleteevent&event='+this.event, {method: 'get'})
-				.then((response) => response.json()).then((id) => {
+				fetchif(!demo, 'ajax.php?req=deleteevent&event='+this.event, (id) => {
 					this.info.score -= this.result;
 					this.info.denominator--;
 					this.event = null;
@@ -169,23 +167,21 @@ function StudentEvent(student) {
 					btn.classList.remove('picked');
 					btn.parentNode.parentNode.classList.remove('picked');
 					for (const btn2 of actions) btn2.disabled = false;
-				}).catch(console.error);
+				});
 
 			//Re-do button press (edit event)
 			} else {
-				fetch('ajax.php?req=updateevent&event='+this.event+'&result='+result, {method: 'get'})
-				.then((response) => response.json()).then((id) => {
+				fetchif(!demo, 'ajax.php?req=updateevent&event='+this.event+'&result='+result, (id) => {
 					for (const btn2 of actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
 					this.result = result;
-				}).catch(console.error);
+				});
 			}
 		
 		//Send event (create new)
 		} else {
-			fetch('ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, {method: 'get'})
-			.then((response) => response.json()).then((id) => {
+			fetchif(!demo, 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, (id) => {
 				for (const btn2 of actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
@@ -194,7 +190,7 @@ function StudentEvent(student) {
 				if (this.info.score == null) this.info.score = 0;
 				this.info.score += result;
 				this.info.denominator++;
-			}).catch(console.error);
+			});
 		}
 	};
 
@@ -280,4 +276,15 @@ function studentSelect(list) {
 function isExcused(student) {
 	const now = new Date();
 	return student.excuseduntil?.getTime() > now.getTime();
+}
+
+//=========
+// UTILITY
+//=========
+
+function fetchif(cond, url, then) {
+	if (!cond) return then(-1);
+	fetch(url, {method: 'get'})
+		.then((response) => response.json()).then(then)
+		.catch(console.error);
 }

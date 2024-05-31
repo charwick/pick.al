@@ -2,7 +2,7 @@
 $sql = new chooser_query();
 
 $user = $sql->current_user();
-if (!$user) {
+if (!$user && !isset($_GET['try'])) {
 	require_once('login/login.php');
 	exit;
 }
@@ -24,7 +24,8 @@ if ($classid) {
 		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
 		<script type="text/javascript">
 			var classid = <?php echo $classid; ?>,
-				roster = <?php echo json_encode($roster); ?>;
+				roster = <?php echo json_encode($roster); ?>,
+				demo = <?php echo $user ? 'false' : 'true'; ?>;
 			<?php echo $class->schema->output_js(true); ?>
 		</script>
 		<?php 
@@ -83,9 +84,9 @@ if ($classid) {
 			<?php $classes = $sql->get_classes(true);
 			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/class.php" class="button" id="pick">New Class</a></li>';
 			else {
-				echo "<li><h2>Active Classes <span>/ {$user->username}</span></h2></li>";
+				echo "<li><h2>Active Classes <span>/ ".($user ? $user->username : 'Demo User')."</span></h2></li>";
 				foreach ($classes as $class)
-					echo "<li><a href='?class={$class->id}'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
+					echo "<li><a href='?class={$class->id}".($user ? '' : '&try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
 			} ?>
 		</ul>
 	<?php }?>

@@ -21,14 +21,15 @@ class chooser_query extends mysqli {
 
 	function get_classes(bool $active=false): array {
 		$aw = $active ? ' AND activeuntil >= NOW()' : '';
-		
+		$u = $this->current_user();
+
 		$q = "SELECT classes.*, COUNT(students.class) AS students
 			FROM classes
 			LEFT JOIN students ON students.class=classes.id
-			WHERE classes.user=? {$aw}
+			WHERE classes.user".($u ? "=?" : " IS NULL")." {$aw}
 			GROUP BY id
 			ORDER BY year DESC, semester DESC, activeuntil DESC";
-		$result = $this->execute_query($q, [$_SESSION['user']]);
+		$result = $this->execute_query($q, $u ? [$_SESSION['user']] : []);
 		
 		$classes = [];
 		while ($class = $result->fetch_object()) $classes[] = $class;
@@ -37,8 +38,9 @@ class chooser_query extends mysqli {
 
 	//Get info on one class. Returns a single row by ID
 	function get_class(int $id) {
-		$q = "SELECT * FROM classes WHERE id=? and user=?";
-		$pq = $this->execute_query($q, [$id, $_SESSION['user']]);
+		$u = $this->current_user();
+		$q = "SELECT * FROM classes WHERE id=? and user".($u ? "=?" : " IS NULL");
+		$pq = $this->execute_query($q, $u ? [$id, $_SESSION['user']] : [$id]);
 		$obj = $pq->fetch_object();
 		if ($obj) $obj->schema = $this->get_schema($obj->schema);
 		return $obj;
@@ -68,7 +70,7 @@ class chooser_query extends mysqli {
 
 	function get_schema(string $name): Schema {
 		$q="SELECT * FROM schemae WHERE `schema`=? AND (user=? OR user IS NULL) ORDER BY value DESC";
-		$pq = $this->execute_query($q, [$name, $_SESSION['user']]);
+		$pq = $this->execute_query($q, [$name, $_SESSION['user'] ?? null]);
 		$result = [];
 		while ($item = $pq->fetch_object()) $result[] = $item;
 		return new Schema($result);
@@ -89,15 +91,16 @@ class chooser_query extends mysqli {
 
 	//Get the roster for a class. Returns an array of objects
 	function get_roster(int $classid): array {
+		$u = $this->current_user();
 		//$wand = $all ? '' : " AND (excuseduntil IS NULL OR NOW() > DATE_ADD(excuseduntil, INTERVAL 1 DAY))";
 		$q="SELECT students.*, SUM(events.result) AS score, COUNT(events.student) AS denominator
 			FROM students
 			LEFT JOIN events ON events.student=students.id
 			LEFT JOIN classes ON classes.id=students.class
-			WHERE class=? AND classes.user=?
+			WHERE class=? AND classes.user".($u ? "=?" : " IS NULL")."
 			GROUP BY students.id
 			ORDER BY students.lname";
-		$students = $this->execute_query($q, [$classid, $_SESSION['user']]);
+		$students = $this->execute_query($q, $u ? [$classid, $_SESSION['user']] : [$classid]);
 
 		$result = [];
 		while ($student = $students->fetch_object()) $result[] = $student;
@@ -165,6 +168,9 @@ class chooser_query extends mysqli {
 	//========
 
 	function new_event(int $rosterid, $result): int {
+		$q1 = $this->execute_query("SELECT user FROM students LEFT JOIN classes ON students.class=classes.id WHERE students.id=?", [$rosterid]);
+		if ($q1->fetch_object()->user != $_SESSION['user']) return -1;
+
 		$q = "INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)";
 		$this->execute_query($q, [$rosterid, $result]);
 		return $this->insert_id;
@@ -231,8 +237,12 @@ class chooser_query extends mysqli {
 	}
 
 	function current_user() {
+		static $user = false;
+		if ($user) return $user;
 		if (!isset($_SESSION['user'])) return false;
-		return $this->get_user_by('id', $_SESSION['user']);
+
+		$user = $this->get_user_by('id', $_SESSION['user']);
+		return $user;
 	}
 
 	//$v=null to delete an option

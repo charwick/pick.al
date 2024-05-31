@@ -218,7 +218,10 @@ require_once('admin/parts.php'); ?>
 						<input type="submit" value="Register" />
 					</div>
 
-					<a href="<?php echo $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcId</a>
+					<div id="actionbuttons">
+						<a href="<?php echo $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcID</a>
+						<a href="/?try" class="button" id="try">Try a Demo</a>
+					</div>
 				<?php } ?>
 			</form>
 		</section>
