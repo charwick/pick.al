@@ -201,7 +201,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 }
 h1#logo { height: 1.5em; }
 
-#adminbutton {
+#adminbutton, #rosteredit {
 	display: inline-block;
 	border: 1px solid rgba(255,255,255,0.25);
 	padding: 0.5em 1em;
@@ -211,17 +211,22 @@ h1#logo { height: 1.5em; }
 	position: absolute;
 	top: 20px; right: 20px;
 }
-#adminbutton:hover {
+#rosteredit {
+	position: static;
+	padding: 0.25em 1em;
+	margin-top: -0.25em;
+}
+#adminbutton:hover, #rosteredit:hover {
 	background: rgba(255,255,255,0.1);
 	border-color: rgba(255,255,255,0.35);
 	color: #BBB;
 }
-#backbutton, #rosterlist, #rosterclose a {
+#backbutton, #rosterlist {
 	color: #FFF;
 	opacity: 0.25;
+	text-decoration: none;
 	position: absolute;
 	top: 40px;
-	text-decoration: none;
 }
 #backbutton {
 	left: 30px;
@@ -256,8 +261,8 @@ h1#logo { height: 1.5em; }
 }
 #roster.open { right: 0; }
 
+#roster li { padding: 0.5em 1.5em; }
 #roster li[data-id] {
-	padding: 0.5em 1.5em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -269,15 +274,22 @@ h1#logo { height: 1.5em; }
 	background: rgba(255,255,255,0.1);
 	color: #FFF;
 }
-#rosterclose {
+#roster li:first-child {
 	position: sticky;
 	top: 0;
-	text-align: right;
-	padding: 30px 30px 0 0;
+	display: flex;
+	justify-content: space-between;
+	padding-top: 1.5em;
 	backdrop-filter: blur(10px);
-	font-size: 2em;
+	z-index: 99;
 }
-#rosterclose a { position: static; }
+#rosterclose {
+	font-size: 2em;
+	color: #FFF;
+	opacity: 0.25;
+	text-decoration: none;
+	justify-content: space-between;
+}
 #roster .excused { opacity: 0.5; }
 #roster .excused::after {
 	content: '';

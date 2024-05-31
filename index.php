@@ -61,7 +61,10 @@ if ($classid) {
 			</div>
 
 			<ul id="roster">
-				<li id="rosterclose"><a href="#">×</a></li>
+				<li>
+					<a href="/admin/class.php?class=<?php echo $classid; ?>" id="rosteredit" class="button">Edit</a>
+					<a href="#" id="rosterclose">×</a>
+				</li>
 				<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
 			</ul>
 		</div>

@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	//Close
-	document.querySelector('#rosterclose a')?.addEventListener('click', function(e) {
+	document.getElementById('rosterclose')?.addEventListener('click', function(e) {
 		e.preventDefault();
 		document.getElementById('roster').classList.remove('open');
 	});
