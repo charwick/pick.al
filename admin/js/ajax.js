@@ -214,7 +214,6 @@ function sendInfo(elements, data, actions, after, errorfn) {
 			else for (const inp of inputs) inp.classList.add('error');
 		};
 
-		console.log(data);
 		fetch('../ajax.php?'+(new URLSearchParams(data).toString()), {method: 'get'})
 		.then((response) => response.json()).then((response) => {
 			if (!response) onerror(response);

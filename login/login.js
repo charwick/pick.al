@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	inpContainer = document.getElementById('entries');
 	
 	for (const radio of radios) radio.addEventListener('change', switchInputs);
+	if ('username' in localStorage) document.getElementById('tab_login').checked = true;
 	switchInputs(false);
+	if ('username' in localStorage) document.querySelector('input[name="username"]').value = localStorage.username;
 	
 	document.querySelector('form').addEventListener('submit', function(e) {
 		if (document.body.classList.contains('resetpw')) return;
