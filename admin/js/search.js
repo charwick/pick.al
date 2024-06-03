@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		timeouts.push(setTimeout(() => {
-			fetch('../ajax.php?req=searchstudent&phrase='+val, {method: 'get'})
+			fetch('../ajax.php?'+(new URLSearchParams({req: 'searchstudent', phrase: val}).toString()), {method: 'get'})
 			.then((response) => response.json()).then((response) => {
 				cache[val] = response;
 				drawList(response);
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		list.textContent = ''; //Clear existing results
 		for (const student of response) {
 			const li = markup({tag: 'a', attrs: {href: '/admin/class.php?class='+student.classid+'#student-'+student.id}, children: [
-				{tag: 'span', attrs: {class: 'student'}, children: [student.fname+' '+student.lname]},
+				{tag: 'span', attrs: {class: 'student'}, children: student.fname+' '+student.lname},
 				{tag: 'span', attrs: {class: 'class'}, children: student.name+'<span class="semester">'+student.semester+' '+student.year+'</span>'},
 			]});
 			student.semester = student.semester[0].toUpperCase() + student.semester.slice(1);
@@ -61,6 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('collapse')?.addEventListener('click', function() {
 		localStorage['hide-inactive'] = localStorage['hide-inactive'] == 'true' ? 'false' : 'true';
 		setInactives();
+	});
+
+	//Focus search on / key
+	document.addEventListener('keydown', function(e) {
+		if (e.key == '/' && document.activeElement.tagName !== 'INPUT') {
+			e.preventDefault();
+			document.getElementById('search').focus();
+		}
 	});
 });
 

@@ -32,8 +32,10 @@ if ($classid) {
 		echo $class->schema->output_css();
 	} else { ?>
 		<title>Available Classes | Pick.al</title>
-		<script type="text/javascript">localStorage.username = "<?php echo $user->username; ?>";</script>
-	<?php } ?>
+		<?php if ($user) { //Remember username on login page ?>
+			<script type="text/javascript">localStorage.username = "<?php echo $user->username; ?>";</script>
+		<?php }
+	} ?>
 	
 	<link rel="stylesheet" href="picker.css" type="text/css" media="all">
 	<script type="text/javascript" src="picker.js"></script>
