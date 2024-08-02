@@ -8,7 +8,7 @@ $orcid = new orcid_api();
 //Should have already checked all of these client-side
 function validate() {
 	global $sql;
-	if (isset($_POST['password']) && $_POST['password'] != $_POST['confirm']) return 'The passwords did not match.';
+	if (isset($_POST['password']) && $_POST['password'] != $_POST['confirm_password']) return 'The passwords did not match.';
 	elseif (!((isset($_POST['password']) && $_POST['password']) || isset($_SESSION['orcid'])) || !$_POST['username'] || !$_POST['email']) return 'All fields are required.';
 	elseif (isset($_POST['password']) && strlen($_POST['password']) < 5 && !isset($_SESSION['orcid'])) return 'Password must be at least 5 characters.';
 	elseif (isset($_POST['password']) && str_contains(strtolower($_POST['password']), strtolower(trim($_POST['username'])))) return 'Password cannot contain the username.';
@@ -169,8 +169,8 @@ require_once('admin/parts.php'); ?>
 					<div id="formbody">
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries">
-							<li><input name="username" type="text" placeholder="Username" value="<?php echo $username; ?>"></li>
-							<li><input name="email" type="email" placeholder="Email Address" value="<?php echo $email; ?>"></li>
+							<li><input name="username" type="text" placeholder="Username" value="<?php echo $username; ?>" autocomplete="username"></li>
+							<li><input name="email" type="email" placeholder="Email Address" value="<?php echo $email; ?>" autocomplete="email"></li>
 							<li id="orcid">
 								OrcId: <?php echo $_SESSION['orcid']; ?>
 								<span class="actions"><a href="/" class="cancel" title="Remove OrcID"></a></span>
@@ -181,15 +181,15 @@ require_once('admin/parts.php'); ?>
 
 				<?php } elseif ($bodyclass=='resetpw') { ?>
 					<div id="formbody">
-						<ul id="entries"><li><input name="username" type="text" placeholder="Username or Email Address" required=""></li></ul>
+						<ul id="entries"><li><input name="username" type="text" placeholder="Username or Email Address" required="" autocomplete="username"></li></ul>
 						<input type="submit" value="Submit" />
 					</div>
 
 				<?php } elseif ($bodyclass=='choosepw') { ?>
 					<div id="formbody">
 						<ul id="entries">
-							<li><input name="password" type="password" placeholder="New Password" required=""></li>
-							<li><input name="confirm" type="password" placeholder="Confirm Password" required=""></li>
+							<li><input name="password" type="password" placeholder="New Password" required="" autocomplete="new-password"></li>
+							<li><input name="confirm_password" type="password" placeholder="Confirm Password" required="" autocomplete="new-password"></li>
 						</ul>
 						<input type="hidden" name="action" value="resetpw" />
 						<input type="hidden" name="user" value="<?php echo $_GET['user']; ?>" />

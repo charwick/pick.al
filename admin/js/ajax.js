@@ -59,7 +59,7 @@ function makeInput(elements, attrs) {
 			inp.type = attrs.type || 'text';
 			if (inp.type=='date') inp.value = element.dataset.date;
 			else inp.value = element.textContent.replace('✎','');
-			for (const attr of ['min', 'max', 'placeholder', 'required'])
+			for (const attr of ['min', 'max', 'placeholder', 'required', 'autocomplete'])
 				if (attr in attrs) {
 					const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
 					if (val !== false) inp.setAttribute(attr, val);

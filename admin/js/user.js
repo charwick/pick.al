@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			makeInput(fields, {
 				type: 'password',
 				placeholder: ['Current Password', 'New Password', 'Confirm New Password'],
+				autocomplete: ['current-password', 'new-password', 'new-password'],
 				actionsbox: document.querySelector('#password .actions')
 			});
 			if (pwnone) {
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					element.querySelector('.inlineError')?.remove();
 					const oldpw = element.querySelector('input[name="oldpw"]'),
 						newpw = element.querySelector('input[name="newpw"]'),
-						confirmpw = element.querySelector('input[name="confirmpw"]');
+						confirmpw = element.querySelector('input[name="confirm_password"]');
 					if (newpw.value != confirmpw.value) {
 						newpw.classList.add('error');
 						confirmpw.classList.add('error');

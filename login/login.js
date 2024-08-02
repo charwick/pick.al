@@ -1,10 +1,10 @@
 'use strict';
 var inputs = {
-	username: {type: 'text', placeholder: 'Username'},
+	username: {type: 'text', placeholder: 'Username', autocomplete: 'username'},
 	password: {type: 'password', placeholder: 'Password'},
-	confirm: {type: 'password', placeholder: 'Confirm Password'},
-	uoremail: {name: 'username', type: 'text', placeholder: 'Username or Email'},
-	email: {type: 'email', placeholder: 'Email Address'},
+	confirm_password: {type: 'password', placeholder: 'Confirm Password'},
+	uoremail: {name: 'username', type: 'text', placeholder: 'Username or Email', autocomplete: 'username'},
+	email: {type: 'email', placeholder: 'Email Address', autocomplete: 'email'},
 }, radios, inpContainer;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (tab=='register' || document.body.classList.contains('choosepw')) {
 			const uname = inpContainer.querySelector('input[name="username"]'),
 				pw = inpContainer.querySelector('input[name="password"]'),
-				pwconfirm = inpContainer.querySelector('input[name="confirm"]');
+				pwconfirm = inpContainer.querySelector('input[name="confirm_password"]');
 			if (pw.value != pwconfirm.value) {
 				pass = false;
 				infoElement('The passwords do not match.', 'error');
@@ -120,16 +120,23 @@ function whichTab() {
 //Change inputs on tab
 function switchInputs(clearInfo=true) {
 	const val = whichTab(),
+		form = document.querySelector('form'),
 		inpContainer = document.getElementById('entries');
 	if (!val) return;
 	if (clearInfo) for (const box of document.querySelectorAll('.info')) box.remove();
 	
 	if (val=='login') {
-		drawInputs(inpContainer, ['uoremail', 'password']);
+		form.id = null;
+		const inps = drawInputs(inpContainer, ['uoremail', 'password']);
+		inps[1].autocomplete = 'current-password';
+		console.log(inps[1]);
 		document.getElementById('resetlink').style.display = 'inline';
 		document.getElementById('terms').style.display = 'none';
 	} else if (val=='register') {
-		drawInputs(inpContainer, ['username', 'email', 'password', 'confirm']);
+		form.id = 'register';
+		const inps = drawInputs(inpContainer, ['username', 'email', 'password', 'confirm_password']);
+		inps[2].autocomplete = 'new-password';
+		inps[3].autocomplete = 'new-password';
 		document.getElementById('resetlink').style.display = 'none';
 		document.getElementById('terms').style.display = 'inline';
 	}
@@ -138,7 +145,7 @@ function switchInputs(clearInfo=true) {
 }
 
 function drawInputs(container, list) {
-	const inps = [];
+	const inps = [], els = [];
 	for (const inp of list) {
 		const inpname = ('name' in inputs[inp] ? inputs[inp].name : inp);
 		let el = container.querySelector('input[name="'+inpname+'"]'), li;
@@ -148,14 +155,17 @@ function drawInputs(container, list) {
 			el = document.createElement('input');
 			li = document.createElement('li');
 			el.name = inpname;
+			el.id = inpname;
 			el.required = true;
 			li.append(el);
 		}
 		for (const [attr, val] of Object.entries(inputs[inp])) el[attr] = val;
 		inps.push(li);
+		els.push(el);
 	}
 	container.textContent = '';
 	container.append(...inps);
+	return els;
 }
 
 function infoElement(message, classname, tag) {
