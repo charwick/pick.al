@@ -57,7 +57,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 		<h1>
 			Profile
 			<span class="num"><?php echo $user->username; ?></span>
-			<span class="actions"><a href="#" class="delete" title="Delete account"></a></span>
+			<span class="actions"><a href="#" class="delete" title="Delete Account"></a></span>
 		</h1>
 
 		<p>Email: <span id="email"><?php echo $user->email; ?></span></p>

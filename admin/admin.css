@@ -467,6 +467,17 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	top: -6px;
 }
 
+h1#name a.delete:hover::after { content: attr(title) ' Class'; }
+h1#name a.edit:hover::after { content: attr(title) ' Title'; }
+#semester a.edit:hover::after { content: attr(title) ' Semester'; }
+#year a.edit:hover::after { content: attr(title) ' Year'; }
+#activeuntil a.edit:hover::after { content: attr(title) ' End Date'; }
+#schemaselect a.edit:hover::after { content: attr(title) ' Schema'; }
+#email a.edit:hover::after { content: attr(title) ' Email Address'; }
+#password a.edit:hover::after { content: attr(title) ' Password'; }
+.events a.edit:hover::after, .events a.delete:hover::after { content: attr(title) ' Event'; }
+.studentmodal > .actions a.delete:hover::after, .studentmodal > .actions a.edit:hover::after { content: attr(title) ' Student'; }
+
 /* ============
    Events modal
    ============ */

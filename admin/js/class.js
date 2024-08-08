@@ -523,7 +523,7 @@ function eventRow(event, namecol) {
 }
 
 function modal(...content) {
-	const modal = markup({tag: 'dialog', attrs: {class: 'transit'}, children: [markup({tag: 'div', children: content})]});
+	const modal = markup({tag: 'dialog', attrs: {class: 'transit'}, children: [markup({tag: 'div', children: content, attrs: {class: 'studentmodal'}})]});
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
 		if (e.target.nodeName === 'DIALOG') {
