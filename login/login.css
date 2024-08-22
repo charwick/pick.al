@@ -42,7 +42,7 @@ form { width: 400px; }
 	border-color: #369 #CCC transparent;
 }
 #tabs input:not(:checked) + label { cursor: pointer; }
-#tabs input:not(:checked) + label:hover { background: rgba(0,0,0,0.05); }
+#tabs input:not(:checked) + label:hover { background: rgb(0 0 0 / 5%); }
 
 #formbody {
 	background: #FFF;
@@ -65,7 +65,7 @@ form { width: 400px; }
 	border-width: 1px;
 	border-style: solid;
 	border-color: #AAA #BBB #CCC;
-	box-shadow: inset 0 2px 2px rgba(0,0,0,0.1);
+	box-shadow: inset 0 2px 2px rgb(0 0 0 / 10%);
 }
 
 #actionbuttons {

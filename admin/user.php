@@ -68,7 +68,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 		</p>
 
 		<?php if ($message) echo '<div class="info error">'.$message.'</div>'; ?>
-		<p id="orcid">OrcId:
+		<p id="orcid">OrcID:
 			<?php if ($user->orcid) echo "<a href='https://orcid.org/{$user->orcid}'>{$user->orcid}</a>" . ' <span class="actions"><a class="cancel" href="#" title="Disconnect"></a></span>'; ?>
 			<a class="button" href="<?php echo $orcid->auth_url('https://pick.al/admin/user.php'); ?>">Connect</a>
 		</p>

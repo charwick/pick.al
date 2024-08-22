@@ -82,7 +82,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #sinfo { position: relative; }
 #sinfo > div {
 	margin: 1em auto 0;
-	background: rgba(255,255,255,0.15);
+	background: rgb(255 255 255 / 15%);
 	padding: 2.25em 0 0;
 	border-radius: 10px;
 	position: absolute;
@@ -98,7 +98,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	margin: 0;
 	font-size: 1.75em;
 }
-.dupename { border-bottom: 3px dotted rgba(255,255,255,0.15); }
+.dupename { border-bottom: 3px dotted rgb(255 255 255 / 15%); }
 .note {
 	margin: 0.5em 2em 0;
 	font-style: italic;
@@ -161,14 +161,14 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	text-decoration: none;
 	padding: 0.7em 0;
 	width: 100%;
-	border-top: 1px solid rgba(255,255,255,0.2);
+	border-top: 1px solid rgb(255 255 255 / 20%);
 	margin-left: auto; margin-right: auto;
 }
 #classlist a:not(#pick):hover {
-	background: rgba(255,255,255,0.05);
+	background: rgb(255 255 255 / 5%);
 	color: #DDD;
 }
-#classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgba(255,255,255,0.2); }
+#classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgb(255 255 255 / 20%); }
 #classlist a span {
 	display: block;
 	font-size: 0.555em;
@@ -204,7 +204,7 @@ h1#logo { height: 1.5em; }
 
 #adminbutton, #rosteredit {
 	display: inline-block;
-	border: 1px solid rgba(255,255,255,0.25);
+	border: 1px solid rgb(255 255 255 / 25%);
 	padding: 0.5em 1em;
 	color: #999;
 	font-size: 0.8em;
@@ -218,8 +218,8 @@ h1#logo { height: 1.5em; }
 	margin-top: -0.25em;
 }
 #adminbutton:hover, #rosteredit:hover {
-	background: rgba(255,255,255,0.1);
-	border-color: rgba(255,255,255,0.35);
+	background: rgb(255 255 255 / 10%);
+	border-color: rgb(255 255 255 / 35%);
 	color: #BBB;
 }
 #backbutton, #rosterlist {
@@ -253,10 +253,10 @@ h1#logo { height: 1.5em; }
 	position: absolute;
 	top: 0; right: -18em;
 	height: 100%; width: 18em;
-	background: rgba(75,75,75,0.85);
+	background: rgb(75 75 75 / 85%);
 	backdrop-filter: blur(10px);
 	overflow-y: auto;
-	scrollbar-color: rgba(255,255,255,0.25) rgba(75,75,75,0.85);
+	scrollbar-color: rgb(255 255 255 / 25%) rgb(75 75 75 / 85%);
 	transition: 0.2s right;
 	z-index: 10;
 }
@@ -269,10 +269,10 @@ h1#logo { height: 1.5em; }
 	white-space: nowrap;
 	cursor: pointer;
 	font-size: 1.2em;
-	color: rgba(255,255,255,0.75);
+	color: rgb(255 255 255 / 75%);
 }
 #roster li[data-id]:hover {
-	background: rgba(255,255,255,0.1);
+	background: rgb(255 255 255 / 10%);
 	color: #FFF;
 }
 #roster li:first-child {
