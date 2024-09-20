@@ -28,6 +28,26 @@ document.addEventListener('DOMContentLoaded', () => {
 		}, 250));
 	});
 
+	//Keyboard nav over autocomplete list
+	search.addEventListener('keydown', function(e) {
+		if (e.key=='Escape') search.blur();
+		if (e.key in ['ArrowDown', 'ArrowUp', 'Enter']) return;
+
+		const curSelect = list.querySelector('.selected');
+		if (e.key=='Enter') {
+			curSelect?.click();
+			return;
+		}
+
+		let newSelect;
+		if (e.key=='ArrowDown') newSelect = curSelect ? curSelect.nextElementSibling : list.querySelector('a');
+		if (e.key=='ArrowUp') newSelect = curSelect ? curSelect.previousElementSibling : list.querySelector('a:last-of-type');
+		if (newSelect) {
+			curSelect?.classList.remove('selected');
+			newSelect.classList.add('selected');
+		} 
+	});
+
 	search.addEventListener('focus', function(e) {
 		list.style.opacity = 1;
 		list.style.transition = '0.25s opacity';
@@ -49,6 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				{tag: 'span', attrs: {class: 'student'}, children: student.fname+' '+student.lname},
 				{tag: 'span', attrs: {class: 'class'}, children: student.name+'<span class="semester">'+student.semester+' '+student.year+'</span>'},
 			]});
+			li.addEventListener('mouseover', function(e) {
+				for (const a of list.querySelectorAll('a')) a.classList.remove('selected');
+				li.classList.add('selected');
+			})
 			student.semester = student.semester[0].toUpperCase() + student.semester.slice(1);
 			list.append(li);
 		}

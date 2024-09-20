@@ -130,7 +130,7 @@ h2 input {
 	color: #333;
 	display: flex;
 }
-#autocomplete a:hover { background: rgb(235 235 235 / 90%); }
+#autocomplete a.selected { background: rgb(235 235 235 / 90%); }
 #autocomplete a:last-child, #autocomplete .none {
 	border-bottom: none;
 	border-radius: 0 0 10px 10px;
