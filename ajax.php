@@ -166,3 +166,5 @@ switch ($req) {
 		echo $result;
 		break;
 }
+
+// sleep(1); //Simulate slow network

@@ -36,15 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		roster.addEventListener('click', function(e) {
 			let tr = e.target;
 			while (tr.tagName != 'TR') tr = tr.parentNode;
-						
+
+			const fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
+				lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
+				smodal = modal(
+					{tag: 'h2', children: [fname, ' ', lname, ' ']},
+					{tag: 'div', attrs: {class: 'loader'}}
+				);
+
 			fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
 			.then((response) => response.json()).then((events) => {
 				const tbody = markup({tag: 'tbody'}),
 					snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
 					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [])}),
 					actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
-					fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
-					lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]});
+					nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]});
+				smodal.querySelector('h2').append(nevents);
 				let num=0, den=0;
 				for (const event of events) {
 					event.student = tr.dataset.id;
@@ -179,11 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
 					else tbody.append(evtr);
 				});
 				
-				modal({tag: 'h2', children: [
-						fname, ' ', lname, ' ',
-						{tag: 'span', attrs: {class: 'num'}, children: [events.length]}
-					]}, actions, snote, excused, table
-				).student = tr.dataset.id;
+				smodal.querySelector('.loader').remove();
+				smodal.children[0].append(actions, snote, excused, table);
+				smodal.student = tr.dataset.id;
 			}).catch(console.error);
 		});
 

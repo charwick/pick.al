@@ -493,6 +493,22 @@ dialog {
 	transition: 0.2s opacity;
 	overflow: visible;
 }
+
+.loader {
+	width: 48px; height: 48px;
+	border-radius: 50%;
+	margin: 3em auto;
+	border-top: 3px solid rgb(0 0 0 / 25%);
+	border-right: 3px solid transparent;
+	box-sizing: border-box;
+	animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+} 
+
 dialog.transit { opacity: 0; }
 dialog > div { padding: 15px 30px; }
 dialog::backdrop {
