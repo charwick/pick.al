@@ -84,7 +84,7 @@ switch ($req) {
 		$rows = preg_split('/\r\n|\r|\n/', $_POST['csv']);
 		foreach ($rows as $row) {
 			if (!$row) continue;
-			$row = str_getcsv($row);
+			$row = str_getcsv($row, escape: "\\");
 			foreach ($row as &$cell) $cell = trim($cell);
 			if (!$i) {
 				$fnkey = array_search('fname', $row);

@@ -259,8 +259,12 @@ h1#logo { height: 1.5em; }
 	scrollbar-color: rgb(255 255 255 / 25%) rgb(75 75 75 / 85%);
 	transition: 0.2s right;
 	z-index: 10;
+	border-radius: 1em 0 0 1em;
 }
-#roster.open { right: 0; }
+#roster.open {
+	right: 0;
+	box-shadow: -1em 0 2em rgba(0, 0, 0, 0.15);
+}
 
 #roster li { padding: 0.5em 1.5em; }
 #roster li[data-id] {
