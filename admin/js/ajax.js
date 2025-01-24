@@ -155,12 +155,6 @@ function actionButtons(list) {
 	return actions;
 }
 
-function invertSchema() {
-	let array = {};
-	for (const id in schemae[schema]) array[schemae[schema][id].value] = id;
-	return array;
-}
-
 Date.prototype.clockTime = function() {
 	let mins = this.getMinutes();
 	if (mins < 10) mins = '0'+mins;

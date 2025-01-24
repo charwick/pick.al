@@ -109,17 +109,16 @@ class StudentEvent {
 		h2.append(lnspan);
 		note.classList.add('note');
 		note.innerHTML = this.info.note;
-		for (const s in schema) {
+		for (const s of schema) {
 			const li = document.createElement('li'),
 				btn = document.createElement('button');
-			btn.dataset.schema = s;
-			btn.innerHTML = schema[s].text;
+			btn.dataset.schemaval = s.value;
 			btn.addEventListener('click', (e) => {
 				for (const btn2 of this.#actions) {
 					btn2.disabled = true;
 					btn2.classList.remove('picked');
 				}
-				this.send(schema[s].value)
+				this.send(s.value)
 			});
 			li.append(btn);
 			this.#actionlist.append(li);
@@ -157,8 +156,8 @@ class StudentEvent {
 
 	send(result) {
 		let btn;
-		for (const s in schema) if (schema[s].value==result) {
-			btn = this.#actionlist.querySelector('button[data-schema="'+s+'"]');
+		for (const s of schema) if (s.value==result) {
+			btn = this.#actionlist.querySelector('button[data-schemaval="'+s.value+'"]');
 			break;
 		}
 

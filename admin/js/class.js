@@ -299,8 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			// actions.append(...actionButtons(['cancel', 'save']));
 			
 			let html = '';
-			for (const schema of response)
-				html += '<option value="'+schema.name+'"'+(schema.compatible ? '' : ' disabled')+(schema.name==schemaselect.dataset.schemaname ? ' selected' : '')+'>'+schema.name+'</option>'
+			for (const schemai of response)
+				html += '<option value="'+schemai.id+'"'+(schemai.compatible ? '' : ' disabled')+(schemai.id==schema ? ' selected' : '')+'>'+schemai.name+'</option>'
 			html += '<option disabled>Custom schemae coming soon</option>';
 			const select = markup({tag: 'select', children: html});
 			select.stop = false
@@ -309,19 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			select.save = function() {
 				fetch('../ajax.php?req=editschema&class='+classid+'&schema='+select.value, {method: 'get'})
 				.then((response) => response.json()).then((response) => {
-					const oldschema = schemae[schema];
 					document.querySelector('.schema-css').textContent = response.css;
 					window.schema = select.value;
 					window.schemae[schema] = response.weights;
-					schemaselect.dataset.schemaname = select.value;
-
-					const inv = invertSchema();
-					for (const el of document.querySelectorAll('[data-schema]')) {
-						el.dataset.schema = inv[oldschema[el.dataset.schema].value];
-						el.textContent = schemae[schema][el.dataset.schema].text;
-					}
-					for (const el of document.querySelectorAll('td[data-result]'))
-						el.dataset.result = inv[oldschema[el.dataset.result].value];
 					select.solidify();
 				});
 			}
@@ -331,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				actions.append(...actionButtons(['edit']));
 			}
 			function onchange() {
-				if (select.value==schemaselect.dataset.schemaname) select.solidify();
+				if (select.value==schema) select.solidify();
 				else select.save();
 			}
 			select.addEventListener('keydown', function(e) {
@@ -428,11 +418,11 @@ function updateScore(student, opts) {
 
 	if (opts.action=='delete') {
 		den--;
-		num -= schemae[schema][opts.oldval].value;
+		num -= parseFloat(opts.oldval);
 	} else if (opts.action=='new') {
 		den++;
-		num += schemae[schema][opts.newval].value;
-	} else if (opts.action=='update') num += schemae[schema][opts.newval].value - schemae[schema][opts.oldval].value;
+		num += parseFloat(opts.newval);
+	} else if (opts.action=='update') num += parseFloat(opts.newval) - parseFloat(opts.oldval);
 
 	rostercell.textContent = den ? num+'/'+den : '';
 	rostercell.dataset.sort = den ? Math.round(num/den*100) : -1;
@@ -456,7 +446,7 @@ function eventActions(e) {
 		numspan = restd.querySelector('.numspan');
 	
 	//Edit event
-	if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.result);
+	if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.val);
 	
 	//Delete event
 	else if (e.target.classList.contains('delete')) {
@@ -464,7 +454,7 @@ function eventActions(e) {
 			fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
 			.then((response) => {
 				const student = evrow.dataset.student,
-					result = evrow.querySelector('td[data-result]').dataset.result,
+					result = evrow.querySelector('td[data-val]').dataset.val,
 					evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
 				for (const row of evrows) row.remove();
 				updateScore(student, {action: 'delete', oldval: result});
@@ -477,7 +467,7 @@ function eventActions(e) {
 			for (const b of restd.querySelectorAll('.unselected')) b.remove();
 			restd.classList.remove('editing');
 			acttd.textContent = '';
-			numspan.textContent = schemae[schema][restd.dataset.result].value;
+			numspan.textContent = restd.dataset.val;
 			acttd.append(...actionButtons(['edit', 'delete']));
 		} else {
 			evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
@@ -515,11 +505,10 @@ function studentRow(id, col1, col2, col3) {
 function eventRow(event, namecol) {
 	const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
 		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
-		res = invertSchema()[event.result],
 		tds = [
 			markup({tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()}),
 			markup({tag: 'td'}),
-			markup({tag: 'td', attrs: {'data-result': res}, children: '<div class="result-button" data-schema="'+res+'">'+schemae[schema][res].text+'</div><span class="numspan">'+event.result+'</span>'}),
+			markup({tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'}),
 			markup({tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])})
 		];
 	if (namecol) tds[1].innerHTML = event.fname+' '+event.lname; //Use InnerHTML so the HTML entities evaluate
@@ -548,40 +537,40 @@ function modal(...content) {
 	return modal;
 }
 
-function editEvent(row, selected) {
+function editEvent(row) {
 	const actionsCell = row.querySelector('.actions'),
-		resultsCell = actionsCell.previousElementSibling;
+		resultsCell = actionsCell.previousElementSibling,
+		curval = resultsCell.querySelector('.result-button')?.dataset.schemaval;
 	
 	resultsCell.classList.add('editing');
 	actionsCell.textContent = '';
 	resultsCell.textContent = '';
 	actionsCell.append(...actionButtons(['cancel']));
-	const numspan = markup({tag: 'span', attrs: {class: 'numspan'}, children: (selected ? [schemae[schema][selected].value] : [])});
+	const numspan = markup({tag: 'span', attrs: {class: 'numspan'}, children: (curval ? [curval] : [])});
 	
-	for (const i in schemae[schema]) {
-		const a = markup({tag: 'a', attrs: {class: 'result-button', 'data-schema': i}, children: [schemae[schema][i].text]});
-		if (i!=selected) a.classList.add('unselected');
+	for (const i of schemae[schema].items) {
+		const a = markup({tag: 'a', attrs: {class: 'result-button', 'data-schemaval': i.value}});
+		if (i.value!=curval) a.classList.add('unselected');
 		resultsCell.append(a);
 		
 		a.addEventListener('click', function(e) {
-			const result = this.dataset.schema;
+			const result = this.dataset.schemaval;
 			let url;
 			
 			const solidifyEvent = function(response) {
 				for (const b of resultsCell.querySelectorAll('.result-button')) {
-					if (b.dataset.schema == result) b.classList.remove('unselected');
+					if (b.dataset.schemaval == result) b.classList.remove('unselected');
 					else b.remove();
 				}
-				numspan.textContent = schemae[schema][i].value;
+				numspan.textContent = result;
 				actionsCell.textContent = '';
 				actionsCell.append(...actionButtons(['edit', 'delete']));
-				const oldval = resultsCell.dataset.result;
-				resultsCell.dataset.result = result;
+				resultsCell.dataset.val = result;
 				resultsCell.classList.remove('editing');
 				let opts;
 				
 				//Add to or update class events table
-				if (!selected) {
+				if (!curval) {
 					opts = {action: 'new', newval: result};
 					row.dataset.id = response; //Save new event ID if necessary
 					const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
@@ -590,16 +579,15 @@ function editEvent(row, selected) {
 						student: row.dataset.student,
 						fname: studentRow.querySelector('.fname').innerHTML,
 						lname: studentRow.querySelector('.lname').innerHTML,
-						result: schemae[schema][result].value
+						result: result
 					}, true))
 				} else {
-					opts = {action: 'update', oldval: oldval, newval: result};
-					const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-result]');
+					opts = {action: 'update', oldval: curval, newval: result};
+					const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-val]');
 					if (recent) {
-						recent.dataset.result = result;
-						recent.querySelector('.result-button').dataset.schema = result;
-						recent.querySelector('.result-button').textContent = schemae[schema][result].text;
-						recent.querySelector('.numspan').textContent = schemae[schema][result].value;
+						recent.dataset.val = result;
+						recent.querySelector('.result-button').dataset.schemaval = result;
+						recent.querySelector('.numspan').textContent = result;
 					}
 				}
 				
@@ -607,8 +595,8 @@ function editEvent(row, selected) {
 				updateScore(row.dataset.student, opts);
 			};
 
-			if (selected) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+schemae[schema][result].value; //Save event edits
-			else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+schemae[schema][result].value; //Save new event
+			if (curval) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+result; //Save event edits
+			else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+result; //Save new event
 
 			fetch(url, {method: 'get'}).then((response) => response.json()).then(solidifyEvent);
 		});

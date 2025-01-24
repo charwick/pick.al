@@ -68,19 +68,25 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function get_schema(string $name): Schema {
-		$q="SELECT * FROM schemae WHERE `schema`=? AND (user=? OR user IS NULL) ORDER BY value DESC";
-		$pq = $this->execute_query($q, [$name, $_SESSION['user'] ?? null]);
+	function get_schema(int $id): Schema {
+		$q="SELECT * FROM schemae
+			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
+			WHERE schemae.id=? AND (user=? OR user IS NULL)
+			ORDER BY value DESC";
+		$pq = $this->execute_query($q, [$id, $_SESSION['user'] ?? null]);
 		$result = [];
 		while ($item = $pq->fetch_object()) $result[] = $item;
 		return new Schema($result);
 	}
 
 	function get_available_schemae(): array {
-		$q = "SELECT * FROM schemae WHERE user IS NULL OR user=?";
+		$q="SELECT * FROM schemae
+			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
+			WHERE user IS NULL OR user=?
+			ORDER BY id, value DESC";
 		$schemae = $this->execute_query($q, [$_SESSION['user']]);
 		$result = []; $return = [];
-		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item;
+		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item; //Organize by schema
 		foreach ($result as $schema) $return[] = new Schema($schema);
 		return $return;
 	}
@@ -320,6 +326,7 @@ class chooser_query extends mysqli {
 }
 
 class Schema {
+	public int $id;
 	public string $name;
 	public array $items = [];
 	public bool $global;
@@ -329,9 +336,10 @@ class Schema {
 	];
 
 	function __construct($data) {
-		$this->name = $data[0]->schema;
+		$this->id = $data[0]->id;
+		$this->name = $data[0]->name;
 		$this->global = $data[0]->user==null;
-		foreach ($data as $key => $item) $this->items[$item->id] = [
+		foreach ($data as $key => $item) $this->items[] = [
 			'color' => $item->color,
 			'hovercolor' => adjustBrightness($item->color, -0.15),
 			'text' => $item->text,
@@ -351,8 +359,9 @@ class Schema {
 		$css = '';
 		$textindent = 'text-indent: -9999px;';
 		foreach ($this->items as $id => $item) {
-			$css .= "[data-schema=\"{$id}\"] { {$this->output_item_css($id)} }\r\n";
-			if ($hover) $css .= "[data-schema=\"{$id}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
+			$css .= "[data-schemaval=\"{$item['value']}\"] { {$this->output_item_css($id)} }\r\n";
+			$css .= "[data-schemaval=\"{$item['value']}\"]::after { content: '{$item['text']}' }\r\n";
+			if ($hover) $css .= "[data-schemaval=\"{$item['value']}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
 		}
 		return $standalone ? "<style type='text/css' class='schema-css'>{$css}</style>" : $css;
 	}

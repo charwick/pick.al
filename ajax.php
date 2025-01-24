@@ -32,6 +32,7 @@ switch ($req) {
 		$result = [];
 		foreach ($schemae as $schema) $result[] = [
 			'name' => $schema->name,
+			'id' => $schema->id,
 			'compatible' => $schema->contains_values(array_keys($values))
 		];
 		echo json_encode($result);

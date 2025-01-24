@@ -37,10 +37,10 @@ if (isset($_POST['name'])) {
 		var classid = <?php echo $classid ?: 'null'; ?>;
 		<?php if ($classid) {
 			$schemae = [$class->schema->name => $class->schema];
-			echo "var schema = '{$class->schema->name}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
+			echo "var schema = '{$class->schema->id}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
 		} else $schemae = $sql->get_available_schemae();
 		echo 'var schemae = {';
-			foreach ($schemae as $schema) echo "'{$schema->name}': ".$schema->output_js(false).',';
+			foreach ($schemae as $schema) echo "'{$schema->id}': {name: '{$schema->name}', items: ".$schema->output_js(false).'},';
 		echo '}, schemabuttons = {};'; ?>
 	</script>
 	<script type="text/javascript" src="js/ajax.js"></script>
@@ -79,7 +79,7 @@ if (isset($_POST['name'])) {
 						<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
 						<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
 					</span>
-					<span class="meta-item" id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
+					<span class="meta-item" id="schemaselect">
 						Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
 						<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
 					</span>
