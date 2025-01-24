@@ -12,7 +12,7 @@ body {
 main { flex: 1; }
 
 h1 {
-	margin: 0.35em 0;
+	margin: 0.25em 0;
 	line-height: 1.5;
 }
 
@@ -64,10 +64,6 @@ input[type="number"] { padding-right: 3px; }
 	max-width: 100%;
 }
 .admin-new #name input { font-size: 1.5em; }
-#year, input[name="year"] {
-	width: 5em;
-	display: inline-block;
-}
 h2 input {
 	font-size: 1em;
 	width: 38%;
@@ -79,6 +75,19 @@ h2 input {
 	font-style: italic;
 	margin-left: 15px;
 }
+
+#classmeta {
+	font-size: 0.9em;
+	margin: 0.25em 0 2em;
+	border-bottom: 1px solid rgba(0 0 0 / 15%);
+	padding-bottom: 0.5em;
+	color: #555;
+}
+.meta-item {
+	display: inline-block;
+	margin-right: 1.5em;
+}
+
 #csvdown {
 	margin-left: 10px;
 	font-weight: normal;

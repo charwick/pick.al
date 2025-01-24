@@ -70,15 +70,19 @@ if (isset($_POST['name'])) {
 			} ?>
 			
 			<?php if ($classid) { ?>
-				<p>
-					<span id="semester"> <?php echo ucwords($class->semester); ?></span>
-					<span id="year"><?php echo $class->year; ?></span>
-					<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
-					<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
-				</p>
-				<p id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
-					Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
-					<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
+				<p id="classmeta">
+					<span class="meta-item">
+						<span id="semester"> <?php echo ucwords($class->semester); ?></span>
+						<span id="year"><?php echo $class->year; ?></span>
+					</span>
+					<span class="meta-item">
+						<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
+						<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
+					</span>
+					<span class="meta-item" id="schemaselect" data-schemaname="<?php echo $class->schema->name; ?>">
+						Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
+						<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
+					</span>
 				</p>
 			<?php } else {
 				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];
