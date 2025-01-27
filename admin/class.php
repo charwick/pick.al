@@ -43,8 +43,8 @@ if (isset($_POST['name'])) {
 			foreach ($schemae as $schema) echo "'{$schema->id}': {name: '{$schema->name}', items: ".$schema->output_js(false).'},';
 		echo '}, schemabuttons = {};'; ?>
 	</script>
-	<script type="text/javascript" src="js/ajax.js"></script>
-	<script type="text/javascript" src="js/class.js"></script>
+	<script type="text/javascript" src="js/ajax.js?version=1"></script>  <?php //Increment version to invalidate cache ?>
+	<script type="text/javascript" src="js/class.js?version=1"></script>
 	<?php if ($classid) echo $class->schema->output_css(true, false);
 	else {
 		echo '<style type="text/css" class="schema-css">';
@@ -99,7 +99,7 @@ if (isset($_POST['name'])) {
 				<p id="schemaselect">
 					Button schema:
 					<select name="schema">
-						<?php foreach ($schemae as $schema) echo "<option value='{$schema->name}'>{$schema->name}</option>"; ?>
+						<?php foreach ($schemae as $schema) echo "<option value='{$schema->id}'>{$schema->name}</option>"; ?>
 						<option disabled>Custom schemae coming soon</option>
 					</select>
 					<span class="schemalist"></span>

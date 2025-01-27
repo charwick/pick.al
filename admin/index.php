@@ -26,8 +26,8 @@ foreach ($sql->get_classes() as $class) {
 <head>
 	<title>Pick.al Admin</title>
 	<?php headermeta(true); ?>
-	<script src="js/ajax.js" type="text/javascript"></script>
-	<script src="js/search.js" type="text/javascript"></script>
+	<script src="js/ajax.js?version=1" type="text/javascript"></script>  <?php //Increment version to invalidate cache ?>
+	<script src="js/search.js?version=1" type="text/javascript"></script>
 </head>
 
 <body>

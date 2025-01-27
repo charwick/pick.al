@@ -25,7 +25,7 @@ function footer(): void {
 <?php }
 
 function headermeta($admin=false): void {
-	if ($admin) { ?><link rel="stylesheet" href="/admin/admin.css" type="text/css" media="all"><?php } ?>
+	if ($admin) { ?><link rel="stylesheet" href="/admin/admin.css?version=1" type="text/css" media="all"><?php } ?>
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	
 	<link rel="icon" type="image/png" sizes="32x32" href="/icon/icon-32.png">

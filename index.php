@@ -37,8 +37,8 @@ if ($classid) {
 		<?php }
 	} ?>
 	
-	<link rel="stylesheet" href="picker.css" type="text/css" media="all">
-	<script type="text/javascript" src="picker.js"></script>
+	<link rel="stylesheet" href="picker.css?version=1" type="text/css" media="all">
+	<script type="text/javascript" src="picker.js?version=1"></script> <?php //Increment version to invalidate cache ?>
 
 	<?php include('admin/parts.php');
 	headermeta(); ?>
