@@ -44,8 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					{tag: 'div', attrs: {class: 'loader'}}
 				);
 
-			fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-			.then((response) => response.json()).then((events) => {
+			function studentmodal(events) {
 				const tbody = markup({tag: 'tbody'}),
 					snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
 					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [])}),
@@ -189,7 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
 				smodal.querySelector('.loader').remove();
 				smodal.children[0].append(actions, snote, excused, table);
 				smodal.student = tr.dataset.id;
-			}).catch(console.error);
+			}
+			
+			if (tr.querySelector('.score').textContent)
+				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
+				.then((response) => response.json()).then(studentmodal).catch(console.error);
+			else studentmodal([]);
 		});
 
 		//CSV Upload
