@@ -25,11 +25,31 @@ function footer(): void {
 <?php }
 
 function headermeta($admin=false): void {
-	if ($admin) { ?><link rel="stylesheet" href="/admin/admin.css?version=1" type="text/css" media="all"><?php } ?>
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+	if ($admin) embed_asset('admin.css');
+	?><meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	
 	<link rel="icon" type="image/png" sizes="32x32" href="/icon/icon-32.png">
 	<link rel="shortcut icon" sizes="196x196" href="/icon/icon-196.png">
 	<link rel="apple-touch-icon" href="/icon/icon-196.png">
 	<meta name="msapplication-TileImage" content="/icon/icon-196.png">
 <?php }
+
+//Increment version to invalidate cache
+function embed_asset(string $asset): void {
+	$assets = [ // filename => [path, version]
+		'ajax.js' => ['/admin/js', 1],
+		'class.js' => ['/admin/js', 1],
+		'search.js' => ['/admin/js', 1],
+		'user.js' => ['/admin/js', 1],
+		'admin.css' => ['/admin', 1],
+		'picker.js' => ['', 1],
+		'picker.css' => ['', 1],
+	];
+
+	if (!isset($assets[$asset])) return;
+	$ext = explode('.', $asset)[1];
+	$path = $assets[$asset][0];
+	$version = $assets[$asset][1];
+	if ($ext=='js') echo "<script type='text/javascript' src='{$path}/{$asset}?version={$version}'></script>";
+	elseif ($ext=='css') echo "<link rel='stylesheet' type='text/css' href='{$path}/{$asset}?version={$version}' media='all'>";
+}

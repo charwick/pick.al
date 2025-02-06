@@ -43,9 +43,9 @@ if (isset($_POST['name'])) {
 			foreach ($schemae as $schema) echo "'{$schema->id}': {name: '{$schema->name}', items: ".$schema->output_js(false).'},';
 		echo '}, schemabuttons = {};'; ?>
 	</script>
-	<script type="text/javascript" src="js/ajax.js?version=1"></script>  <?php //Increment version to invalidate cache ?>
-	<script type="text/javascript" src="js/class.js?version=1"></script>
-	<?php if ($classid) echo $class->schema->output_css(true, false);
+	<?php embed_asset('ajax.js');
+	embed_asset('class.js');
+	if ($classid) echo $class->schema->output_css(true, false);
 	else {
 		echo '<style type="text/css" class="schema-css">';
 		foreach ($schemae as $schema) echo $schema->output_css(false, false);

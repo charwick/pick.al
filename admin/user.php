@@ -43,9 +43,9 @@ if (isset($_GET['code']) && !$user->orcid) {
 <html lang="en-US">
 <head>
 	<title>User profile: <?php echo $user->username; ?> | Pick.al</title>
-	<script type="text/javascript" src="js/ajax.js?version=1"></script>  <?php //Increment version to invalidate cache ?>
-	<script type="text/javascript" src="js/user.js?version=1"></script>
-	<?php headermeta(true); ?>
+	<?php embed_asset('ajax.js');
+	embed_asset('user.js');
+	headermeta(true); ?>
 </head>
 
 <body class="admin-user">

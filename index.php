@@ -35,12 +35,11 @@ if ($classid) {
 		<?php if ($user) { //Remember username on login page ?>
 			<script type="text/javascript">localStorage.username = "<?php echo $user->username; ?>";</script>
 		<?php }
-	} ?>
+	}
 	
-	<link rel="stylesheet" href="picker.css?version=1" type="text/css" media="all">
-	<script type="text/javascript" src="picker.js?version=1"></script> <?php //Increment version to invalidate cache ?>
-
-	<?php include('admin/parts.php');
+	include('admin/parts.php');
+	embed_asset('picker.css');
+	embed_asset('picker.js');
 	headermeta(); ?>
 </head>
 
