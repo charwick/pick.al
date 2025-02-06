@@ -44,7 +44,7 @@ if ($classid) {
 	headermeta(); ?>
 </head>
 
-<body>
+<body<?php if ($classid && !$class->active) echo ' class="inactive"'; ?>>
 	<?php if ($classid) { ?>
 		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 

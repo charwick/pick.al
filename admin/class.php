@@ -139,7 +139,7 @@ if (isset($_POST['name'])) {
 								echo "</td>";
 								echo "<td class='note'>{$student->note}</td>";
 								$scorepct = $student->denominator ? round($student->score/$student->denominator*100) : '-1';
-								echo '<td class="score'.($student->score===null ? ' nullscore' : '').'" data-sort="'.$scorepct.'">';
+								echo '<td class="score" data-sort="'.$scorepct.'">';
 									if ($student->score!==null) echo "{$student->score}/{$student->denominator}";
 								echo "</td>";
 							echo "</tr>";

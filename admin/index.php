@@ -17,7 +17,7 @@ if (isset($_POST['action']) && $_POST['action']=='delete') {
 
 $active = []; $inactive = [];
 foreach ($sql->get_classes() as $class) {
-	if (strtotime($class->activeuntil) + 24*3600 >= time()) $active[] = $class;
+	if ($class->active) $active[] = $class;
 	else $inactive[] = $class;
 } ?>
 

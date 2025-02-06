@@ -6,6 +6,7 @@ body {
 	margin: 0;
 	overflow: hidden;
 }
+body.inactive { background: #555; }
 #bodywrap { /* Necessary because of a dumb Samsung Browser bug */
 	overflow-x: hidden;
 	padding: 40px 20px;
@@ -24,6 +25,10 @@ p.subtitle {
 	color: #999;
 	margin-top: 1.25em;
 	font-size: 1.2em;
+}
+.inactive .subtitle::after {
+	content: ' - inactive';
+	font-style: italic;
 }
 
 a.button, button, input[type='submit'] {

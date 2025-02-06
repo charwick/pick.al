@@ -32,7 +32,10 @@ class chooser_query extends mysqli {
 		$result = $this->execute_query($q, $u ? [$_SESSION['user']] : []);
 		
 		$classes = [];
-		while ($class = $result->fetch_object()) $classes[] = $class;
+		while ($class = $result->fetch_object()) {
+			$classes[] = $class;
+			$class->active = $active || strtotime($class->activeuntil) + 24*3600 >= time();
+		}
 		return $classes;
 	}
 
@@ -43,6 +46,7 @@ class chooser_query extends mysqli {
 		$pq = $this->execute_query($q, $u ? [$id, $_SESSION['user']] : [$id]);
 		$obj = $pq->fetch_object();
 		if ($obj) $obj->schema = $this->get_schema($obj->schema);
+		$obj->active = strtotime($obj->activeuntil) + 24*3600 >= time();
 		return $obj;
 	}
 	
