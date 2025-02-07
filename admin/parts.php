@@ -1,6 +1,10 @@
 <?php function userbar($sql, $backlink=null, $backtext=null): void {
 	global $user;
-	$user = $sql->current_user(); ?>
+	$user = $sql->current_user();
+	if (!$user) {
+		header("Location: /");
+		die();
+	} ?>
 	<div id="userbar">
 		<?php if ($backlink) echo "<a href='{$backlink}' id='backlink'>← <span>Back to</span> {$backtext}</a>"; ?>
 		<a href="/" id="logo">Pick.al</a>
@@ -44,6 +48,8 @@ function embed_asset(string $asset): void {
 		'admin.css' => ['/admin', 1],
 		'picker.js' => ['', 1],
 		'picker.css' => ['', 1],
+		'login.js' => ['/login', 1],
+		'login.css' => ['/login', 1]
 	];
 
 	if (!isset($assets[$asset])) return;

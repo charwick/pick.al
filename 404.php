@@ -1,5 +1,9 @@
 <?php http_response_code(404);
-require_once('admin/parts.php'); ?>
+require_once('admin/parts.php');
+if (!isset($sql)) {
+	require_once('query.php');
+	$sql = new chooser_query();
+} ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
@@ -7,7 +11,7 @@ require_once('admin/parts.php'); ?>
 	<title>404 Not Found | Student Chooser</title>
 	
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
-	<link rel="stylesheet" href="/admin/admin.css" type="text/css" media="all">
+	<?php embed_asset('admin.css'); ?>
 </head>
 
 <body>

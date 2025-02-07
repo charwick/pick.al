@@ -45,8 +45,10 @@ class chooser_query extends mysqli {
 		$q = "SELECT * FROM classes WHERE id=? and user".($u ? "=?" : " IS NULL");
 		$pq = $this->execute_query($q, $u ? [$id, $_SESSION['user']] : [$id]);
 		$obj = $pq->fetch_object();
-		if ($obj) $obj->schema = $this->get_schema($obj->schema);
-		$obj->active = strtotime($obj->activeuntil) + 24*3600 >= time();
+		if ($obj) {
+			$obj->schema = $this->get_schema($obj->schema);
+			$obj->active = strtotime($obj->activeuntil) + 24*3600 >= time();
+		}
 		return $obj;
 	}
 	

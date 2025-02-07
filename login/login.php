@@ -139,9 +139,9 @@ require_once('admin/parts.php'); ?>
 <html lang="en-US">
 <head>
 	<title>Pick.al | Login</title>
-	<?php headermeta(true); ?>
-	<link rel="stylesheet" href="login/login.css" type="text/css" media="all">
-	<script type="text/javascript" src="login/login.js"></script>
+	<?php headermeta(true);
+	embed_asset('login.js');
+	embed_asset('login.css'); ?>
 	<meta name="description" content="Pick.al is a lightweight app for calling on students at random during class and recording participation.">
 </head>
 
