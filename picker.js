@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.style.right = null;
 			break;
 		}
+		this.classList.remove('open');
 	});
 	//Close
 	document.getElementById('rosterclose')?.addEventListener('click', function(e) {

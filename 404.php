@@ -15,7 +15,7 @@ if (!isset($sql)) {
 </head>
 
 <body>
-	<?php userbar($sql, '.', 'Admin'); ?>
+	<?php userbar($sql, '.', 'Picker'); ?>
 	<p>Sorry, there's nothing here. You can go back to the <a href=".">Picker</a> or the <a href="admin/">admin panel</a>.</p>
 </body>
 </html>
