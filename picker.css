@@ -115,7 +115,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 }
 
 #sinfo ul {
-	padding: 0; margin: 0;
+	padding: 0;
 	list-style: none;
 	display: flex;
 	margin: 1.5em 0 0;

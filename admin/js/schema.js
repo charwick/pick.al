@@ -32,16 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		for (const item of schema.items) addSchemaItem(item);
 		if (!document.querySelectorAll('#schemaitems tbody tr').length) addSchemaItem();
 	}
+	preview();
 
 	//Delete schema items
 	const tbody = document.querySelector('#schemaitems tbody');
 	tbody?.addEventListener('click', function(e) {
 		if (!e.target.classList.contains('delete')) return;
 		e.preventDefault();
-		dirty();
 		const tr = e.target.closest('TR');
 		if ('id' in tr.dataset) deleted.push(tr.dataset.id);
 		tr.remove();
+		dirty();
 		document.querySelector('#schemaitems .addnew a').classList.remove('disabled');
 	});
 
@@ -127,4 +128,31 @@ function dirty(e) {
 	const btn = document.getElementById('save');
 	btn.disabled = false;
 	btn.textContent = 'Save';
+	preview();
+}
+
+function preview() {
+	const ul = document.querySelector('.studentinfo ul'),
+		trs = Array.from(document.querySelectorAll('#schemaitems tbody tr'));
+	trs.sort((a, b) => trval(b) > trval(a));
+	ul.innerHTML = '';
+	let css = '';
+	for (const tr of trs) {
+		const trv = trval(tr),
+			color = tr.querySelector('input[name="color"]').value,
+			symbol = tr.querySelector('input[type="text"]').value,
+			btn = markup({tag: 'li', children: [{tag: 'button', attrs: {'data-schemaval': trv}, children: symbol}]});
+		ul.append(btn);
+		css += 'button[data-schemaval="'+trv+'"] { background: '+color+'; }';
+		css += 'button[data-schemaval="'+trv+'"]:hover { background-color: color(from '+color+' srgb calc(r * 0.85) calc(g * 0.85) calc(b * 0.85)) !important; }';
+		if (symbol in icons)
+			css += 'button[data-schemaval="'+trv+'"] { text-indent: -9999em; background-image: url("/icon/svg.php?icon='+icons[symbol]+'&color=FFF"); }';
+		document.getElementById('previewcss').textContent = css;
+	}
+}
+
+//Get the value of the row whether it's solidified or not
+function trval(tr) {
+	const valinp = tr.querySelector('.value input');
+	return parseFloat(valinp ? valinp.value : tr.querySelector('.value').textContent);
 }

@@ -34,6 +34,7 @@ if (isset($_POST['name'])) {
 <head>
 	<title><?php echo $schemaid ? "Editing Schema {$schema->name}" : "New Schema"; ?> | Pick.al</title>
 	<?php if ($schemaid) { ?>
+		<style type="text/css" id="previewcss">/*filled by JS*/</style>
 		<script type="text/javascript">
 			<?php $classes = $sql->classes_by_schema($schemaid);
 			foreach ($classes as $class)
@@ -43,7 +44,8 @@ if (isset($_POST['name'])) {
 							$item['locked'] = true;
 			echo "var schemaid = {$schemaid},
 				schema = ".json_encode($schema).",
-				classes = ".count($classes).";"; ?>
+				classes = ".count($classes).",
+				icons = ".json_encode($schema::$icons).";"; ?>
 		</script>
 	<?php }
 
@@ -76,7 +78,7 @@ if (isset($_POST['name'])) {
 				} ?>
 			</p>
 
-			<section>
+			<section id="items">
 				<h2>Items</h2>
 				<table id="schemaitems">
 					<thead>
@@ -97,13 +99,21 @@ if (isset($_POST['name'])) {
 
 			<button id="save" disabled>Saved</button>
 			
+			<section id="preview">
+				<h2>Preview</h2>
+				<div class="studentinfo">
+					<h2>Stuart <span>Denton</span></h2>
+					<p class="note">A model student.</p>
+					<ul><!--Filled in by JS--></ul>
+				</div>
+			</section>
 
 			<details<?php if (!count($schema->items)) echo ' open'; ?>>
 				<summary><h2>Why Can't I—?</h2></summary>
 				<ul>
 					<li>Schemae must have a minimum of one item, and a maximum of five.</li>
-					<li>Schema items are ordered low to high point value.</li>
-					<li>Schema item point values must be between zero and one.</li>
+					<li>Schema items are ordered high to low point value.</li>
+					<li>Schema item point values must be between zero and one, and may not be repeated within a schema.</li>
 					<li>Schema items cannot be deleted, or their values changed, if any classes with that schema have events registered with that item value. Schema items can always be added, up to the maximum of 5.</li>
 					<li>Schema 1 is <em>compatible</em> with Schema 2 if all of Schema 2's point values have a corresponding item in Schema 1.</li>
 					<li>Schemae can only be deleted if (1) there are no classes using it, OR (2) there is at least one compatible schema to replace it with.</li>

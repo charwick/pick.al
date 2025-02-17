@@ -2,7 +2,7 @@
 
 A lightweight app for picking students at random and recording participation. Register and try it out at [pick.al](https://pick.al).
 
-The picker (to be used on a phone in class) randomly selects a student from the roster to be called upon, and records the result.
+The picker (to be used on a phone in class) randomly picks a student from the roster to be called upon, and records the result.
 
 [See how it works here](https://twitter.com/C_Harwick/status/1615481096161861632).
 
@@ -24,6 +24,7 @@ The picker (to be used on a phone in class) randomly selects a student from the 
 * View, edit, and delete individual participation events on a per-student basis
 * Set excused absences, so a student's name doesn't come up until a set date
 * Search for students across classes
+* Custom participation schemae
 
 ### Other
 
@@ -33,5 +34,5 @@ Bug reports and feature requests can be filed in the [issues tab](https://github
 
 ## Planned features
 
-* Custom participation schemae
+* Queue up questions
 * E2E encryption

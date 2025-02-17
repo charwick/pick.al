@@ -412,7 +412,8 @@ class Schema {
 	public bool $global;
 	public static array $icons = [
 		'✓' => 'check-lg',
-		'×' => 'x-lg'
+		'×' => 'x-lg',
+		'^' => 'chevron-up'
 	];
 
 	function __construct($data) {
