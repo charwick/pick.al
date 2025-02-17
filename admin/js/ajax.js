@@ -176,7 +176,10 @@ function validate(elements) {
 		element.classList.remove('error');
 		if (element.value != element.oldValue) changed = true;
 		if (Object.hasOwn(element, 'validate') && !element.validate) continue; //Let fields be skipped
-		if (element.required && element.value == '') {
+		if (
+			(element.required && element.value == '') ||
+			(element.type=='number' && ((element.min && parseFloat(element.value) < parseFloat(element.min)) || (element.max && parseFloat(element.value) > parseFloat(element.max))))
+		) {
 			element.classList.add('error');
 			element.focus();
 			blank = true; //Don't return quite yet, so we can check all our inputs

@@ -72,9 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		for (const s of roster) if (s.id==e.target.dataset.id) {
 			new StudentEvent(s);
 			this.style.right = null;
+			this.classList.remove('open');
 			break;
 		}
-		this.classList.remove('open');
 	});
 	//Close
 	document.getElementById('rosterclose')?.addEventListener('click', function(e) {

@@ -130,6 +130,24 @@ switch ($req) {
 	case 'deleteevent':
 		echo $sql->delete_event($_GET['event']);
 		break;
+	
+	//=========
+	// SCHEMAE
+	//=========
+
+	case 'updateschema':
+		echo $sql->edit_schema($_GET['id'], $_GET['name']);
+		break;
+	
+	case 'editschemaitems':
+		$p = json_decode($_POST['params'], true);
+
+		$newids = [];
+		foreach ($p['delete'] as $del) $sql->delete_schema_item($del);
+		foreach ($p['new'] as $new) $newids[$sql->new_schema_item($p['schema'], $new['color'], $new['text'], $new['value'])] = $new;
+		foreach ($p['update'] as $up) $sql->edit_schema_item($up['id'], $up['color'], $up['text'], $up['value'] ?? null);
+		echo json_encode($newids);
+		break;
 
 	//========
 	// USERS
@@ -169,3 +187,4 @@ switch ($req) {
 }
 
 // sleep(1); //Simulate slow network
+// x=5/0; //Simulate PHP error

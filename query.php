@@ -74,29 +74,6 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function get_schema(int $id): Schema {
-		$q="SELECT * FROM schemae
-			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
-			WHERE schemae.id=? AND (user=? OR user IS NULL)
-			ORDER BY value DESC";
-		$pq = $this->execute_query($q, [$id, $_SESSION['user'] ?? null]);
-		$result = [];
-		while ($item = $pq->fetch_object()) $result[] = $item;
-		return new Schema($result);
-	}
-
-	function get_available_schemae(): array {
-		$q="SELECT * FROM schemae
-			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
-			WHERE user IS NULL OR user=?
-			ORDER BY id, value DESC";
-		$schemae = $this->execute_query($q, [$_SESSION['user']]);
-		$result = []; $return = [];
-		while ($item = $schemae->fetch_object()) $result[$item->schema][] = $item; //Organize by schema
-		foreach ($result as $schema) $return[] = new Schema($schema);
-		return $return;
-	}
-
 	//==========
 	// STUDENTS
 	//==========
@@ -234,6 +211,103 @@ class chooser_query extends mysqli {
 		return $result;
 	}
 
+	//=========
+	// SCHEMAE
+	//=========
+
+	function get_schema(int $id): ?Schema {
+		$q="SELECT schemae.*, schemaitems.id AS itemid, `color`, `text`, `value` FROM schemae
+			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
+			WHERE schemae.id=? AND (user=? OR user IS NULL)
+			ORDER BY value DESC";
+		$pq = $this->execute_query($q, [$id, $_SESSION['user'] ?? null]);
+		$result = [];
+		while ($item = $pq->fetch_object()) $result[] = $item;
+		return $result ? new Schema($result) : null;
+	}
+
+	function get_available_schemae(): array {
+		$q="SELECT schemae.*, schemaitems.id AS itemid, `color`, `text`, `value` FROM schemae
+			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
+			WHERE user IS NULL OR user=?
+			ORDER BY schemae.id, value DESC";
+		$schemae = $this->execute_query($q, [$_SESSION['user']]);
+		$result = []; $return = [];
+		while ($item = $schemae->fetch_object()) $result[$item->id][] = $item; //Organize by schema
+		foreach ($result as $schema) $return[] = new Schema($schema);
+		return $return;
+	}
+
+	function new_schema(string $name): int {
+		$q='INSERT INTO schemae (`user`, `name`) VALUES (?,?)';
+		$this->execute_query($q, [$_SESSION['user'], $name]);
+		return $this->insert_id;
+	}
+
+	function edit_schema(int $id, string $name): int {
+		$q="UPDATE schemae SET `name`=? WHERE id=? AND user=?";
+		$this->execute_query($q, [$name, $id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
+	function delete_schema(int $id): int {
+		$q="DELETE schemae FROM schemae
+			LEFT JOIN classes ON classes.schema=schemae.id
+			WHERE schemae.id=? AND schemae.user=? AND classes.id IS NULL"; //Don't delete if there are any classes using it
+		$this->execute_query($q, [$id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
+	function classes_by_schema(int $id): array {
+		$q="SELECT * FROM classes WHERE `schema`=? AND `user`=? ORDER BY year, semester DESC";
+		$classes = $this->execute_query($q, [$id, $_SESSION['user']]);
+		$result = [];
+		while ($class = $classes->fetch_object()) {
+			$q="SELECT DISTINCT result
+				FROM students
+				RIGHT JOIN events ON events.student=students.id
+				WHERE class=?";
+			$vals = $this->execute_query($q, [$class->id]);
+			$class->values = [];
+			while ($val = $vals->fetch_object()) $class->values[] = $val->result;
+			$result[] = $class;
+		}
+		return $result;
+	}
+
+	function edit_schema_item(int $id, string $color, string $text, $value=null): int {
+		$q="SELECT user FROM schemaitems LEFT JOIN schemae ON schemaitems.schema=schemae.id WHERE schemaitems.id=?";
+		if ($this->execute_query($q, [$id])->fetch_object()->user != $_SESSION['user']) return -1;
+
+		$vq = $value!==null ? ', `value`=?' : '';
+		$q="UPDATE schemaitems SET `color`=?, `text`=? {$vq} WHERE id=?";
+		$this->execute_query($q, $value!==null ? [$color, $text, $value, $id] : [$color, $text, $id]);
+		return $this->affected_rows;
+	}
+
+	function new_schema_item(int $schema, string $color, string $text, $value): int {
+		$q="SELECT user FROM schemae WHERE id=?";
+		if ($this->execute_query($q, [$schema])->fetch_object()->user != $_SESSION['user']) return -1;
+		$q="SELECT COUNT(`schema`) AS count FROM schemaitems WHERE `schema`=?";
+		if ($this->execute_query($q, [$schema])->fetch_object()->count >= 5) return -2;
+
+		$q="INSERT INTO schemaitems (`schema`, `color`, `text`, `value`) VALUES (?,?,?,?)";
+		$this->execute_query($q, [$schema, $color, $text, $value]);
+		return $this->insert_id;
+	}
+
+	function delete_schema_item(int $id): int {
+		//Only delete schema items that are (1) unused and (2) from the user's own schemae
+		$q="DELETE schemaitems FROM schemaitems
+			LEFT JOIN schemae ON schemaitems.schema=schemae.id
+			LEFT JOIN classes ON classes.schema=schemae.id
+			LEFT JOIN students ON students.class=classes.id
+			LEFT JOIN events ON events.student=students.id AND events.result=schemaitems.value
+			WHERE schemaitems.id=? AND schemae.user=? AND events.id IS NULL";
+		$this->execute_query($q, [$id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
 	//=======
 	// USERS
 	//=======
@@ -345,7 +419,8 @@ class Schema {
 		$this->id = $data[0]->id;
 		$this->name = $data[0]->name;
 		$this->global = $data[0]->user==null;
-		foreach ($data as $key => $item) $this->items[] = [
+		foreach ($data as $key => $item) if ($item->text) $this->items[] = [
+			'id' => $item->itemid,
 			'color' => $item->color,
 			'hovercolor' => adjustBrightness($item->color, -0.15),
 			'text' => $item->text,

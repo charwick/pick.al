@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 		//Student details modal
 		roster.addEventListener('click', function(e) {
-			let tr = e.target;
-			while (tr.tagName != 'TR') tr = tr.parentNode;
+			let tr = e.target.closest('TR');
 
 			const fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
 				lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
@@ -190,9 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				smodal.student = tr.dataset.id;
 			}
 			
+			function smError() {
+				smodal.querySelector('.loader').remove();
+				const p = document.createElement('p');
+				p.classList.add('error');
+				p.innerHTML = 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.';
+				smodal.append(p);
+			}
+
 			if (tr.querySelector('.score').textContent)
 				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-				.then((response) => response.json()).then(studentmodal).catch(console.error);
+				.then((response) => response.json()).then(studentmodal).catch(smError);
 			else studentmodal([]);
 		});
 
@@ -305,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			let html = '';
 			for (const schemai of response)
 				html += '<option value="'+schemai.id+'"'+(schemai.compatible ? '' : ' disabled')+(schemai.id==schema ? ' selected' : '')+'>'+schemai.name+'</option>'
-			html += '<option disabled>Custom schemae coming soon</option>';
+			html += '<hr /><option value="__addnew__">Add new schema</option>';
 			const select = markup({tag: 'select', children: html});
 			select.stop = false
 			schemaselect.insertBefore(select, schemaselect.querySelector('.schemalist'));
@@ -352,6 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function addSchemaButtons() {
 	const target = document.getElementById('schemaselect'),
 		schema = target.querySelector('select')?.value ?? window.schema;
+	
+	if (schema=='__addnew__') {
+		window.location.href = '/admin/schema.php';
+		return;
+	}
 
 	function drawButtons(html) {
 		const cont = target.querySelector('.schemalist');

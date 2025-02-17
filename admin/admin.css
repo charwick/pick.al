@@ -40,11 +40,15 @@ a.button, button, input[type='submit'] {
 	font-family: 'Lucida Grande', Calibri, sans-serif;
 }
 
-a.button:hover, button:hover, input[type='submit']:hover { background: #258; }
+a.button:hover, button:not(:disabled):hover, input[type='submit']:hover { background: #258; }
 a.button.small {
 	font-size: .55em;
 	padding: 3px 13px 1px;
 	border-bottom-width: 2px;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
 }
 
 input[type="text"], input[type="password"], input[type="date"], input[type="number"] {
@@ -297,7 +301,7 @@ tfoot a {
 	padding: 0.5rem 0;
 	min-width: 1.75em;
 }
-#roster tfoot a {
+#roster tfoot a, #schemaitems tfoot a {
 	border-top: 1px solid rgb(0 0 0 / 10%);
 	padding: 5px 0;
 }
@@ -435,9 +439,9 @@ table .actions {
 	padding: 0 5px;
 	font-size: 1em;
 }
-table .actions a { visibility: hidden; }
+table:not(#schemaitems) .actions a { visibility: hidden; }
 table tr:hover .actions, table td.editing + td.actions { border-left-color: #CCC; }
-table tr:hover .actions a, table td.editing + td.actions a { visibility: visible; }
+table:not(#schemaitems) tr:hover .actions a, table:not(#schemaitems) td.editing + td.actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
 
 table.sortable th::after {
@@ -486,6 +490,8 @@ h1#name a.edit:hover::after { content: attr(title) ' Title'; }
 #password a.edit:hover::after { content: attr(title) ' Password'; }
 .events a.edit:hover::after, .events a.delete:hover::after { content: attr(title) ' Event'; }
 .studentmodal > .actions a.delete:hover::after, .studentmodal > .actions a.edit:hover::after { content: attr(title) ' Student'; }
+
+#schemaitems .actions a { font-size: 1em; }
 
 /* ============
    Events modal
@@ -581,6 +587,59 @@ dialog div > .actions {
 	font-size: 1.25em;
 }
 .excused .actions { font-size: 1.25em; } /* Cancels out the 0.8 */
+
+dialog .error {
+	font-size: .85em;
+	margin: 2em;
+	color: #900;
+}
+
+/* ========
+   Schemae
+   ======== */
+
+#schemaitems td { padding: 3px 20px; }
+#schemaitems tr.locked td.value { padding-left: 2.1em; }
+#schemaitems td:last-child {
+	padding-left: 0;
+	border-left: none;
+}
+.colortext {
+	vertical-align: top;
+	margin: 0.35em 0.5em 0;
+	display: inline-block;
+}
+input[name="text"] {
+	font-size: 2.5em;
+	text-align: center;
+	width: 2em;
+	padding: 0.1em;
+}
+details {
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	margin: 2em 0;
+	padding: 0 2em;
+	max-width: 840px;
+}
+summary { list-style: none; }
+summary h2 {
+	margin: 0 -2rem;
+	padding: 1em 2rem;
+}
+summary h2:hover {
+	background: rgb(0 0 0 / 5%);
+	cursor: pointer;
+}
+summary h2::after {
+	content: '';
+	display: inline-block;
+	height: 1rem; width: 1rem;
+	background-image: url("../icon/svg.php?icon=chevron-down&color=777");
+	background-size: 1rem 1rem;
+	margin: 0 6px -2px 0.5em;
+}
+details[open] summary h2::after { background-image: url("../icon/svg.php?icon=chevron-up&color=777"); }
+details li { margin: 0.4em 0; }
 
 /* =================
    Header and Footer
