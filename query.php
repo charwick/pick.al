@@ -230,7 +230,7 @@ class chooser_query extends mysqli {
 		$q="SELECT schemae.*, schemaitems.id AS itemid, `color`, `text`, `value` FROM schemae
 			LEFT JOIN schemaitems ON schemaitems.schema=schemae.id
 			WHERE user IS NULL OR user=?
-			ORDER BY schemae.id, value DESC";
+			ORDER BY user DESC, schemae.id, value DESC";
 		$schemae = $this->execute_query($q, [$_SESSION['user']]);
 		$result = []; $return = [];
 		while ($item = $schemae->fetch_object()) $result[$item->id][] = $item; //Organize by schema

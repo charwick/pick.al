@@ -15,6 +15,18 @@ h1 {
 	margin: 0.25em 0;
 	line-height: 1.5;
 }
+.new { margin-top: 2em; }
+.new::after {
+	content: 'NEW';
+	display: inline-block;
+	background: #09F;
+	color: #FFF;
+	font: normal 0.5em sans-serif;
+	padding: 4px 6px 3px;
+	border-radius: 3px;
+	margin-left: 0.75em;
+	vertical-align: middle;
+  }
 
 .deemph-link {
   color: #666;
@@ -555,17 +567,18 @@ dialog table:last-child { margin-bottom: -15px; }
 dialog h2 { margin-top: 0.5em; }
 .schemalist { margin-left: 0.5em; }
 .result-button {
-	height: 16px; width: 16px;
+	height: 1.11em; width: 1.11em; /* 16px at 0.9em */
 	display: inline-block;
 	vertical-align: middle;
 	margin-top: -3px;
-	background-size: 13px 13px;
+	background-size: 0.9em 0.9em;
 	background-repeat: no-repeat;
 	background-position: center;
 	color: #FFF;
 	text-align: center;
-	line-height: 16px;
+	line-height: 1.11em;
 }
+.events .result-button { font-size: 0.9rem; }
 .result-button:first-of-type {
 	border-top-left-radius: 2px;
 	border-bottom-left-radius: 2px;
@@ -643,6 +656,12 @@ summary h2::after {
 details[open] summary h2::after { background-image: url("../icon/svg.php?icon=chevron-up&color=777"); }
 details li { margin: 0.4em 0; }
 #save { margin: 0 0 1em; }
+
+#schemae td:first-child { font-size: 1em; }
+#schemae td:nth-child(2) {
+	font-size: 1.5em;
+	padding: 5px 20px;
+}
 
 .studentinfo {
 	background: #666;

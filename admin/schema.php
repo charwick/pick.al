@@ -70,7 +70,7 @@ if (isset($_POST['name'])) {
 					$ff2 = array_slice($classes, 2);
 					$cstrs = [];
 					foreach ($ff1 as $class) $cstrs[] = cstr($class);
-					echo implode(count($ff1)==2 ? ', ' : ' and ', $cstrs);
+					echo implode(count($ff2)>0 ? ', ' : ' and ', $cstrs);
 					if (count($ff2) > 1) echo ', and '.count($ff2).' other classes';
 					elseif (count($ff2)) echo ', and '.cstr($ff2[0]);
 					echo '.';

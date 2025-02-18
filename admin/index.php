@@ -47,8 +47,6 @@ foreach ($sql->get_classes() as $class) {
 			</div>
 		</h1>
 
-		
-		
 		<?php if (isset($message)) echo $message; ?>
 
 		<ul class="classes">
@@ -65,6 +63,26 @@ foreach ($sql->get_classes() as $class) {
 		</ul>
 		
 		<p><a class="button" href="class.php">New class</a></p>
+
+		<h2 class="new">Schemae</h2>
+
+		<table id="schemae">
+			<?php foreach ($sql->get_available_schemae() as $schema) {
+				$count = 0;
+				foreach (array_merge($active, $inactive) as $class) if ($class->schema==$schema->id) $count++; ?>
+				<tr>
+					<td>
+						<?php if (!$schema->global) { ?><a href="/admin/schema.php?schema=<?php echo $schema->id; ?>"><?php }
+						echo $schema->name;
+						if (!$schema->global) echo '</a>'; ?>
+					</td>
+					<td><?php echo $schema->output_buttons(true); ?></td>
+					<td><?php echo $count; ?> classes</td>
+				</tr>
+			<?php } ?>
+		</table>
+		<p><a class="button" href="schema.php">New schema</a></p>
+
 	</main>
 
 	<?php footer(); ?>
