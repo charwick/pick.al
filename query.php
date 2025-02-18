@@ -250,7 +250,11 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function delete_schema(int $id): int {
+	function delete_schema(int $id, ?int $replace=null): int {
+		if ($replace) {
+			$q="UPDATE classes SET `schema`=? WHERE `schema`=? AND `user`=?";
+			$this->execute_query($q, [$replace, $id, $_SESSION['user']]);
+		}
 		$q="DELETE schemae FROM schemae
 			LEFT JOIN classes ON classes.schema=schemae.id
 			WHERE schemae.id=? AND schemae.user=? AND classes.id IS NULL"; //Don't delete if there are any classes using it

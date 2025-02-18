@@ -15,7 +15,7 @@ if (isset($_POST['action']) && $_POST['action']=='delete') {
 		if ($deleted) $message = '<div class="info">Class successfully deleted.</div>';
 		else $message = '<div class="info error">Failed to delete class '.$_POST['class'].'.</div>';
 	} elseif (isset($_POST['schema'])) {
-		$deleted = $sql->delete_schema($_POST['schema']);
+		$deleted = $sql->delete_schema($_POST['schema'], $_POST['replacement'] ?? null);
 		if ($deleted) $message = '<div class="info">Schema successfully deleted.</div>';
 		else $message = '<div class="info error">Failed to delete schema '.$_POST['schema'].'.</div>';
 	}

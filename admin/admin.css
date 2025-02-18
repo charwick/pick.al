@@ -493,9 +493,9 @@ h1#name a.edit:hover::after { content: attr(title) ' Title'; }
 
 #schemaitems .actions a { font-size: 1em; }
 
-/* ============
-   Events modal
-   ============ */
+/* ======
+   Modal
+   ====== */
 
 dialog {
 	width: 540px;
@@ -548,6 +548,8 @@ dialog table {
 	margin: 0 -30px;
 	width: calc(100% + 60px);
 }
+dialog .buttons { text-align: right; }
+dialog .buttons button { margin-left: 1em; }
 dialog table tr th:first-child, dialog table tr td:first-child, dialog table tbody:empty::before { padding-left: 30px; }
 dialog table:last-child { margin-bottom: -15px; }
 dialog h2 { margin-top: 0.5em; }
@@ -643,9 +645,10 @@ details li { margin: 0.4em 0; }
 #save { margin: 0 0 1em; }
 
 .studentinfo {
-	background: #777;
+	background: #666;
+	border: 20px solid #333; 
 	padding: 2.25em 0 0;
-	border-radius: 10px;
+	border-radius: 30px;
 	max-width: 640px;
 	color: #FFF;
 	text-align: center;

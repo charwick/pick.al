@@ -24,7 +24,7 @@ The picker (to be used on a phone in class) randomly picks a student from the ro
 * View, edit, and delete individual participation events on a per-student basis
 * Set excused absences, so a student's name doesn't come up until a set date
 * Search for students across classes
-* Custom participation schemae
+* Create custom participation schemae
 
 ### Other
 

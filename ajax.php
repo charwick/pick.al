@@ -21,22 +21,6 @@ switch ($req) {
 		if ($response) echo $response;
 		else http_response_code(403);
 		break;
-
-	case 'schemae':
-		//Figure out the pattern a schema has to fit
-		$events = $sql->get_events_by_class($_GET['class']);
-		$values = [];
-		foreach ($events as $event) $values["$event->result"] = true;
-
-		$schemae = $sql->get_available_schemae();
-		$result = [];
-		foreach ($schemae as $schema) $result[] = [
-			'name' => $schema->name,
-			'id' => $schema->id,
-			'compatible' => $schema->contains_values(array_keys($values))
-		];
-		echo json_encode($result);
-		break;
 	
 	//Basically the same as updateclassinfo, but returns schema info too
 	case 'editschema':
@@ -147,6 +131,43 @@ switch ($req) {
 		foreach ($p['new'] as $new) $newids[$sql->new_schema_item($p['schema'], $new['color'], $new['text'], $new['value'])] = $new;
 		foreach ($p['update'] as $up) $sql->edit_schema_item($up['id'], $up['color'], $up['text'], $up['value'] ?? null);
 		echo json_encode($newids);
+		break;
+
+	//Compatibility by class
+	case 'schemae':
+		//Figure out the pattern a schema has to fit
+		$events = $sql->get_events_by_class($_GET['class']);
+		$values = [];
+		foreach ($events as $event) $values["$event->result"] = true;
+
+		$schemae = $sql->get_available_schemae();
+		$result = [];
+		foreach ($schemae as $schema) $result[] = [
+			'name' => $schema->name,
+			'id' => $schema->id,
+			'compatible' => $schema->contains_values(array_keys($values))
+		];
+		echo json_encode($result);
+		break;
+	
+	//Compatibility by schema
+	case 'compatibleschemae':
+		//Figure out the pattern a schema has to fit
+		$schema = $sql->get_schema($_GET['schema']);
+		$values = [];
+		foreach ($schema->items as $item) $values["{$item['value']}"] = true;
+
+		$schemae = $sql->get_available_schemae();
+		$result = [];
+		foreach ($schemae as $sch) {
+			if ($sch->id==$schema->id) continue;
+			if ($sch->contains_values(array_keys($values))) {
+				$scharr = (array)$sch;
+				$scharr['markup'] = $sch->output_buttons(true);
+				$result[] = $scharr;
+			}
+		}
+		echo json_encode($result);
 		break;
 
 	//========
