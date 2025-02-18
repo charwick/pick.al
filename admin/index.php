@@ -78,6 +78,7 @@ foreach ($sql->get_classes() as $class) {
 					</td>
 					<td><?php echo $schema->output_buttons(true); ?></td>
 					<td><?php echo $count; ?> classes</td>
+					<td class="actions"><a href="/admin/schema.php?schema=<?php echo $schema->id; ?>&duplicate=1" class="copy" title="Duplicate"></a></td>
 				</tr>
 			<?php } ?>
 		</table>

@@ -342,7 +342,10 @@ dialog tfoot td:last-child a { border-bottom-right-radius: 12px; }
 	margin: 3px 10px -3px 0;
 }
 
-table tbody:empty { height: 3em; }
+table tbody:empty {
+	height: 3em;
+	display: block;
+}
 table tbody:empty::before {
 	padding: 10px 0;
 	display: table-cell;
@@ -418,6 +421,7 @@ span.num::before { content: ' / '; }
 .cancel { background: url('../icon/x-lg.svg') center no-repeat; }
 .delete { background: url('../icon/trash3-fill.svg') center no-repeat; }
 .excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
+.copy { background: url('../icon/copy.svg') center no-repeat; }
 
 .edit, .actions a, #roster .excuses {
 	color: #000;
@@ -451,9 +455,9 @@ table .actions {
 	padding: 0 5px;
 	font-size: 1em;
 }
-table:not(#schemaitems) .actions a { visibility: hidden; }
-table tr:hover .actions, table td.editing + td.actions { border-left-color: #CCC; }
-table:not(#schemaitems) tr:hover .actions a, table:not(#schemaitems) td.editing + td.actions a { visibility: visible; }
+table.events .actions a { visibility: hidden; }
+table.events tr:hover .actions, table.events td.editing + td.actions { border-left-color: #CCC; }
+table.events tr:hover .actions a, table:not(#schemaitems) td.editing + td.actions a { visibility: visible; }
 #roster [data-excused] .actions a.excuses { visibility: visible; }
 
 table.sortable th::after {
@@ -493,6 +497,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 }
 
 h1#name a.delete:hover::after { content: attr(title) ' Class'; }
+.admin-schema h1#name a.delete:hover::after { content: attr(title) ' Schema'; }
 h1#name a.edit:hover::after { content: attr(title) ' Title'; }
 #semester a.edit:hover::after { content: attr(title) ' Semester'; }
 #year a.edit:hover::after { content: attr(title) ' Year'; }
@@ -637,6 +642,7 @@ details {
 	max-width: 840px;
 }
 summary { list-style: none; }
+summary::-webkit-details-marker { display: none; } /* Necessary for Safari */
 summary h2 {
 	margin: 0 -2rem;
 	padding: 1em 2rem;

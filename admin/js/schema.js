@@ -4,9 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Make schema info editable
 	if (document.body.classList.contains('admin-edit') && !schema.global) {
-		const title = document.getElementById('name');
+		const title = document.getElementById('name'),
+			titleEditAttrs = {placeholder: 'Schema Name', data: inps => ({req: 'updateschema', id: schemaid, name: inps[0].value})};
 
-		makeEditable(title, {placeholder: 'Schema Name', data: inps => ({req: 'updateschema', id: schemaid, name: inps[0].value})})
+		makeEditable(title, titleEditAttrs);
 
 		//Delete button
 		title.querySelector('.actions').append(...actionButtons(['delete']));
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}).catch(onerror);
 			}
 		});
+		if (document.body.classList.contains('duplicated')) makeInput(title, titleEditAttrs);
 	}
 
 	//Populate and add schema items

@@ -19,6 +19,14 @@ if ($schemaid) {
 }
 $error = false;
 
+//Duplicate schema
+if (isset($_GET['duplicate']) && $_GET['duplicate']) {
+	$id = $sql->new_schema("{$schema->name} Copy");
+	foreach ($schema->items as $item) $sql->new_schema_item($id, $item['color'], $item['text'], $item['value']);
+	header("Location: schema.php?schema={$id}&duplicated=1");
+	exit;
+}
+
 //Create new schema
 if (isset($_POST['name'])) {
 	$id = $sql->new_schema($_POST['name']);
@@ -55,7 +63,7 @@ if (isset($_POST['name'])) {
 
 </head>
 
-<body class="admin-<?php echo $schemaid ? 'edit' : 'new'; ?> admin-schema">
+<body class="admin-<?php echo $schemaid ? 'edit' : 'new'; ?> admin-schema<?php if (isset($_GET['duplicated']) && $_GET['duplicated']) echo ' duplicated'; ?>">
 	<?php userbar($sql, '.', 'Admin');
 	if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>'; ?>
 	<main>
