@@ -11,7 +11,7 @@ The picker (to be used on a phone in class) randomly picks a student from the ro
 ### The Picker
 
 * Record participation events and swipe over history to edit and undo
-* Multiple participation schemae (✓/?/× and 1-5)
+* Multiple participation schemae (✓/?/× and 1-5 included; custom also possible)
 * "Snooze" student with a tap
 * Roster sidebar to select specific students
 * Keyboard, mouse, and touch/swipe navigation

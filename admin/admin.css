@@ -15,8 +15,8 @@ h1 {
 	margin: 0.25em 0;
 	line-height: 1.5;
 }
-.new { margin-top: 2em; }
-.new::after {
+.new-feature { margin-top: 2em; }
+.new-feature::after {
 	content: 'NEW';
 	display: inline-block;
 	background: #09F;
@@ -262,6 +262,12 @@ h2 input {
 	vertical-align: middle;
 	opacity: 0.75;
 }
+#welcome {
+	display: block;
+	width: auto;
+	max-width: 640px;
+	font-size: 1.1em;
+  }
 
 /* ======
    Tables

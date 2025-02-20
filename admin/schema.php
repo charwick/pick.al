@@ -82,8 +82,8 @@ if (isset($_POST['name'])) {
 					if (count($ff2) > 1) echo ', and '.count($ff2).' other classes';
 					elseif (count($ff2)) echo ', and '.cstr($ff2[0]);
 					echo '.';
-					if ($schema->global) echo '<br /><em><small>This is a global schema. It can be duplicated, but not modified.</small></em>';
-				} ?>
+				}
+				if ($schema->global) echo '<br /><em><small>This is a global schema. It can be duplicated, but not modified.</small></em>'; ?>
 			</p>
 
 			<section id="items">
@@ -145,7 +145,7 @@ if (isset($_POST['name'])) {
 				</tr>
 			</template>
 		<?php } else { ?>
-			<h1>New Schema</h1>
+			<h1>New Button Schema</h1>
 			<form action="" method="post">
 				<p id="name"><input type="text" name="name" placeholder="Schema Name" value="<?php echo $error ? $_POST['name'] : ''; ?>" required=""></p>
 				<p><input type="submit" name="submit" value="Create Schema"></p>

@@ -414,6 +414,7 @@ class Schema {
 	public string $name;
 	public array $items = [];
 	public bool $global;
+	public array $limits;
 	public static array $icons = [
 		'✓' => 'check-lg',
 		'×' => 'x-lg',
@@ -424,13 +425,18 @@ class Schema {
 		$this->id = $data[0]->id;
 		$this->name = $data[0]->name;
 		$this->global = $data[0]->user==null;
-		foreach ($data as $key => $item) if ($item->text) $this->items[] = [
-			'id' => $item->itemid,
-			'color' => $item->color,
-			'hovercolor' => adjustBrightness($item->color, -0.15),
-			'text' => $item->text,
-			'value' => $item->value
-		];
+		$this->limits = [null, null];
+		foreach ($data as $key => $item) if ($item->text) {
+			$this->items[] = [
+				'id' => $item->itemid,
+				'color' => $item->color,
+				'hovercolor' => adjustBrightness($item->color, -0.15),
+				'text' => $item->text,
+				'value' => $item->value
+			];
+			if ($this->limits[0]===null || $item->value < $this->limits[0]) $this->limits[0] = $item->value;
+			if ($this->limits[1]===null || $item->value > $this->limits[1]) $this->limits[1] = $item->value;
+		}
 	}
 
 	function output_item_css($id) {

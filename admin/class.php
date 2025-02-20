@@ -40,7 +40,7 @@ if (isset($_POST['name'])) {
 			echo "var schema = '{$class->schema->id}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
 		} else $schemae = $sql->get_available_schemae();
 		echo 'var schemae = {';
-			foreach ($schemae as $schema) echo "'{$schema->id}': {name: '{$schema->name}', items: ".$schema->output_js(false).'},';
+			foreach ($schemae as $schema) echo "'{$schema->id}': ".json_encode($schema).",";
 		echo '}, schemabuttons = {};'; ?>
 	</script>
 	<?php embed_asset('ajax.js');
@@ -99,8 +99,9 @@ if (isset($_POST['name'])) {
 				<p id="schemaselect">
 					Button schema:
 					<select name="schema">
-						<?php foreach ($schemae as $schema) echo "<option value='{$schema->id}'>{$schema->name}</option>"; ?>
-						<option disabled>Custom schemae coming soon</option>
+						<?php foreach ($schemae as $schema) echo "<option value='{$schema->id}'".($schema->id==1 ? ' selected="selected"' : '').">{$schema->name}</option>"; ?>
+						<hr />
+						<option value="__addnew__">Add new schema</option>
 					</select>
 					<span class="schemalist"></span>
 				</p>

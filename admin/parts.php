@@ -41,12 +41,12 @@ function headermeta($admin=false): void {
 //Increment version to invalidate cache
 function embed_asset(string $asset): void {
 	$assets = [ // filename => [path, version]
-		'ajax.js' => ['/admin/js', 1],
-		'class.js' => ['/admin/js', 1],
+		'ajax.js' => ['/admin/js', 2],
+		'class.js' => ['/admin/js', 2],
 		'search.js' => ['/admin/js', 1],
 		'user.js' => ['/admin/js', 1],
 		'schema.js' => ['/admin/js', 1],
-		'admin.css' => ['/admin', 1],
+		'admin.css' => ['/admin', 2],
 		'picker.js' => ['', 1],
 		'picker.css' => ['', 1],
 		'login.js' => ['/login', 1],

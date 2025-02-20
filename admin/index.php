@@ -62,9 +62,15 @@ foreach ($sql->get_classes() as $class) {
 			if ($inactive) echo '<li id="collapse"></li>'; ?>
 		</ul>
 		
+		<?php if (!$inactive && !$active) { ?>
+			<a id="welcome" class="classbox active" href="class.php">
+				<h2 class="title">Welcome to Pick.al!</h2>
+				<p>Get started by creating a class and uploading a roster.</p>
+			</a>
+		<?php } ?>
 		<p><a class="button" href="class.php">New class</a></p>
 
-		<h2 class="new">Schemae</h2>
+		<h2 class="new-feature">Button Schemae</h2>
 
 		<table id="schemae">
 			<?php foreach ($sql->get_available_schemae() as $schema) {
