@@ -29,7 +29,8 @@ switch ($req) {
 			$schema = $sql->get_schema($_GET['schema']);
 			echo json_encode([
 				'weights' => $schema->items,
-				'css' => $schema->output_css(false, false)
+				'css' => $schema->output_css(false, false),
+				'limits' => $schema->limits
 			]);
 		} else echo 0;
 		break;

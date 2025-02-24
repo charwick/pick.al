@@ -321,9 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
 				fetch('../ajax.php?req=editschema&class='+classid+'&schema='+select.value, {method: 'get'})
 				.then((response) => response.json()).then((response) => {
 					document.querySelector('.schema-css').textContent = response.css;
+					const oldmax = window.schemae[window.schema].limits[1];
 					window.schema = select.value;
-					window.schemae[schema] = response.weights;
+					window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
 					select.solidify();
+					for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
 				});
 			}
 			select.solidify = function() {
@@ -418,29 +420,32 @@ function makeSortable(table, defaultsort, defaultdesc) {
 	});
 }
 
-function updateScore(student, opts) {
+//Student can be a student ID, or a td.score cell
+function updateScore(rostercell, opts) {
+	if (!(rostercell instanceof Element)) rostercell = document.querySelector('#roster tr[data-id="'+rostercell+'"] .score');
+
 	const evcell = document.querySelector('dialog td.numtotal'),
-		rostercell = document.querySelector('#roster tr[data-id="'+student+'"] .score'),
 		scoretext = rostercell.textContent;
 	let num, den;
 	
 	if (scoretext) {
-		const match = scoretext.match(/^(\d+(\.\d+)?)\/(\d+)$/);
+		const match = scoretext.match(/^(\-?\d+(\.\d+)?)\/(\d+(\.\d+)?)$/);
 		num = parseFloat(match[1]);
-		den = parseInt(match[3]);
+		den = parseFloat(match[3]);
 	} else {
 		num = 0; den = 0;
 	}
 
 	if (opts.action=='delete') {
-		den--;
+		den -= schemae[schema].limits[1];
 		num -= parseFloat(opts.oldval);
 	} else if (opts.action=='new') {
-		den++;
+		den += schemae[schema].limits[1];
 		num += parseFloat(opts.newval);
 	} else if (opts.action=='update') num += parseFloat(opts.newval) - parseFloat(opts.oldval);
+	else if (opts.action=='schema') den *= schemae[schema].limits[1]/opts.oldmax;
 
-	rostercell.textContent = den ? num+'/'+den : '';
+	rostercell.textContent = den ? (Math.round(num*100)/100)+'/'+den : '';
 	rostercell.dataset.sort = den ? Math.round(num/den*100) : -1;
 	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
 

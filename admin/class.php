@@ -139,9 +139,10 @@ if (isset($_POST['name'])) {
 									if ($excused) echo '<span class="excuses" title="Excused until '.date('M j, Y', strtotime($student->excuseduntil)).'"></span>';
 								echo "</td>";
 								echo "<td class='note'>{$student->note}</td>";
-								$scorepct = $student->denominator ? round($student->score/$student->denominator*100) : '-1';
+								$den = $student->denominator * $schema->limits[1];
+								$scorepct = $student->denominator ? round($student->score/$den*100) : '-9999';
 								echo '<td class="score" data-sort="'.$scorepct.'">';
-									if ($student->score!==null) echo round($student->score,2)."/{$student->denominator}";
+									if ($student->score!==null) echo round($student->score,2)."/{$den}";
 								echo "</td>";
 							echo "</tr>";
 							$row = !$row;

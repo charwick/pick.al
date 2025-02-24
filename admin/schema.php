@@ -121,11 +121,11 @@ if (isset($_POST['name'])) {
 				<ul>
 					<li>Schemae must have a minimum of one item, and a maximum of five.</li>
 					<li>Schema items are ordered high to low point value.</li>
-					<li>Schema item point values must be between zero and one, and may not be repeated within a schema.</li>
 					<li>Schema items cannot be deleted, or their values changed, if any classes with that schema have events registered with that item value. Schema items can always be added, up to the maximum of 5.</li>
 					<li>Schema 1 is <em>compatible</em> with Schema 2 if all of Schema 2's point values have a corresponding item in Schema 1.</li>
 					<li>Schemae can only be deleted if (1) there are no classes using it, OR (2) there is at least one compatible schema to replace it with.</li>
 					<li>Classes can only switch to schemae that have items covering the point values of all events in that class. This includes any compatible schemae, but inclusive of schemae compatible with the subset of events already registered in that class. Classes with no events can be switched to any schema.</li>
+					<li>Student scores are as a percentage of the maximum schema value. Scores will be easiest to interpret for schemae with a maximum value of 1, but this is not required.</li>
 				</ul>
 			</details>
 
@@ -136,7 +136,7 @@ if (isset($_POST['name'])) {
 			<template id="schemaitem">
 				<tr>
 					<td><input name="text" type="text" required /></td>
-					<td class="value"><input name="value" type="number" min="0" max="1" step="0.05" required /></td>
+					<td class="value"><input name="value" type="number" step="0.05" required /></td>
 					<td>
 						<input name="color" type="color" />
 						<span class="colortext">#000000</span>

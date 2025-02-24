@@ -673,6 +673,7 @@ details li { margin: 0.4em 0; }
 #schemae td:nth-child(2) {
 	font-size: 1.5em;
 	padding: 5px 20px;
+	text-align: center;
 }
 
 .studentinfo {
