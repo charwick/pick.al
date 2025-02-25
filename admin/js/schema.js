@@ -61,17 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (document.body.classList.contains('duplicated')) makeInput(title, titleEditAttrs);
 	}
 
-	//Populate and add schema items
-	document.querySelector('#schemaitems .addnew a')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		if (!this.classList.contains('disabled')) addSchemaItem();
-		if (document.querySelectorAll('#schemaitems tbody tr').length >= 5) this.classList.add('disabled');
-	});
-	if ('schema' in window) {
-		for (const item of schema.items) addSchemaItem(item);
-		if (!document.querySelectorAll('#schemaitems tbody tr').length) addSchemaItem();
-	}
-	preview();
+	populate();
 
 	//Delete schema items
 	const tbody = document.querySelector('#schemaitems tbody');
@@ -96,9 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		dirty(e);
 	});
 
-	//Save on enter
-	tbody?.addEventListener('keydown', (e) => {
-		if (e.key=='Enter') document.getElementById('save').click();
+	//Enter and esc to save and cancel
+	tbody?.addEventListener('keydown', function(e) {
+		const savebtn = document.getElementById('save');
+		if (e.key=='Enter') savebtn.click();
+		else if (e.key=='Escape' && !savebtn.disabled) {
+			this.innerHTML = '';
+			populate();
+			savebtn.disabled = true;
+		}
 	});
 
 	//Save item info
@@ -124,18 +120,37 @@ document.addEventListener('DOMContentLoaded', () => {
 			method: 'post',
 			body: formData
 		}).then((response) => response.json()).then((response) => {
+			//Update window.schema and UI
 			this.textContent = 'Saved';
+			for (const d of deleted) {
+				const index = schema.items.findIndex(item => item.id == parseInt(d));
+				if (index !== -1) schema.items.splice(index, 1);
+			}
 			deleted = [];
-			for (const tr of tbody.querySelectorAll('tr')) {
-				delete tr.dataset.dirty;
 
-				//Add id to new rows
-				if (!('id' in tr.dataset))
+			for (const tr of tbody.querySelectorAll('tr')) {
+
+				//Add id to new rows 
+				if (!('id' in tr.dataset)) {
 					for (const r in response)
 						if (tr.querySelector('input[name=text]').value==response[r].text && tr.querySelector('input[name=value]').value==response[r].value && tr.querySelector('input[name=color]').value=='#'+response[r].color) {
 							tr.dataset.id = r;
+							response[r].value = parseFloat(response[r].value);
+							schema.items.push(response[r]);
 							break;
 						}
+				
+				} else if ('dirty' in tr.dataset) {
+					const index = schema.items.findIndex(item => item.id == tr.dataset.id);
+					console.log(schema.items[index]);
+					if (index !== -1) {
+						const ival = tr.querySelector('input[name=value]');
+						schema.items[index].text = tr.querySelector('input[name=text]').value;
+						if (ival) schema.items[index].value = ival.value;
+						schema.items[index].color = tr.querySelector('input[name=color]').value.replace('#','');
+					}
+				}
+				delete tr.dataset.dirty;
 			}
 		}).catch(console.log);
 	});
@@ -146,6 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 	});
 });
+
+//Populate and add schema items
+function populate() {
+	document.querySelector('#schemaitems .addnew a')?.addEventListener('click', function(e) {
+		e.preventDefault();
+		if (!this.classList.contains('disabled')) addSchemaItem();
+		if (document.querySelectorAll('#schemaitems tbody tr').length >= 5) this.classList.add('disabled');
+	});
+	if ('schema' in window) {
+		for (const item of schema.items) addSchemaItem(item);
+		if (!document.querySelectorAll('#schemaitems tbody tr').length) addSchemaItem();
+	}
+	preview();
+}
 
 function addSchemaItem(item) {
 	const template = document.getElementById('schemaitem'),

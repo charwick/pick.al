@@ -129,7 +129,10 @@ switch ($req) {
 
 		$newids = [];
 		foreach ($p['delete'] as $del) $sql->delete_schema_item($del);
-		foreach ($p['new'] as $new) $newids[$sql->new_schema_item($p['schema'], $new['color'], $new['text'], $new['value'])] = $new;
+		foreach ($p['new'] as &$new) {
+			$new['id'] = $sql->new_schema_item($p['schema'], $new['color'], $new['text'], $new['value']);
+			if ($new['id']) $newids[$new['id']] = $new;
+		}
 		foreach ($p['update'] as $up) $sql->edit_schema_item($up['id'], $up['color'], $up['text'], $up['value'] ?? null);
 		echo json_encode($newids);
 		break;

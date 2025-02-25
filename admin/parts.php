@@ -45,7 +45,7 @@ function embed_asset(string $asset): void {
 		'class.js' => ['/admin/js', 3],
 		'search.js' => ['/admin/js', 1],
 		'user.js' => ['/admin/js', 1],
-		'schema.js' => ['/admin/js', 1],
+		'schema.js' => ['/admin/js', 2],
 		'admin.css' => ['/admin', 2],
 		'picker.js' => ['', 1],
 		'picker.css' => ['', 1],
