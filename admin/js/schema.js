@@ -96,6 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		dirty(e);
 	});
 
+	//Save on enter
+	tbody?.addEventListener('keydown', (e) => {
+		if (e.key=='Enter') document.getElementById('save').click();
+	});
+
 	//Save item info
 	document.getElementById('save')?.addEventListener('click', function(e) {
 		if (!validate(tbody.querySelectorAll('input'))) return;

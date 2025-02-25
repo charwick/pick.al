@@ -42,7 +42,7 @@ function headermeta($admin=false): void {
 function embed_asset(string $asset): void {
 	$assets = [ // filename => [path, version]
 		'ajax.js' => ['/admin/js', 2],
-		'class.js' => ['/admin/js', 2],
+		'class.js' => ['/admin/js', 3],
 		'search.js' => ['/admin/js', 1],
 		'user.js' => ['/admin/js', 1],
 		'schema.js' => ['/admin/js', 1],
