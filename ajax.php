@@ -17,22 +17,16 @@ switch ($req) {
 	//=========
 
 	case 'updateclassinfo':
-		$response = $sql->edit_class($_GET['class'], $_GET['k'], $_GET['v']);
-		if ($response) echo $response;
-		else http_response_code(403);
-		break;
-	
-	//Basically the same as updateclassinfo, but returns schema info too
-	case 'editschema':
-		$updated = $sql->edit_class($_GET['class'], 'schema', $_GET['schema']);
-		if ($updated) {
+		$response = $sql->edit_class($_GET['class'], $_GET['title'] ?? null, $_GET['semester'] ?? null, $_GET['year'] ?? null, $_GET['activeuntil'] ?? null, $_GET['schema'] ?? null);
+		if ($response) {
 			$schema = $sql->get_schema($_GET['schema']);
 			echo json_encode([
 				'weights' => $schema->items,
 				'css' => $schema->output_css(false, false),
 				'limits' => $schema->limits
 			]);
-		} else echo 0;
+		}
+		else http_response_code(403);
 		break;
 	
 	case 'getschemabuttons':
@@ -135,23 +129,6 @@ switch ($req) {
 		}
 		foreach ($p['update'] as $up) $sql->edit_schema_item($up['id'], $up['color'], $up['text'], $up['value'] ?? null);
 		echo json_encode($newids);
-		break;
-
-	//Compatibility by class
-	case 'schemae':
-		//Figure out the pattern a schema has to fit
-		$events = $sql->get_events_by_class($_GET['class']);
-		$values = [];
-		foreach ($events as $event) $values["$event->result"] = true;
-
-		$schemae = $sql->get_available_schemae();
-		$result = [];
-		foreach ($schemae as $schema) $result[] = [
-			'name' => $schema->name,
-			'id' => $schema->id,
-			'compatible' => $schema->contains_values(array_keys($values))
-		];
-		echo json_encode($result);
 		break;
 	
 	//Compatibility by schema

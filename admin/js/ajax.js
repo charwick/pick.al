@@ -14,126 +14,148 @@ function markup(element) {
 	return el;
 }
 
-function makeEditable(element, attrs) {
-	if (!element) return;
-	const actions = document.createElement('span'),
-		edit = actionButtons(['edit'])[0];
-	actions.classList.add('actions');
-	actions.append(edit);
-	if (!element.editable) {
-		element.addEventListener('click', function(e) {
-			if (!e.target.classList.contains('edit')) return;
+class makeInput {
+	elements = [];
+	data = null; //Should be set to a function that takes the inputs, and returns data to send to the server
+	validate = null;
+
+	constructor(actionsbox) {
+		this.actionsbox = actionsbox;
+		actionsbox.addEventListener('click', e => {
 			e.preventDefault();
-			makeInput(element, attrs);
+			if (e.target.classList.contains('edit')) this.edit();
+			else if (e.target.classList.contains('save')) this.save();
+			else if (e.target.classList.contains('cancel')) this.cancel();
 		});
-		element.editable = true;
 	}
-	element.appendChild(actions);
-}
 
-//Turns a set of elements into inputs
-function makeInput(elements, attrs) {
-	let inps = [], i=0;
-	if (!(elements instanceof Array)) elements = [elements];
-	attrs = attrs || {};
+	addElement(element, opts) {	this.elements.push([element, opts ?? {}]); }
 
-	//Keep track of what actions to put back when we solidify
-	if (!('actions' in attrs)) {
-		attrs['actions'] = [];
-		if (!('actionsbox' in attrs)) attrs['actionsbox'] = elements[0].querySelector('.actions');
-		for (const a of attrs['actionsbox'].querySelectorAll('a'))
-			attrs['actions'].push(a.getAttribute('class'));
-	}
-	if (!('required' in attrs)) attrs['required'] = true;
-
-	for (const element of elements) {
-		let inp;	
-		if (attrs.type=='select') {
-			inp = document.createElement('select');
-			let html = '';
-			for (const s of attrs.opts) html += '<option value="'+s.toLowerCase()+'">'+s+'</option>';
-			inp.innerHTML = html;
-			inp.value = element.textContent.replace(/✎| /g,'').toLowerCase();
-		} else {
-			inp = document.createElement('input');
-			inp.type = attrs.type || 'text';
-			if (inp.type=='date') inp.value = element.dataset.date;
-			else inp.value = element.textContent.replace('✎','');
-			for (const attr of ['min', 'max', 'placeholder', 'required', 'autocomplete'])
-				if (attr in attrs) {
-					const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
-					if (val !== false) inp.setAttribute(attr, val);
+	edit() {
+		const inps = [];
+		for (const [element, attrs] of this.elements) {
+			let inp;
+			const type = attrs.type ?? 'text';
+			if (type=='select') {
+				inp = markup({tag: 'select'});
+				for (const s of attrs.opts) {
+					let option;
+					if (s===null) option = markup({tag: 'hr'});
+					else if (typeof s == 'string') option = markup({tag: 'option', attrs: {value: s.toLowerCase()}, children: [s]});
+					else {
+						option = markup({tag: 'option', attrs: {value: s[0]}, children: [s[1]]});
+						if (s.length>=3 && !s[2]) option.disabled = true;
+					}
+					inp.append(option);
 				}
-		}
-
-		inp.name = element.id || element.getAttribute('class');
-		element.classList.add('editing');
-		element.pickalAttrs = attrs
-		inp.oldValue = inp.value;
-
-		//Saving and cancelling
-		inp.addEventListener('keydown', function(e) {
-			if (e.key == "Enter") {
-				e.preventDefault();
-				element.save();
-			} else if (e.key == "Escape") {
-				e.preventDefault();
-				element.cancel();
+				inp.value = 'default' in element.dataset ? element.dataset.default : element.textContent.trim().toLowerCase();
+			} else {
+				if (type=='textarea') inp = markup({tag: 'textarea'});
+				else inp = markup({tag: 'input', attrs: {type: type || 'text'}});
+				if (inp.type=='date') inp.value = element.dataset.date;
+				else if (inp.type!='password') inp.value = element.textContent.trim();
+				if (!('required' in attrs)) attrs['required'] = true;
+				for (const attr of ['min', 'max', 'placeholder', 'required', 'autocomplete'])
+					if (attr in attrs) {
+						const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
+						if (val !== false) inp.setAttribute(attr, val);
+					}
 			}
-		});
-		element.cancel = function() {
-			for (const input of inps) input.value = input.oldValue;
-			solidify(elements, attrs['actions']);
-			element.parentNode.querySelector('.inlineError')?.remove();
-			if ('cancel' in attrs) attrs.cancel();
-		}
-		element.save = function() {
-			element.parentNode.querySelector('.inlineError')?.remove();
-			sendInfo(elements, attrs.data(inps), attrs['actions'], 'after' in attrs ? attrs.after : null);
-		};
 
-		if (elements.length==1) {
-			if  (!('blur' in attrs && !attrs['blur'])) inp.addEventListener('blur', elements[0].save);
-		} else {
-			const actions = attrs['actionsbox'];
+			inp.name = element.id || element.getAttribute('class');
+			element.classList.add('editing');
+			inp.oldValue = inp.value;
+
+			//Saving and cancelling
+			inp.addEventListener('keydown', e => {
+				if (e.key == "Enter") {
+					e.preventDefault();
+					this.save();
+				} else if (e.key == "Escape") {
+					e.preventDefault();
+					this.cancel();
+				}
+			});
+
+			//Swap out actions but keep track of what to put back when we solidify
+			if (!(this.actions)) {
+				this.actions = [];
+				if (!this.actionsbox) this.actionsbox = this.elements[0].querySelector('.actions');
+				for (const a of this.actionsbox.querySelectorAll('a'))
+					this.actions.push(a.getAttribute('class'));
+			}
+			const actions = this.actionsbox;
 			actions.textContent = '';
 			actions.append(...actionButtons(['save', 'cancel']));
-		}
-
-		//Draw the input
-		element.textContent = '';
-		element.append(inp)
-		inps.push(inp);
-		i++;
-	}
-
-	inps[0].focus();
-	return inps;
-}
-
-//Turns a set of inputs back into elements
-function solidify(els, actionList) {
-	if (!els.length) return;
-	for (const el of els) {
-		el.classList.remove('editing');
-		const inp = el.querySelector('input, select');
-		if (inp.tagName.toLowerCase() == 'select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
-		else if (inp.type == 'date') {
-			inp.parentNode.dataset.date = inp.value;
-			inp.parentNode.textContent = datetostr(inp.value);
-		} else inp.parentNode.textContent = inp.value;
-	}
 	
-	let actions;
-	if (els.length == 1) {
-		actions = document.createElement('span');
-		actions.classList.add('actions');
-		els[0].append(actions);
-	} else if (els.length > 1) {
-		actions = els[0].pickalAttrs['actionsbox'];
-		actions.textContent = '';
+			//Draw the input
+			element.textContent = '';
+			element.append(inp);
+			if (!this.actionsbox.isConnected) this.elements[0][0].append(this.actionsbox);
+			inps.push(inp);
+		}
+		inps[0].focus();
+		if (this.editfunc instanceof Function) this.editfunc(inps);
 	}
-	actions.append(...actionButtons(actionList));
+
+	cancel() {
+		for (const [element, attrs] of this.elements) {
+			const input = element.querySelector('input, select, textarea');
+			input.value = input.oldValue;
+			element.parentNode.querySelector('.inlineError')?.remove();
+
+		}
+		this.solidify();
+		if (this.cancelfunc) this.cancelfunc();
+	}
+	save() {
+		for (const [element, attrs] of this.elements)
+			element.parentNode.querySelector('.inlineError')?.remove();
+	
+		//Check for blank values and only make a request if the value has changed
+		const inps = [];
+		for (const [element, attrs] of this.elements) inps.push(element.querySelector('input,select,textarea'));
+		const valid = validate(inps);
+		if (valid===0 || (this.validate instanceof Function && !this.validate(inps))) return;
+		if (valid!=null || !inps.length) {
+			onerror = response =>  {
+				if (this.error instanceof Function) this.error(response, inps);
+				else for (const inp of inps) inp.classList.add('error');
+			};
+	
+			fetch('../ajax.php?'+(new URLSearchParams(this.data(inps)).toString()), {method: 'get'})
+			.then(response => response.json()).then(response => {
+				if (!response) onerror(response);
+				else {
+					const vals = [];
+					for (const inp of inps) {
+						vals.push(inp.value);
+						if ('default' in inp.parentNode.dataset) inp.parentNode.dataset.default = inp.value;
+					}
+					this.solidify();
+					if (this.after instanceof Function) this.after(response, vals);
+				}
+			}).catch(onerror);
+			
+		} else this.solidify();
+	};
+
+	//Turns inputs back into elements
+	solidify() {
+		for (const [el, attrs] of this.elements) {
+			el.classList.remove('editing');
+			const inp = el.querySelector('input, select, textarea');
+			if (attrs.type=='select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
+			else if (attrs.type == 'date') {
+				inp.parentNode.dataset.date = inp.value;
+				inp.parentNode.textContent = datetostr(inp.value);
+			} else inp.parentNode.textContent = inp.value;
+		}
+		
+		this.actionsbox.textContent = '';
+		this.actionsbox.append(...actionButtons(this.actions));
+		if (!this.actionsbox.isConnected) this.elements[0][0].append(this.actionsbox);
+	}
 }
 
 function actionButtons(list) {
@@ -172,14 +194,11 @@ function datetostr(datestr) {
 function validate(elements) {
 	let blank, changed;
 	for (let element of elements) {
-		if (!['INPUT', 'SELECT'].includes(element.tagName)) element = element.querySelector('input,select');
+		if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName)) element = element.querySelector('input,select,textarea');
 		element.classList.remove('error');
 		if (element.value != element.oldValue) changed = true;
 		if (Object.hasOwn(element, 'validate') && !element.validate) continue; //Let fields be skipped
-		if (
-			(element.required && element.value == '') ||
-			(element.type=='number' && ((element.min && parseFloat(element.value) < parseFloat(element.min)) || (element.max && parseFloat(element.value) > parseFloat(element.max))))
-		) {
+		if (!element.validity.valid) { //Takes care of blank+required, num ranges, and email
 			element.classList.add('error');
 			element.focus();
 			blank = true; //Don't return quite yet, so we can check all our inputs
@@ -209,37 +228,4 @@ function modal(...content) {
 	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
-}
-
-//============================
-// Communicate with the server
-//============================
-
-function sendInfo(elements, data, actions, after, errorfn) {
-	if (elements == null) elements = [];
-	else if (!(elements instanceof Array)) elements = [elements];
-	
-	//Check for blank values and only make a request if the value has changed
-	const valid = validate(elements);
-	if (valid===0) return;
-	if (valid!=null || !elements.length) {
-		onerror = function(response)  {
-			const inputs = [];
-			for (const inp of elements)
-				if (['INPUT', 'SELECT'].includes(inp.tagName)) inputs.push(inp);
-				else inputs.push(inp.querySelector('input,select'));
-			if (errorfn) errorfn(response, inputs);
-			else for (const inp of inputs) inp.classList.add('error');
-		};
-
-		fetch('../ajax.php?'+(new URLSearchParams(data).toString()), {method: 'get'})
-		.then((response) => response.json()).then((response) => {
-			if (!response) onerror(response);
-			else {
-				solidify(elements, actions);
-				if (after instanceof Function) after(response);
-			}
-		}).catch(onerror);
-		
-	} else solidify(elements, actions);
 }

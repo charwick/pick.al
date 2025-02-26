@@ -58,12 +58,18 @@ class chooser_query extends mysqli {
 		return $this->insert_id;
 	}
 	
-	function edit_class(int $class, string $key, $val): int {
-		$keys = ['name', 'semester', 'year', 'activeuntil', 'schema'];
-		if (!in_array($key, $keys)) return False;
-		
-		$q = "UPDATE classes SET `{$key}`=? WHERE id=? AND user=?";
-		$this->execute_query($q, [sanitize($val), $class, $_SESSION['user']]);
+	function edit_class(int $class, string $name=null, string $semester=null, int $year=null, string $activeuntil=null, int $schema=null): int {
+		$params = []; $cols = [];
+		if ($name) { $params[] = sanitize($name); $cols[] = '`name`=?'; }
+		if ($semester) { $params[] = $semester; $cols[] = '`semester`=?'; }
+		if ($year) { $params[] = $year; $cols[] = '`year`=?'; }
+		if ($activeuntil) { $params[] = $activeuntil; $cols[] = '`activeuntil`=?'; }
+		if ($schema) { $params[] = $schema; $cols[] = '`schema`=?'; }
+
+		$params = array_merge($params, [$class, $_SESSION['user']]);
+		$cols = implode(', ', $cols);
+		$q = "UPDATE classes SET {$cols} WHERE id=? AND user=?";
+		$this->execute_query($q, $params);
 		return $this->affected_rows;
 	}
 

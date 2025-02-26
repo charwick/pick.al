@@ -1,75 +1,62 @@
 "use strict";
 document.addEventListener('DOMContentLoaded', () => {
 	function fieldData(inputs) { return ['req=edituser', 'k='+inputs[0].name, 'v='+inputs[0].value] }
-	makeEditable(document.getElementById('email'), {type: 'email', placeholder: 'Email Address', request: 'edituser', data: fieldData});
 
-	const password = document.querySelector('#password');
+	const emailedit = new makeInput(document.querySelector('#email + .actions'));
+	emailedit.addElement(document.getElementById('email'), {type: 'email', placeholder: 'Email address', autocomplete: 'email'});
+	emailedit.data = inps => ({req: 'edituser', k: 'email', v: inps[0].value});
 
 	function inlineError(element, message) {
 		let error = markup({tag: 'span', attrs: {class: 'inlineError'}, children: [message]});
 		element.append(error);
+		return 0;
 	}
 
-	function pwerror(response, inputs) {
-		inputs[0].classList.add('error');
-		inlineError(inputs[0].parentNode.parentNode, 'Current password is incorrect.');
+	const pwelement = document.getElementById('password'),
+		pwedit = new makeInput(pwelement.querySelector('.actions'));
+	var pwnone = document.getElementById('oldpw').textContent == 'None';
+	pwedit.addElement(document.getElementById('oldpw'), {type: 'password', placeholder: 'Current Password', autocomplete: 'current-password'});
+	pwedit.addElement(document.getElementById('newpw'), {type: 'password', placeholder: 'New Password', autocomplete: 'new-password'});
+	pwedit.addElement(document.getElementById('confirm_password'), {type: 'password', placeholder: 'Confirm New Password', autocomplete: 'new-password'});
+	pwedit.data = inps => ({req: 'editpw', current: (inps[0].value), new: inps[1].value});
+	pwedit.editfunc = inps => {
+		if (pwnone) {
+			inps[0].style.display = 'none';
+			inps[0].validate = false;
+		}
 	}
-	function pwafter(response) {
+	pwedit.validate = inps => {
+		pwelement.querySelector('.inlineError')?.remove();
+		if (inps[1].value != inps[2].value) {
+			inps[1].classList.add('error');
+			inps[2].classList.add('error');
+			return inlineError(pwelement, 'Passwords do not match.');
+		}  else if (inps[1].value.length < 5) {
+			inps[1].classList.add('error');
+			return inlineError(pwelement, 'Password must be at least 5 characters.');
+		} else if (inps[1].value.toLowerCase().includes(document.querySelector('h1 .num').textContent.trim().toLowerCase())) {
+			inps[1].classList.add('error');
+			return inlineError(pwelement, 'Password cannot contain the username.');
+		}
+		return 1;
+	}
+	pwedit.error = (response, inputs) => {
+		inputs[0].classList.add('error');
+		inlineError(pwelement, 'Current password is incorrect.');
+	}
+	pwedit.cancelfunc = () => {
 		let i=0;
-		for (const span of password.querySelectorAll('.field')) {
+		for (const span of pwelement.querySelectorAll('.field')) {
 			span.textContent = i ? '' : '••••••••';
 			i++;
 		}
+	}
+	pwedit.after = (response, inps) => {
+		pwedit.cancelfunc();
 		const now = new Date();
-		password.dataset.date = now.toLocaleDateString('en-us', {month: 'long', day: 'numeric', year: 'numeric'})+' at '+now.clockTime();
+		pwelement.dataset.date = now.toLocaleDateString('en-us', {month: 'long', day: 'numeric', year: 'numeric'})+' at '+now.clockTime();
+		pwnone = false;
 	}
-
-	function pwedit(e) {
-		e.preventDefault();
-		const element = e.target.parentNode.parentNode,
-			fields = Array.from(element.querySelectorAll('.field'));
-		if (e.target.classList.contains('edit')) {
-			let pwnone = false;
-			if (document.getElementById('oldpw').textContent == 'None') pwnone = true;
-			makeInput(fields, {
-				type: 'password',
-				placeholder: ['Current Password', 'New Password', 'Confirm New Password'],
-				autocomplete: ['current-password', 'new-password', 'new-password'],
-				actionsbox: document.querySelector('#password .actions')
-			});
-			if (pwnone) {
-				const opwi = element.querySelector('#oldpw input');
-				opwi.style.display = 'none';
-				opwi.validate = false;
-			}
-			
-			for (const inp of element.querySelectorAll('input')) {
-				inp.value = '';
-
-				inp.parentNode.save = function() {
-					element.querySelector('.inlineError')?.remove();
-					const oldpw = element.querySelector('input[name="oldpw"]'),
-						newpw = element.querySelector('input[name="newpw"]'),
-						confirmpw = element.querySelector('input[name="confirm_password"]');
-					if (newpw.value != confirmpw.value) {
-						newpw.classList.add('error');
-						confirmpw.classList.add('error');
-						return inlineError(element, 'Passwords do not match.');
-					}  else if (newpw.value.length < 5) {
-						newpw.classList.add('error');
-						return inlineError(element, 'Password must be at least 5 characters.');
-					} else if (newpw.value.toLowerCase().includes(document.querySelector('h1 .num').textContent.toLowerCase())) {
-						newpw.classList.add('error');
-						return inlineError(element, 'Password cannot contain the username.');
-					}
-					sendInfo(fields, {req: 'editpw', current: (oldpw ? oldpw.value : ''), new: newpw.value}, ['edit'], pwafter, pwerror);
-				}
-			}
-		
-		} else if (e.target.classList.contains('cancel')) element.querySelector('.field').cancel();
-		else if (e.target.classList.contains('save')) element.querySelector('.field').save();
-	}
-	password.addEventListener('click', pwedit);
 
 	const oid = document.querySelector('#orcid');
 	oid.addEventListener('click', function(e) {

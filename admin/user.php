@@ -60,7 +60,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 			<span class="actions"><a href="#" class="delete" title="Delete Account"></a></span>
 		</h1>
 
-		<p>Email: <span id="email"><?php echo $user->email; ?></span></p>
+		<p>Email: <span id="email"><?php echo $user->email; ?></span> <span class="actions"><a href="#" class="edit" title="Edit"></a></span></p>
 		<p id="password" data-date="<?php echo $user->password ? date('F j, Y \a\t H:i', strtotime($user->pwchanged)) : 'never'; ?>">
 			Password:
 			<span class="field" id="oldpw"><?php echo $user->password ? '••••••••' : 'None'; ?></span><span class="field" id="newpw"></span><span class="field" id="confirm_password"></span>

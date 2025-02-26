@@ -69,7 +69,10 @@ if (isset($_POST['name'])) {
 	<main>
 		<?php if ($schemaid) { ?>
 			<input type='hidden' name='schemaid' value='<?php echo $schemaid; ?>'>
-			<h1 id='name'><?php echo $schema->name; ?></h1>
+			<h1 id='name'>
+				<?php echo $schema->name;
+				?><span class="actions"><a class="edit" href="#" title="Edit"></a><a class="delete" href="#" title="Delete"></a></span>
+			</h1>
 			<p id="classmeta">
 				<?php if (!$classes) echo 'No classes using this schema.';
 				else {

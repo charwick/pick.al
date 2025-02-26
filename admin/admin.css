@@ -75,7 +75,7 @@ input[type="password"] { margin-right: 1em; }
 input[type="number"] { padding-right: 3px; }
 
 #name input {
-	margin: calc(-0.3em - 1px) calc(-0.6em - 1px);
+	margin: calc(-0.3em - 1px) 0 calc(-0.3em - 1px) calc(-0.6em - 1px);
 	font: bold 1em 'Lucida Grande',Calibri,sans-serif;
 	max-width: 100%;
 }
@@ -502,12 +502,8 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	top: -6px;
 }
 
-h1#name a.delete:hover::after { content: attr(title) ' Class'; }
-.admin-schema h1#name a.delete:hover::after { content: attr(title) ' Schema'; }
-h1#name a.edit:hover::after { content: attr(title) ' Title'; }
-#semester a.edit:hover::after { content: attr(title) ' Semester'; }
-#year a.edit:hover::after { content: attr(title) ' Year'; }
-#activeuntil a.edit:hover::after { content: attr(title) ' End Date'; }
+.admin-edit h1#name:not(.editing) .actions a:hover::after { content: attr(title) ' Class'; }
+.admin-schema h1#name:not(.editing) .actions a:hover::after { content: attr(title) ' Schema'; }
 #schemaselect a.edit:hover::after { content: attr(title) ' Schema'; }
 #email a.edit:hover::after { content: attr(title) ' Email Address'; }
 #password a.edit:hover::after { content: attr(title) ' Password'; }

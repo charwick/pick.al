@@ -4,23 +4,43 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Make class info editable
 	if (document.body.classList.contains('admin-edit')) {
 		const title = document.getElementById('name'),
-			infoData = inps => ({req: 'updateclassinfo', class: classid, k: inps[0].name, v: inps[0].value});
+			classedit = new makeInput(title.querySelector('.actions'));
 
-		makeEditable(title, {placeholder: 'Class Name', data: infoData})
-		makeEditable(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer'], data: infoData})
-		makeEditable(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year', data: infoData})
-		makeEditable(document.getElementById('activeuntil'), {type: 'date', data: infoData})
+		const schemaOpts = [];
+		for (const s of allschemae) schemaOpts.push([s.id, s.name, s.compatible]);
+		schemaOpts.push(null);
+		schemaOpts.push(['__addnew__','Add new schema']);
+
+		classedit.addElement(title, {placeholder: 'Class Name'});
+		classedit.addElement(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer']});
+		classedit.addElement(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year'});
+		classedit.addElement(document.getElementById('activeuntil'), {type: 'date'});
+		classedit.addElement(document.getElementById('selectgoeshere'), {type: 'select', opts: schemaOpts});
+		classedit.data = inputs => ({req: 'updateclassinfo', class: classid, title: inputs[0].value, semester: inputs[1].value, year: inputs[2].value, activeuntil: inputs[3].value, schema: inputs[4].value});
+		classedit.after = (response, vals) => {
+			document.querySelector('.schema-css').textContent = response.css;
+			document.getElementById('selectgoeshere').textContent = '';
+			const oldmax = window.schemae[window.schema].limits[1];
+			window.schema = vals[4];
+			window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
+			for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
+		}
+		classedit.cancelfunc = () => {
+			addSchemaButtons();
+			document.getElementById('selectgoeshere').textContent = '';
+		}
 
 		//Delete button
-		title.querySelector('.actions').append(...actionButtons(['delete']));
 		title.addEventListener('click', function(e) {
 			e.preventDefault();
 			if (!e.target.classList.contains('delete')) return;
 			const delform = document.getElementById('deleteform');
-			if (confirm('Are you sure you want to delete '+title.textContent+' and all its students?')) delform.submit();
+			if (confirm('Are you sure you want to delete '+title.textContent.trim()+' and all its students?')) delform.submit();
 		});
 	
 	} else addSchemaButtons();
+
+	document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
 
 	//Action buttons
 	const roster = document.querySelector('#roster tbody');
@@ -71,28 +91,25 @@ document.addEventListener('DOMContentLoaded', () => {
 				
 				tbody.addEventListener('click', eventActions); //Event action buttons
 				makeSortable(table, 'm-date', true);
+				
+				const studentedit = new makeInput(actions);
+				studentedit.addElement(fname, {placeholder: 'First Name'});
+				studentedit.addElement(lname, {placeholder: 'Last name'});
+				studentedit.addElement(snote, {placeholder: 'Note', required: false});
+				studentedit.data = inputs => ({req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value});
+				
+				//Update roster with any changes
+				studentedit.after = (response, vals) => {
+					tr.querySelector('.fname').innerHTML = vals[0];
+					tr.querySelector('.lname').innerHTML = vals[1];
+					tr.querySelector('.note').innerHTML = vals[2];
+				}
 
 				actions.addEventListener('click', function(e) {
 					e.preventDefault();
 
-					//Edit student
-					if (e.target.classList.contains('edit')) {
-						makeInput([fname, lname, snote], {
-							placeholder: ['First Name', 'Last Name', 'Note'], required: [true, true, false],
-							data: (inputs) => {
-								return {req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value};
-							},
-							actionsbox: actions,
-							after: (response) => {
-								tr.querySelector('.fname').innerHTML = fname.innerHTML;
-								tr.querySelector('.lname').innerHTML = lname.innerHTML;
-								tr.querySelector('.note').innerHTML = snote.innerHTML;
-							}
-						});
-					}
-
 					//Delete student
-					else if (e.target.classList.contains('delete')) {
+					if (e.target.classList.contains('delete')) {
 						if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
 						fetch('../ajax.php?req=deletestudent&id='+tr.dataset.id, {method: 'get'})
 						.then((response) => response.json()).then((response) => {
@@ -268,14 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 		
-		for (const inp of [fname, lname, note]) inp.addEventListener('keydown', function(e2) {
+		for (const inp of [fname, lname, note]) inp.addEventListener('keydown', e2 => {
 			if (e2.key == "Enter") {
 				e2.preventDefault();
 				studentSave();
 			}
 		});
 
-		actions.addEventListener('click', function(e) {
+		actions.addEventListener('click', e => {
 			e.preventDefault();
 			if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
 			else if (e.target.classList.contains('save')) studentSave();
@@ -297,59 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!pass) e.preventDefault();
 	});
-
-	//Schema select
-	document.getElementById('schemaselect').addEventListener('click', function(e) {
-		if (!e.target.classList.contains('edit')) return;
-		e.preventDefault();
-		const schemaselect = this;
-		fetch('../ajax.php?req=schemae&class='+classid, {method: 'get'})
-		.then((response) => response.json()).then((response) => {
-			const actions = schemaselect.querySelector('.actions');
-			actions.textContent = '';
-			// actions.append(...actionButtons(['cancel', 'save']));
-			
-			let html = '';
-			for (const schemai of response)
-				html += '<option value="'+schemai.id+'"'+(schemai.compatible ? '' : ' disabled')+(schemai.id==schema ? ' selected' : '')+'>'+schemai.name+'</option>'
-			html += '<hr /><option value="__addnew__">Add new schema</option>';
-			const select = markup({tag: 'select', children: html});
-			select.stop = false
-			schemaselect.insertBefore(select, schemaselect.querySelector('.schemalist'));
-
-			select.save = function() {
-				fetch('../ajax.php?req=editschema&class='+classid+'&schema='+select.value, {method: 'get'})
-				.then((response) => response.json()).then((response) => {
-					document.querySelector('.schema-css').textContent = response.css;
-					const oldmax = window.schemae[window.schema].limits[1];
-					window.schema = select.value;
-					window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
-					select.solidify();
-					for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
-				});
-			}
-			select.solidify = function() {
-				select.remove();
-				addSchemaButtons();
-				actions.append(...actionButtons(['edit']));
-			}
-			function onchange() {
-				if (select.value==schema) select.solidify();
-				else select.save();
-			}
-			select.addEventListener('keydown', function(e) {
-				if (e.key == "Enter") { select.stop = true; onchange(); }
-				else if (e.key == "Escape") { select.stop = true; select.solidify(); }
-			});
-			select.addEventListener('blur', function(e) {
-				if (select.stop) return; //Because Chrome fires both the blur and the keydown
-				onchange();
-			});
-			select.focus();
-		});
-	});
-	document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
-
 
 	//Highlight student from autocomplete
 	if (window.location.hash.includes('#student-')) {

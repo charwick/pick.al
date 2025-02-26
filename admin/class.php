@@ -16,6 +16,7 @@ if ($classid) {
 		require_once('../404.php');
 		exit;
 	}
+	$events = $sql->get_events_by_class($classid);
 }
 $error = false;
 
@@ -37,11 +38,24 @@ if (isset($_POST['name'])) {
 		var classid = <?php echo $classid ?: 'null'; ?>;
 		<?php if ($classid) {
 			$schemae = [$class->schema->name => $class->schema];
-			echo "var schema = '{$class->schema->id}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
+			
+			//Figure out the pattern a schema has to fit
+			$values = [];
+			foreach ($events as $event) $values["$event->result"] = true;
+
+			$allschemae = $sql->get_available_schemae();
+			$result = [];
+			foreach ($allschemae as $schema) $result[] = [
+				'name' => $schema->name,
+				'id' => $schema->id,
+				'compatible' => $schema->contains_values(array_keys($values))
+			]; 
+			echo 'allschemae='.json_encode($result).',';
+			echo "schema = '{$class->schema->id}', schemabuttons = { '{$class->schema->name}': '".addslashes($class->schema->output_buttons(true))."'};";
 		} else $schemae = $sql->get_available_schemae();
 		echo 'var schemae = {';
 			foreach ($schemae as $schema) echo "'{$schema->id}': ".json_encode($schema).",";
-		echo '}, schemabuttons = {};'; ?>
+		echo "}, schemabuttons = ".($classid ? json_encode([$class->schema->id => $class->schema->output_buttons(true)]) : '{}').';'; ?>
 	</script>
 	<?php embed_asset('ajax.js');
 	embed_asset('class.js');
@@ -61,10 +75,13 @@ if (isset($_POST['name'])) {
 		<form id="classinfo" action="" method="post">
 			<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
 			
-			if ($classid) {
-				echo "<input type='hidden' name='classid' value='{$classid}'>";
-				echo "<h1 id='name'>{$class->name}</h1>";
-			} else {
+			if ($classid) { ?>
+				<input type='hidden' name='classid' value='<?php echo $classid; ?>'>
+				<h1 id='name'>
+					<?php echo $class->name;
+					?><span class="actions"><a class="edit" href="#" title="Edit"></a><a class="delete" href="#" title="Delete"></a></span>
+				</h1>
+			<?php } else {
 				echo '<h1>New Class</h1>';
 				echo '<p id="name"><input type="text" name="name" placeholder="Class Name" value="'.($error ? $_POST['name'] : '').'" required=""></p>';
 			} ?>
@@ -80,8 +97,7 @@ if (isset($_POST['name'])) {
 						<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
 					</span>
 					<span class="meta-item" id="schemaselect">
-						Button schema: <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
-						<span class="actions"><a href="#" class="edit" title="Edit"></a></span>
+						Button schema: <span id="selectgoeshere" data-default="<?php echo $class->schema->id; ?>"></span> <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
 					</span>
 				</p>
 			<?php } else {
@@ -157,8 +173,8 @@ if (isset($_POST['name'])) {
 				</table>
 			</section>
 
-			<?php $events = $sql->get_events_by_class($classid, 10);
-			//Render in JS because PHP doesn't know the right timezone ?>
+			<?php //Render in JS because PHP doesn't know the right timezone
+			array_splice($events, 10); ?>
 			<script type="text/javascript">var events = <?php echo json_encode($events); ?>;</script>
 			<section id="recentevents">
 				<h2>Recent Participation Events</h2>

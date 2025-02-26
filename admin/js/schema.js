@@ -5,12 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Make schema info editable
 	if (document.body.classList.contains('admin-edit') && !schema.global) {
 		const title = document.getElementById('name'),
-			titleEditAttrs = {placeholder: 'Schema Name', data: inps => ({req: 'updateschema', id: schemaid, name: inps[0].value})};
-
-		makeEditable(title, titleEditAttrs);
+			titleedit = new makeInput(title.querySelector('.actions'));
+		titleedit.addElement(title, {placeholder: 'Schema Name'});
+		titleedit.data = inps => ({req: 'updateschema', id: schemaid, name: inps[0].value});
 
 		//Delete button
-		title.querySelector('.actions').append(...actionButtons(['delete']));
 		title.addEventListener('click', function(e) {
 			e.preventDefault();
 			if (!e.target.classList.contains('delete')) return;
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}).catch(onerror);
 			}
 		});
-		if (document.body.classList.contains('duplicated')) makeInput(title, titleEditAttrs);
+		if (document.body.classList.contains('duplicated')) titleedit.edit();
 	}
 
 	populate();
@@ -94,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.innerHTML = '';
 			populate();
 			savebtn.disabled = true;
+			const addnew = document.querySelector('.addnew a');
+			if (document.querySelectorAll('tbody tr').length >= 5) addnew.classList.add('disabled');
+			else addnew.classList.remove('disabled');
+			deleted = [];
 		}
 	});
 
