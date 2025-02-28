@@ -253,15 +253,11 @@ h1#logo { height: 1.5em; }
 #roster {
 	list-style: none;
 	text-align: left;
-	margin: 0;
-	padding: 0;
 	position: absolute;
 	top: 0; right: -18em;
 	height: 100%; width: 18em;
 	background: rgb(75 75 75 / 85%);
 	backdrop-filter: blur(10px);
-	overflow-y: auto;
-	scrollbar-color: rgb(255 255 255 / 25%) rgb(75 75 75 / 85%);
 	transition: 0.2s right;
 	z-index: 10;
 	border-radius: 1em 0 0 1em;
@@ -270,9 +266,36 @@ h1#logo { height: 1.5em; }
 	right: 0;
 	box-shadow: -1em 0 2em rgba(0, 0, 0, 0.15);
 }
-
-#roster li { padding: 0.5em 1.5em; }
-#roster li[data-id] {
+#roster #topbar {
+	position: absolute; 
+	padding: 0.5em 1.5em;
+	top: 0; width: 100%;
+	display: flex;
+	justify-content: space-between;
+	padding-top: 1.5em;
+	backdrop-filter: blur(10px);
+	z-index: 99;
+	box-sizing: border-box;
+	border-top-left-radius: 1em;
+}
+#rosterclose {
+	font-size: 2em;
+	color: #FFF;
+	opacity: 0.25;
+	text-decoration: none;
+	justify-content: space-between;
+}
+#rosterclose:hover { opacity: 0.5; }
+#roster ul {
+	overflow-y: auto;
+	scrollbar-color: rgb(255 255 255 / 25%) rgb(75 75 75 / 85%);
+	height: 100%;
+	padding: 4em 0 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+#roster li {
+	padding: 0.5em 1.5em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -284,21 +307,11 @@ h1#logo { height: 1.5em; }
 	background: rgb(255 255 255 / 10%);
 	color: #FFF;
 }
-#roster li:first-child {
-	position: sticky;
-	top: 0;
-	display: flex;
-	justify-content: space-between;
-	padding-top: 1.5em;
-	backdrop-filter: blur(10px);
-	z-index: 99;
-}
-#rosterclose {
-	font-size: 2em;
-	color: #FFF;
-	opacity: 0.25;
-	text-decoration: none;
-	justify-content: space-between;
+#roster .head {
+	text-transform: uppercase;
+	font: bold 0.9em sans-serif;
+	color: #888;
+	padding-left: 1.2em;
 }
 #roster .excused { opacity: 0.5; }
 #roster .excused::after {

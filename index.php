@@ -63,13 +63,16 @@ if ($classid) {
 				<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
 			</div>
 
-			<ul id="roster">
-				<li>
+			<div id="roster">
+				<div id="topbar">
 					<a href="/admin/class.php?class=<?php echo $classid; ?>" id="rosteredit" class="button">Edit</a>
 					<a href="#" id="rosterclose">×</a>
-				</li>
-				<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
-			</ul>
+				</div>
+				<ul>
+					<li class="head">Students</li>
+					<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
+				</ul>
+			</div>
 		</div>
 
 		<div id="pickwrap">

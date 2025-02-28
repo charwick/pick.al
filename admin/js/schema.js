@@ -145,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				
 				} else if ('dirty' in tr.dataset) {
 					const index = schema.items.findIndex(item => item.id == tr.dataset.id);
-					console.log(schema.items[index]);
 					if (index !== -1) {
 						const ival = tr.querySelector('input[name=value]');
 						schema.items[index].text = tr.querySelector('input[name=text]').value;
