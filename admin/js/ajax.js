@@ -50,10 +50,12 @@ class makeInput {
 				}
 				inp.value = 'default' in element.dataset ? element.dataset.default : element.textContent.trim().toLowerCase();
 			} else {
-				if (type=='textarea') inp = markup({tag: 'textarea'});
-				else inp = markup({tag: 'input', attrs: {type: type || 'text'}});
-				if (inp.type=='date') inp.value = element.dataset.date;
-				else if (inp.type!='password') inp.value = element.textContent.trim();
+				if (type=='textarea') inp = markup({tag: 'textarea', children: element.textContent.trim()});
+				else {
+					inp = markup({tag: 'input', attrs: {type: type || 'text'}});
+					if (inp.type=='date') inp.value = element.dataset.date;
+					else if (inp.type!='password') inp.value = element.textContent.trim();
+				}
 				if (!('required' in attrs)) attrs['required'] = true;
 				for (const attr of ['min', 'max', 'placeholder', 'required', 'autocomplete'])
 					if (attr in attrs) {
@@ -165,6 +167,7 @@ function actionButtons(list) {
 		save: {title: 'Save'},
 		delete: {title: 'Delete'},
 		cancel: {title: 'Cancel'},
+		archive: {title: 'Archive'},
 		excuses: {title: 'Set excused absences'}
 	}, actions = [];
 	for (const item of list) {

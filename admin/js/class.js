@@ -315,6 +315,139 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!pass) e.preventDefault();
 	});
 
+	//Open question modal
+	const qlist = document.querySelector('#questionlist');
+	qlist?.addEventListener('click', function(e) {
+		const li = e.target.closest('li');
+		if (!li) return;
+		const question = li.childNodes[0].textContent.trim(),
+			h3 = markup({tag: 'h3', children: question}),
+			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'archive', 'delete'])}),
+			qedit = new makeInput(actions);
+		qedit.addElement(h3, {placeholder: 'Question', required: true, type: 'textarea'});
+		qedit.data = inps => ({req: 'editquestion', id: li.dataset.id, text: inps[0].value});
+		qedit.editfunc = inps => {
+			const shrink = e => { inps[0].style.height = ""; inps[0].style.height = (inps[0].scrollHeight+6) + "px"; };
+			inps[0].addEventListener('input', shrink);
+			shrink();
+		}
+		qedit.after = response => { li.childNodes[0].textContent = h3.textContent+' '; };
+
+		const m = modal(h3, actions);
+		m.classList.add('question');
+		if (li.classList.contains('inactive')) m.classList.add('inactive');
+		
+		actions.addEventListener('click', function(e2) {
+			e2.preventDefault();
+								
+			//Archive or unarchive question
+			if (e2.target.classList.contains('archive')) {
+				const li = e.target.closest('li'),
+					active = + li.classList.contains('inactive'),
+					params = new URLSearchParams({req: 'archivequestion', id: li.dataset.id, archive: active}).toString();
+				fetch('/ajax.php?'+params, {method: 'GET'})
+				.then(response => response.json()).then(data => {
+					if (active) {
+						li.classList.remove('inactive');
+						m.classList.remove('inactive');
+						if (!document.querySelectorAll('#questionlist .inactive').length)
+							document.querySelector('#qactions .expand').classList.add('disabled');
+					} else {
+						li.classList.add('inactive');
+						m.classList.add('inactive');
+						document.querySelector('#qactions .expand').classList.remove('disabled');
+					}
+
+					//Sort inactive at bottom, and then descending by ID
+					const ul = li.parentNode,
+						lis = Array.from(ul.querySelectorAll('li'));
+					lis.sort((a, b) => {
+						if (a.classList.contains('addnew')) return 1;
+						if (b.classList.contains('addnew')) return -1;
+						const aInactive = a.classList.contains('inactive'),
+							bInactive = b.classList.contains('inactive');
+						if (aInactive && !bInactive) return 1;
+						if (!aInactive && bInactive) return -1;
+						return parseInt(b.dataset.id) - parseInt(a.dataset.id);
+					});
+					for (const li of lis) ul.appendChild(li);
+				}).catch(console.error);
+			
+			//Delete question
+			} else if (e2.target.classList.contains('delete')) {
+				const li = e.target.closest('li');
+				if (confirm('Are you sure you want to delete this question rather than archiving it?')) {
+					const params = new URLSearchParams({req: 'deletequestion', id: li.dataset.id}).toString();
+					fetch('/ajax.php?' + params, {method: 'GET'})
+					.then(response => response.text()).then(data => {
+						if (data === "1") {
+							li.remove();
+							m.close();
+						} else console.error('Error deleting the question.');
+					}).catch(console.error);
+				}
+			}
+		});
+	});
+
+	//Add new question
+	document.querySelector('#qactions .addnew')?.addEventListener('click', e => {
+		e.preventDefault();
+		const title = markup({tag: 'h2', children: ['New Question']}),
+			textarea = markup({tag: 'textarea', attrs: {placeholder: 'Question', required: 'true'}}),
+			actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])});
+
+		function questionSave() {
+			if (validate([textarea])) {
+				const params = new URLSearchParams({req: 'newquestion', class: classid, text: textarea.value}).toString()
+				fetch('/ajax.php?'+params, {method: 'GET'})
+				.then(response => response.json()).then(data => {
+					const date = new Date().toLocaleDateString(),
+						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)}</span>`});
+					li.dataset.id = data;
+					qlist.prepend(li);
+					document.querySelector('dialog').close();
+				}).catch(console.error);
+			}
+		}
+
+		textarea.addEventListener('keydown', e2 => {
+			if (e2.key == "Enter") {
+				e2.preventDefault();
+				questionSave();
+			}
+		});
+		actions.addEventListener('click', e => {
+			e.preventDefault();
+			if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
+			else if (e.target.classList.contains('save')) questionSave();
+		});
+
+		modal(title, actions, textarea);
+		textarea.focus();
+	})
+
+	const qexpand = document.querySelector('#qactions .expand');
+	function toggleQuestions() {
+		if (!qexpand || qexpand.classList.contains('disabled')) return;
+		
+		if (localStorage['hide-inactive-qs'] == 'true') {
+			qlist.classList.remove('hiding');
+			qexpand.title = "Hide inactive questions";
+		} else {
+			qlist.classList.add('hiding');
+			qexpand.title = "Show inactive questions";
+		}
+	}
+
+	//Show/hide inactive questions
+	toggleQuestions();
+	qexpand?.addEventListener('click', function(e) {
+		e.preventDefault();
+		localStorage['hide-inactive-qs'] = localStorage['hide-inactive-qs'] == 'true' ? 'false' : 'true';
+		toggleQuestions();
+	});
+
 	//Highlight student from autocomplete
 	if (window.location.hash.includes('#student-')) {
 		const student = parseInt(window.location.hash.replace('#student-', ''));

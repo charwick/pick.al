@@ -80,6 +80,52 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
+	function get_questions(int $class): array {
+		$q="SELECT questions.* FROM questions
+			LEFT JOIN classes ON questions.class=classes.id
+			WHERE class=? AND user=?
+			ORDER BY active DESC, `date` DESC";
+		$qs = $this->execute_query($q, [$class, $_SESSION['user']]);
+		$questions = [];
+		while ($question = $qs->fetch_object()) $questions[] = $question;
+		return $questions;
+	}
+
+	function new_question(int $class, string $text): int {
+		if (!$this->get_class($class)) return false;
+		$q="INSERT INTO questions (`class`, `text`) VALUES (?, ?)";
+		$this->execute_query($q, [$class, $text]);
+		return $this->insert_id;
+	}
+
+	function edit_question(int $id, string $text): int {
+		$q="UPDATE questions
+			LEFT JOIN classes ON questions.class=classes.id
+			SET `text`=? WHERE questions.id=? AND classes.user=?";
+		$this->execute_query($q, [$text, $id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
+	function archive_question(int $id, bool $active): int {
+		$q="UPDATE questions
+			LEFT JOIN classes ON questions.class=classes.id
+			SET `active`=? WHERE questions.id=? AND classes.user=?";
+		
+		//Have to do it the verbose way because execute_query coerces everything into a string, which makes it impossible to update a BIT(1) field
+		$stmt = $this->prepare($q);
+		$stmt->bind_param('iii', $active, $id, $_SESSION['user']);
+		$stmt->execute();
+		return $stmt->affected_rows;
+	}
+
+	function delete_question(int $id): int {
+		$q="DELETE questions FROM questions
+			LEFT JOIN classes ON classes.id=questions.class
+			WHERE questions.id=? AND classes.user=?";
+		$this->execute_query($q, [$id, $_SESSION['user']]);
+		return $this->affected_rows;
+	}
+
 	//==========
 	// STUDENTS
 	//==========

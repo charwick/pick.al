@@ -34,6 +34,22 @@ switch ($req) {
 		echo $schema->output_buttons(true);
 		break;
 	
+	case 'newquestion':
+		echo $sql->new_question($_GET['class'], $_GET['text']);
+		break;
+	
+	case 'editquestion':
+		echo $sql->edit_question($_GET['id'], $_GET['text']);
+		break;
+	
+	case 'deletequestion':
+		echo $sql->delete_question($_GET['id']);
+		break;
+	
+	case 'archivequestion':
+		echo $sql->archive_question($_GET['id'], (bool)$_GET['archive']);
+		break;
+	
 	//==========
 	// STUDENTS
 	//==========

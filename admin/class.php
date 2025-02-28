@@ -173,6 +173,24 @@ if (isset($_POST['name'])) {
 				</table>
 			</section>
 
+			<section id="questions">
+				<h2 class="new-feature">Queued Questions</h2>
+				<ul id="questionlist"><?php
+					$inactives = 0;
+					foreach ($sql->get_questions($classid) as $question) { ?>
+						<li data-id="<?php echo $question->id; ?>"<?php if (!$question->active) echo ' class="inactive"'; ?>>
+							<?php echo $question->text; ?>
+							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?></span>
+							<?php if (!$question->active) $inactives++; ?>
+						</li>
+					<?php }
+				?></ul>
+				<div id="qactions">
+					<a href="#" class="addnew" title="New Question">+</a>
+					<a href="#" class="expand<?php if (!$inactives) echo ' disabled'; ?>" title="Show Inactive Questions">^</a>
+				</div>
+			</section>
+
 			<?php //Render in JS because PHP doesn't know the right timezone
 			array_splice($events, 10); ?>
 			<script type="text/javascript">var events = <?php echo json_encode($events); ?>;</script>

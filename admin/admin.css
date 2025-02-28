@@ -310,7 +310,7 @@ td.note {
 }
 
 td.addnew, #roster tfoot td { padding: 0 !important; } /* Replace with :has(a) when Firefox gets support */
-tfoot a {
+tfoot a, #qactions a {
 	text-align: center;
 	display: block;
 	font-size: 1.5em;
@@ -323,8 +323,8 @@ tfoot a {
 	border-top: 1px solid rgb(0 0 0 / 10%);
 	padding: 5px 0;
 }
-tfoot a:hover {
-	background-color: rgb(0 0 0 / 10%);
+tfoot a:hover, #qactions a:not(.disabled):hover {
+	background-color: rgb(0 0 0 / 5%);
 	color: #555;
 }
 tfoot a.disabled {
@@ -352,7 +352,7 @@ table tbody:empty {
 	height: 3em;
 	display: block;
 }
-table tbody:empty::before {
+table tbody:empty::before, #questionlist:empty::before {
 	padding: 10px 0;
 	display: table-cell;
 	font-size: 0.8em;
@@ -362,8 +362,13 @@ table tbody:empty::before {
 }
 .events tbody:empty::before { content: 'No events yet'; }
 #roster tbody:empty::before { content: 'No students yet. You can add them individually, or upload a CSV roster, below.' }
+#questionlist:empty::before {
+	content: 'None yet.';
+	display: list-item;
+	position: static;
+}
 
-input.error { box-shadow: 0 0 3px 1px #D22; }
+input.error, textarea.error { box-shadow: 0 0 3px 1px #D22; }
 
 #roster tbody tr:hover td, table.sortable th[class]:hover {
 	cursor: pointer;
@@ -417,6 +422,55 @@ span.num {
 }
 span.num::before { content: ' / '; }
 
+#questionlist {
+	padding: 0;
+	list-style: none;
+}
+#questionlist .inactive { color: #999; }
+#questionlist .inactive .archive:hover::after { content: 'Unarchive'; }
+#questionlist li {
+	padding: 0.2em 0.5em;
+	border-radius: 5px;
+	cursor: pointer;
+	max-width: 640px;
+}
+#questionlist.hiding .inactive { display: none; }
+#questionlist li:hover { background: rgb(160 180 230 / 20%); }
+#questionlist .date {
+	display: block;
+	font-size: 0.75em;
+}
+.studentmodal textarea {
+	width: 85%;
+	font-size: 1em;
+	font-family: inherit;
+	box-sizing: border-box;
+}
+.question .studentmodal h3 { font-weight: normal; }
+.inactive.question .studentmodal h3, .inactive.question .studentmodal textarea { color: #999; }
+#qactions {
+	border-top: 1px solid rgb(0 0 0 / 10%);
+	display: flex;
+	padding: 0;
+	border-radius: 0;
+	max-width: 640px;
+}
+#qactions a {
+	display: block;
+	padding: 0.5rem 2em;
+}
+#qactions a:not(:last-child) { border-right: 1px solid rgb(0 0 0 / 10%); }
+#qactions .expand {
+	text-indent: -9999em;
+	background: url('/icon/svg.php?icon=chevron-up&color=777') center no-repeat;
+	background-size: 1em 1em;
+}
+#qactions a.disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+#questionlist.hiding + #qactions .expand { background-image: url('/icon/svg.php?icon=chevron-down&color=777'); }
+
 /* ==============
    Action buttons
    ============== */
@@ -428,6 +482,7 @@ span.num::before { content: ' / '; }
 .delete { background: url('../icon/trash3-fill.svg') center no-repeat; }
 .excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
 .copy { background: url('../icon/copy.svg') center no-repeat; }
+.archive { background: url('../icon/archive.svg') center no-repeat; }
 
 .edit, .actions a, #roster .excuses {
 	color: #000;
@@ -509,6 +564,8 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 #password a.edit:hover::after { content: attr(title) ' Password'; }
 .events a.edit:hover::after, .events a.delete:hover::after { content: attr(title) ' Event'; }
 .studentmodal > .actions a.delete:hover::after, .studentmodal > .actions a.edit:hover::after { content: attr(title) ' Student'; }
+.question .studentmodal > .actions a:hover::after { content: attr(title) ' Question'; }
+.inactive .studentmodal > .actions a.archive:hover::after { content: 'Unarchive Question'; }
 
 #schemaitems .actions a { font-size: 1em; }
 
@@ -571,7 +628,7 @@ dialog .buttons { text-align: right; }
 dialog .buttons button { margin-left: 1em; }
 dialog table tr th:first-child, dialog table tr td:first-child, dialog table tbody:empty::before { padding-left: 30px; }
 dialog table:last-child { margin-bottom: -15px; }
-dialog h2 { margin-top: 0.5em; }
+dialog h2, dialog h3 { margin-top: 0.5em; }
 .schemalist { margin-left: 0.5em; }
 .result-button {
 	height: 1.11em; width: 1.11em; /* 16px at 0.9em */
@@ -611,8 +668,8 @@ dialog div > .actions {
 .excused .actions { font-size: 1.25em; } /* Cancels out the 0.8 */
 
 dialog .error {
-	font-size: .85em;
-	margin: 2em;
+	/* font-size: .85em;
+	margin: 2em; */
 	color: #900;
 }
 
