@@ -115,11 +115,15 @@ switch ($req) {
 		break;
 
 	case 'writeevent':
-		echo $sql->new_event($_GET['rosterid'], $_GET['result']);
+		$q = $_GET['q'] ?? null;
+		$q = ($q && is_numeric($q)) ? (int)$q : null;
+		echo $sql->new_event($_GET['rosterid'], $_GET['result'], $q);
 		break;
 	
 	case 'updateevent':
-		echo $sql->edit_event($_GET['event'], $_GET['result']);
+		$q = $_GET['q'] ?? null;
+		if ($q) $q = $q=='null' ? 0 : $q; //Pass 0 to clear, pass null to leave unchanged
+		echo $sql->edit_event($_GET['event'], $_GET['result'], $q);
 		break;
 	
 	case 'deleteevent':

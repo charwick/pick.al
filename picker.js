@@ -1,7 +1,8 @@
 "use strict";
 var hist = [], //Reverse coded: current student = index[0]
 	histIndex = null,
-	currentAnim = false;
+	currentAnim = false,
+	currentQ = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {
@@ -9,11 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		s.excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
 		if (isExcused(s)) document.querySelector('li[data-id="'+s.id+'"]').classList.add('excused');
 	}
-	document.getElementById('actions')?.addEventListener('click', function(e) {
+	document.querySelector('#bodywrap > .actions')?.addEventListener('click', function(e) {
 		e.preventDefault();
-		if (e.target.id=='back') buttonFunc('back')(e);
-		else if (e.target.id=='forward') buttonFunc('forward')(e);
-		else if (e.target.id=='snooze') {
+		if (e.target.classList.contains('back')) buttonFunc('back')(e);
+		else if (e.target.classList.contains('forward')) buttonFunc('forward')(e);
+		else if (e.target.classList.contains('snooze')) {
 			const now = new Date();
 			let excdate, fn;
 			if (!isExcused(hist[histIndex].info)) { //Set excused
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (buttons.length < i) return;
 			buttons[i-1].click();
 		} else if (e.key == '0') hist[histIndex].element.querySelector('button.picked')?.click();
-		else if (e.key == 'x') document.getElementById('snooze').click();
+		else if (e.key == 'x') document.querySelector('.snooze').click();
 		else if (e.key == 'r') {
 			const roster = document.getElementById('roster');
 			if (roster.classList.contains('open')) roster.classList.remove('open');
@@ -69,23 +70,95 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	document.getElementById('roster')?.addEventListener('click', function(e) {
-		const index = roster.findIndex(item => item.id==e.target.dataset.id);
-		new StudentEvent(roster[index]);
-		this.style.right = null;
-		this.classList.remove('open');
-
+		if ('id' in e.target.dataset) {
+			const index = roster.findIndex(item => item.id==e.target.dataset.id);
+			new StudentEvent(roster[index]);
+			this.style.right = null;
+			this.classList.remove('open');
+		} else if ('q' in e.target.dataset) {
+			document.getElementById('question').classList.add('active');
+			document.getElementById('qtext').textContent = e.target.textContent;
+			this.classList.remove('open');
+			currentQ = e.target.dataset.q;
+			setQbuttons();
+		}
 	});
 	//Close
 	document.getElementById('rosterclose')?.addEventListener('click', function(e) {
 		e.preventDefault();
 		document.getElementById('roster').classList.remove('open');
 	});
+
+	//==================
+	// QUEUED QUESTIONS
+	//==================
+
+	document.querySelector('#question .actions').addEventListener('click', e => {
+		e.preventDefault();
+		if (e.target.classList.contains('back') || e.target.classList.contains('forward')) {
+			const newq = document.querySelector('#roster li[data-q="'+e.target.dataset.q+'"]');
+			document.getElementById('qtext').textContent = newq.textContent;
+			currentQ = e.target.dataset.q;
+			setQbuttons();
+
+		} else if (e.target.classList.contains('clear')) {
+			document.getElementById('question').classList.remove('active');
+			currentQ = null;
+
+		} else if (e.target.classList.contains('archive')) {
+			const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
+			fetchif(!demo, 'ajax.php?req=archivequestion&archive='+archived+'&id='+currentQ, response => {
+
+				//If we're unarchiving
+				if (archived) {
+					document.getElementById('question').classList.remove('archived');
+					const qs = document.querySelector('#roster li[data-q]');
+					let lihead;
+					if (!qs) {
+						lihead = document.createElement('li');
+						lihead.classList.add('head');
+						lihead.textContent='Questions';
+						document.querySelector('#roster ul').prepend(lihead);
+					} else lihead = document.querySelector('#roster li.head');
+					const li = document.createElement('li');
+					li.dataset.q = currentQ;
+					li.textContent = document.getElementById('qtext').textContent;
+					lihead.insertAdjacentElement('afterend', li);
+				} else {
+					document.querySelector('#roster li[data-q="'+currentQ+'"').remove()
+					let newq = document.querySelector('#question .actions .forward').dataset.q;
+					if (!newq) newq = document.querySelector('#question .actions .back').dataset.q;
+					
+					//If we're on an existing result, show it's archived but don't remove
+					if (histIndex!==null && hist[histIndex].result !== null) {
+						document.getElementById('question').classList.add('archived');
+						if (!document.querySelector('#roster li[data-q]')) document.querySelector('#roster li.head')?.remove();
+					
+					//If we have more questions, swap to the next question
+					} else if (newq) {
+						document.getElementById('qtext').textContent = document.querySelector('#roster li[data-q="'+newq+'"]').textContent;
+						currentQ = newq;
+						setQbuttons();
+					
+					//If there are no more questions, hide the question box
+					} else {
+						document.getElementById('question').classList.remove('active');
+						currentQ = null;
+						document.querySelector('#roster li.head').remove();
+					}
+				}
+			});
+		}
+	});
+	
 });
 
 class StudentEvent {
 	event = null;
 	result = null;
 	excused = false;
+	qid = null;
+	qtext = null;
 	#actionlist;
 	#actions = [];
 
@@ -176,7 +249,10 @@ class StudentEvent {
 
 			//Re-do button press (edit event)
 			} else {
-				fetchif(!demo, 'ajax.php?req=updateevent&event='+this.event+'&result='+result, (id) => {
+				this.qid = currentQ;
+				this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
+
+				fetchif(!demo, 'ajax.php?req=updateevent&event='+this.event+'&result='+result+'&q='+currentQ, id => {
 					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
@@ -186,7 +262,11 @@ class StudentEvent {
 		
 		//Send event (create new)
 		} else {
-			fetchif(!demo, 'ajax.php?req=writeevent&rosterid='+this.info.id+'&result='+result, (id) => {
+			this.qid = currentQ;
+			this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
+
+			const params = {req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ};
+			fetchif(!demo, 'ajax.php?'+(new URLSearchParams(params).toString()), id => {
 				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
@@ -204,12 +284,25 @@ class StudentEvent {
 		this.element.classList.add(left ? 'out' : 'in')
 		document.getElementById('sinfo').append(this.element);
 
-		const snoozeElement = document.getElementById('snooze');
+		const snoozeElement = document.querySelector('.snooze');
 		snoozeElement.classList.remove('disabled');
 		if (isExcused(this.info)) snoozeElement.dataset.excused = 'Excused through '+this.info.excuseduntil.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
 		else delete snoozeElement.dataset.excused;
 
 		setTimeout(() => { this.element.classList.remove(left ? 'out' : 'in'); }, 1); //JS will skip the animation without the timeout
+
+		//Recall the attached question if applicable, but leave the existing question up for new presses, unless it's archived
+		const qel = document.getElementById('question');
+		if (this.qid) {
+			currentQ = this.qid;
+			document.getElementById('qtext').textContent = this.qtext;
+			qel.classList.add('active');
+			setQbuttons();
+		} else if (this.event || qel.classList.contains('archived')) {
+			currentQ = null;
+			qel.classList.remove('active');
+			qel.classList.remove('archived');
+		}
 	}
 	exit(right) {
 		right = right ?? false;
@@ -248,10 +341,42 @@ function buttonFunc(action) {
 }
 
 function setButtons() {
-	if (histIndex < hist.length-1) document.getElementById('back').classList.remove('disabled');
-	else document.getElementById('back').classList.add('disabled');
-	if (histIndex) document.getElementById('forward').classList.remove('disabled');
-	else document.getElementById('forward').classList.add('disabled');
+	if (histIndex < hist.length-1) document.querySelector('#bodywrap > .actions .back').classList.remove('disabled');
+	else document.querySelector('#bodywrap > .actions .back').classList.add('disabled');
+	if (histIndex) document.querySelector('#bodywrap > .actions .forward').classList.remove('disabled');
+	else document.querySelector('#bodywrap > .actions .forward').classList.add('disabled');
+}
+
+function setQbuttons() {
+	const qs = Array.from(document.querySelectorAll('#roster li[data-q]')),
+		n = qs.findIndex(item => item.dataset.q == currentQ);
+	let prev, next;
+	if (n==-1) {
+		prev = null;
+		next = qs.length ? qs[0] : null;
+		document.getElementById('question').classList.add('archived');
+	} else {
+		prev = qs[n].previousElementSibling;
+		next = qs[n].nextElementSibling;
+		document.getElementById('question').classList.remove('archived');
+	}
+	const b = document.querySelector('#question .back'),
+		f = document.querySelector('#question .forward');
+
+	if (prev && 'q' in prev.dataset) {
+		b.classList.remove('disabled');
+		b.dataset.q = prev.dataset.q;
+	} else {
+		b.classList.add('disabled');
+		delete b.dataset.q;
+	}
+	if (next && 'q' in next.dataset) {
+		f.classList.remove('disabled');
+		f.dataset.q = next.dataset.q;
+	} else {
+		f.classList.add('disabled');
+		delete f.dataset.q;
+	}
 }
 
 Array.prototype.random = function () { return this[Math.floor((Math.random()*this.length))]; }

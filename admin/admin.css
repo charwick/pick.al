@@ -441,12 +441,15 @@ span.num::before { content: ' / '; }
 	font-size: 0.75em;
 }
 .studentmodal textarea {
-	width: 85%;
+	width: 100%;
 	font-size: 1em;
 	font-family: inherit;
 	box-sizing: border-box;
 }
-.question .studentmodal h3 { font-weight: normal; }
+.question .studentmodal h3 {
+	font-weight: normal;
+	max-width: 85%;
+}
 .inactive.question .studentmodal h3, .inactive.question .studentmodal textarea { color: #999; }
 #qactions {
 	border-top: 1px solid rgb(0 0 0 / 10%);
@@ -483,6 +486,7 @@ span.num::before { content: ' / '; }
 .excuses { background: url('../icon/moon-fill.svg') center no-repeat; }
 .copy { background: url('../icon/copy.svg') center no-repeat; }
 .archive { background: url('../icon/archive.svg') center no-repeat; }
+.inactive .archive { background: url('../icon/unarchive.svg') center no-repeat; }
 
 .edit, .actions a, #roster .excuses {
 	color: #000;

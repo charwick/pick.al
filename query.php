@@ -58,7 +58,7 @@ class chooser_query extends mysqli {
 		return $this->insert_id;
 	}
 	
-	function edit_class(int $class, string $name=null, string $semester=null, int $year=null, string $activeuntil=null, int $schema=null): int {
+	function edit_class(int $class, ?string $name=null, ?string $semester=null, ?int $year=null, ?string $activeuntil=null, ?int $schema=null): int {
 		$params = []; $cols = [];
 		if ($name) { $params[] = sanitize($name); $cols[] = '`name`=?'; }
 		if ($semester) { $params[] = $semester; $cols[] = '`semester`=?'; }
@@ -80,10 +80,11 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function get_questions(int $class): array {
+	function get_questions(int $class, $onlyactive=false): array {
+		$oaclause = $onlyactive ? 'AND active=1' : '';
 		$q="SELECT questions.* FROM questions
 			LEFT JOIN classes ON questions.class=classes.id
-			WHERE class=? AND user=?
+			WHERE class=? AND user=? {$oaclause}
 			ORDER BY active DESC, `date` DESC";
 		$qs = $this->execute_query($q, [$class, $_SESSION['user']]);
 		$questions = [];
@@ -208,22 +209,32 @@ class chooser_query extends mysqli {
 	// EVENTS
 	//========
 
-	function new_event(int $rosterid, $result): int {
+	function new_event(int $rosterid, $result, ?int $question=null): int {
 		$q1 = $this->execute_query("SELECT user FROM students LEFT JOIN classes ON students.class=classes.id WHERE students.id=?", [$rosterid]);
 		if ($q1->fetch_object()->user != $_SESSION['user']) return -1;
 
-		$q = "INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)";
-		$this->execute_query($q, [$rosterid, $result]);
+		if ($question) {
+			$q = "INSERT INTO events (student, `date`, result, question) VALUES (?, NOW(), ?, ?)";
+			$this->execute_query($q, [$rosterid, $result, $question]);
+		} else {
+			$q = "INSERT INTO events (student, `date`, result) VALUES (?, NOW(), ?)";
+			$this->execute_query($q, [$rosterid, $result]);
+		}
 		return $this->insert_id;
 	}
 	
-	function edit_event(int $id, $result): int {
+	function edit_event(int $id, $result, ?int $question=null): int {
+		if ($question===0) $qclause = ', question=NULL';
+		elseif ($question===null) $qclause = '';
+		else $qclause = ', question=?';
+
 		$q="UPDATE events
 			LEFT JOIN students ON students.id=events.student
 			LEFT JOIN classes ON classes.id=students.class
-			SET result=?
+			SET result=? {$qclause}
 			WHERE events.id=? AND classes.user=?";
-		$this->execute_query($q, [$result, $id, $_SESSION['user']]);
+		$params = $question ? [$result, $question, $id, $_SESSION['user']] : [$result, $id, $_SESSION['user']];
+		$this->execute_query($q, $params);
 		return $this->affected_rows;
 	}
 	
@@ -388,7 +399,7 @@ class chooser_query extends mysqli {
 	}
 
 	//$v=null to delete an option
-	function user_add_option(string $k, $v, int $user=null): int {
+	function user_add_option(string $k, $v, ?int $user=null): int {
 		if (!$user) $user = $_SESSION['user'];
 		$q = "SELECT options FROM users WHERE id=?";
 		$options = $this->execute_query($q, [$user])->fetch_object()->options;

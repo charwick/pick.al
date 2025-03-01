@@ -40,29 +40,32 @@ a.button, button, input[type='submit'] {
 button:disabled, .picked button { opacity: 0.25; }
 button.picked:disabled, .picked button.picked { opacity: 1; }
 
-#actions {
+.actions {
 	display: flex;
 	justify-content: space-between;
 	max-width: 800px;
 	margin: 2.25em auto 0;
 }
-#actions a {
+.actions a {
 	height: 3em; width: 3em;
 	text-indent: -9999px;
 	opacity: 0.5;
 }
-#actions a:hover { opacity: 0.75; }
-#actions a.disabled {
+.actions a:hover { opacity: 0.75; }
+.actions a.disabled {
 	opacity: 0.1;
 	pointer-events: none;
 }
-#actions #back { background: url("icon/svg.php?icon=caret-left-fill&color=FFF") left/2.5em 2.5em no-repeat; }
-#actions #snooze {
+.actions .back { background: url("icon/svg.php?icon=caret-left-fill&color=FFF") left/2.5em 2.5em no-repeat; }
+.actions .snooze {
 	position: relative;
 	background: url("icon/svg.php?icon=moon-fill&color=FFF") center/2em 2em no-repeat;
 }
-#actions #forward { background: url("icon/svg.php?icon=caret-right-fill&color=FFF") right/2.5em 2.5em no-repeat; }
-#snooze[data-excused]::after {
+.actions .forward { background: url("icon/svg.php?icon=caret-right-fill&color=FFF") right/2.5em 2.5em no-repeat; }
+.actions .archive { background: url("icon/svg.php?icon=archive&color=FFF") right/2.5em 2.5em no-repeat; }
+.archived .actions .archive { background: url("icon/svg.php?icon=unarchive&color=FFF") right/2.5em 2.5em no-repeat; }
+.actions .clear { background: url("icon/svg.php?icon=x-lg&color=FFF") right/2.5em 2.5em no-repeat; }
+.snooze[data-excused]::after {
 	content: attr(data-excused);
 	position: absolute;
 	display: block;
@@ -74,7 +77,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	padding: 2px 10px;
 	border-radius: 4px 4px 4px 0;
 }
-#snooze[data-excused]::before {
+.snooze[data-excused]::before {
 	position: absolute;
 	display: block;
 	border-width: 0.25em 0.5em;
@@ -303,15 +306,17 @@ h1#logo { height: 1.5em; }
 	font-size: 1.2em;
 	color: rgb(255 255 255 / 75%);
 }
-#roster li[data-id]:hover {
+#roster li:not(.head):hover {
 	background: rgb(255 255 255 / 10%);
 	color: #FFF;
 }
+#roster li[data-q] { font-size: 0.9em; }
 #roster .head {
 	text-transform: uppercase;
 	font: bold 0.9em sans-serif;
 	color: #888;
 	padding-left: 1.2em;
+	margin-top: 1em;
 }
 #roster .excused { opacity: 0.5; }
 #roster .excused::after {
@@ -323,12 +328,35 @@ h1#logo { height: 1.5em; }
 	opacity: 0.75;
 }
 
+#question {
+	padding: .2em 2em 1.2em;
+	color: #CCC;
+	background: #222;
+	border-radius: 10px;
+	font-size: 1.5em;
+	line-height: 1.5;
+	margin-top: 12em;
+	display: none;
+	position: relative;
+}
+#question.active { display: block; }
+#question .actions {
+	margin: 0.5em 0 1.5em;
+	font-size: 0.56em;
+}
+
 /* Small phones */
 
-@media screen and (max-height: 42em) {
+@media screen and (max-height: 62em) {
 	body {font-size: 0.8em; }
 	#bodywrap { padding: 20px; }
 	#backbutton, #rosterlist { top: 20px; }
 	#pickwrap { bottom: 6vh; }
-	#pick { padding: 20px; }
+	#pick {
+		padding: 20px;
+		font-size: 1.6rem;
+	}
+}
+@media screen and (max-height: 48em) {
+	.subtitle { display: none; }
 }

@@ -53,14 +53,24 @@ if ($classid) {
 			<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
 			<a href="#" title="Roster" id="rosterlist">Roster</a>
 
-			<div id="actions">
-				<a href="#" id="back" class="disabled">Back</a>
-				<a href="#" id="snooze" class="disabled">Snooze</a>
-				<a href="#" id="forward" class="disabled">Forward</a>
+			<div class="actions">
+				<a href="#" class="back disabled">Back</a>
+				<a href="#" class="snooze disabled">Snooze</a>
+				<a href="#" class="forward disabled">Forward</a>
 			</div>
 
 			<div id="sinfo">
 				<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
+			</div>
+
+			<div id="question">
+				<div class="actions">
+					<a href="#" class="back" class="disabled">Back</a>
+					<a href="#" class="archive">Archive</a>
+					<a href="#" class="clear">Clear</a>
+					<a href="#" class="forward" class="disabled">Forward</a>
+				</div>
+				<div id="qtext"></div>
 			</div>
 
 			<div id="roster">
@@ -69,6 +79,11 @@ if ($classid) {
 					<a href="#" id="rosterclose">×</a>
 				</div>
 				<ul>
+					<?php $qs = $sql->get_questions($classid, true);
+					if ($qs) { ?>
+						<li class="head">Questions</li>
+						<?php foreach ($qs as $q) echo "<li data-q='{$q->id}'>{$q->text}</li>";
+					} ?>
 					<li class="head">Students</li>
 					<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
 				</ul>
