@@ -248,7 +248,7 @@ class chooser_query extends mysqli {
 	}
 	
 	function get_events(int $student): array {
-		$q="SELECT events.id, date, result FROM events
+		$q="SELECT events.* FROM events
 			LEFT JOIN students ON students.id=events.student
 			LEFT JOIN classes ON classes.id=students.class
 			WHERE student=? and classes.user=?
@@ -268,6 +268,20 @@ class chooser_query extends mysqli {
 			ORDER BY date DESC";
 		if ($limit) $q .= " LIMIT {$limit}";
 		$events = $this->execute_query($q, [$class, $_SESSION['user']]);
+
+		$result = [];
+		while ($event = $events->fetch_object()) $result[] = $event;
+		return $result;
+	}
+
+	function get_events_by_question(int $question): array {
+		$q="SELECT events.id, events.date, result, student, students.fname, students.lname FROM events
+			LEFT JOIN questions ON questions.id=events.question
+			LEFT JOIN students ON students.id=events.student
+			LEFT JOIN classes ON classes.id=questions.class AND classes.id=students.class
+			WHERE question=? and classes.user=?
+			ORDER BY date DESC";
+		$events = $this->execute_query($q, [$question, $_SESSION['user']]);
 
 		$result = [];
 		while ($event = $events->fetch_object()) $result[] = $event;

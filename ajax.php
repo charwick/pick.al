@@ -113,6 +113,10 @@ switch ($req) {
 	case 'events':
 		echo json_encode($sql->get_events($_GET['student']));
 		break;
+	
+	case 'eventsbyquestion':
+		echo json_encode($sql->get_events_by_question($_GET['question']));
+		break;
 
 	case 'writeevent':
 		$q = $_GET['q'] ?? null;

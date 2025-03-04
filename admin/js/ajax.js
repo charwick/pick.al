@@ -8,7 +8,7 @@ function markup(element) {
 		if ('attrs' in element) for (const a in element.attrs) el.setAttribute(a, element.attrs[a]);
 		if ('children' in element) {
 			if (typeof element.children == 'string') el.innerHTML = element.children;
-			else for (const c of element.children) el.append(markup(c));
+			else for (const c of element.children) if (c !== null) el.append(markup(c));
 		}
 	}
 	return el;
@@ -16,16 +16,23 @@ function markup(element) {
 
 class makeInput {
 	elements = [];
-	data = null; //Should be set to a function that takes the inputs, and returns data to send to the server
+	data = null; //A function that takes the inputs, and returns data to send to the server
 	validate = null;
+	actions = [];
+	editActions = ['save', 'cancel']; //Additions should define a `action`func method attached to the object
 
-	constructor(actionsbox) {
+	constructor(actionsbox=null) {
 		this.actionsbox = actionsbox;
-		actionsbox.addEventListener('click', e => {
+		if (!actionsbox) this.actionsbox = markup({tag: 'span', attrs: {class: 'actions'} });
+		else {
+			//Swap out actions but keep track of what to put back when we solidify
+			for (const a of this.actionsbox.querySelectorAll('a'))
+				this.actions.push(a.getAttribute('class'));
+		}
+		this.actionsbox.addEventListener('click', e => {
 			e.preventDefault();
 			if (e.target.classList.contains('edit')) this.edit();
-			else if (e.target.classList.contains('save')) this.save();
-			else if (e.target.classList.contains('cancel')) this.cancel();
+			else if (this.editActions.includes(e.target.className)) this[e.target.className]();
 		});
 	}
 
@@ -79,17 +86,9 @@ class makeInput {
 				}
 			});
 
-			//Swap out actions but keep track of what to put back when we solidify
-			if (!(this.actions)) {
-				this.actions = [];
-				if (!this.actionsbox) this.actionsbox = this.elements[0].querySelector('.actions');
-				for (const a of this.actionsbox.querySelectorAll('a'))
-					this.actions.push(a.getAttribute('class'));
-			}
-			const actions = this.actionsbox;
-			actions.textContent = '';
-			actions.append(...actionButtons(['save', 'cancel']));
-	
+			this.actionsbox.textContent = '';
+			this.actionsbox.append(...actionButtons(this.editActions));
+
 			//Draw the input
 			element.textContent = '';
 			element.append(inp);
@@ -105,11 +104,11 @@ class makeInput {
 			const input = element.querySelector('input, select, textarea');
 			input.value = input.oldValue;
 			element.parentNode.querySelector('.inlineError')?.remove();
-
 		}
 		this.solidify();
 		if (this.cancelfunc) this.cancelfunc();
 	}
+
 	save() {
 		for (const [element, attrs] of this.elements)
 			element.parentNode.querySelector('.inlineError')?.remove();
@@ -148,15 +147,17 @@ class makeInput {
 			el.classList.remove('editing');
 			const inp = el.querySelector('input, select, textarea');
 			if (attrs.type=='select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
-			else if (attrs.type == 'date') {
-				inp.parentNode.dataset.date = inp.value;
-				inp.parentNode.textContent = datetostr(inp.value);
-			} else inp.parentNode.textContent = inp.value;
+			else if (attrs.type == 'date' && inp.value) {
+				el.dataset.date = inp.value;
+				el.textContent = datetostr(inp.value);
+			} else el.textContent = inp.value;
 		}
 		
-		this.actionsbox.textContent = '';
-		this.actionsbox.append(...actionButtons(this.actions));
-		if (!this.actionsbox.isConnected) this.elements[0][0].append(this.actionsbox);
+		if (this.actions.length) {
+			this.actionsbox.textContent = '';
+			this.actionsbox.append(...actionButtons(this.actions));
+			if (!this.actionsbox.isConnected) this.elements[0][0].append(this.actionsbox);
+		} else this.actionsbox.remove();
 	}
 }
 

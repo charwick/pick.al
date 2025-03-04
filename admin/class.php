@@ -196,16 +196,6 @@ if (isset($_POST['name'])) {
 			<script type="text/javascript">var events = <?php echo json_encode($events); ?>;</script>
 			<section id="recentevents">
 				<h2>Recent Participation Events</h2>
-				<table class="events">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Student</th>
-							<th colspan="2">Result</th>
-						</tr>
-					</thead>
-					<tbody><!--Filled in with JS--></tbody>
-				</table>
 			</section>
 			
 			<form id="deleteform" action="." method="post">

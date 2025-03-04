@@ -1,4 +1,5 @@
 "use strict";
+var recentTable;
 document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
@@ -64,33 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				);
 
 			function studentmodal(events) {
-				const tbody = markup({tag: 'tbody'}),
-					snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
-					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [])}),
+				const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
+					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [{tag: 'span'}])}),
 					actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
-					nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]});
+					nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
+					table = new EventsTable(events);
 				smodal.querySelector('h2').append(nevents);
-				let num=0, den=0;
-				for (const event of events) {
-					event.student = tr.dataset.id;
-					tbody.append(eventRow(event, false));
-					num += event.result;
-					den++;
-				}
-				const table = markup({tag: 'table', attrs: {class: 'events'}, children: [
-						{tag: 'thead', children: [{tag: 'tr', children: [
-							{tag: 'th', attrs: {class: 'm-date'}, children: ['Date']},
-							{tag: 'th', attrs: {colspan: 2}, children: ['Result']}
-						]}]}, tbody,
-						{tag: 'tfoot', children: [{tag: 'tr', children: [
-							{tag: 'td', children: ['Total']},
-							{tag: 'td', attrs: {class: 'numtotal'}, children: [(den ? Math.round(num/den*100)+'%' : '—')]},
-							{tag: 'td', attrs: {class: 'addnew'}, children: [{tag: 'a', attrs: {href: '#'}, children: ['+']}]}
-						]}]}
-					]});
-				
-				tbody.addEventListener('click', eventActions); //Event action buttons
-				makeSortable(table, 'm-date', true);
+				table.student = tr.dataset.id;
 				
 				const studentedit = new makeInput(actions);
 				studentedit.addElement(fname, {placeholder: 'First Name'});
@@ -104,6 +85,46 @@ document.addEventListener('DOMContentLoaded', () => {
 					tr.querySelector('.lname').innerHTML = vals[1];
 					tr.querySelector('.note').innerHTML = vals[2];
 				}
+
+				const qspan = excused.querySelector('span');
+				function clearacts() {
+					if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
+				};
+				const excInput = new makeInput();
+				excInput.addElement(qspan, {type: 'date'});
+				excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
+				excInput.cancelfunc = clearacts;
+				excInput.editActions.push('delete');
+				excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInpit.after. */
+					const inp = qspan.querySelector('input');
+					inp.value = '';
+					inp.validate = false;
+					delete qspan.dataset.date;
+					excInput.save();
+					if (!inp.oldValue) excInput.after();
+				}
+
+				//Update roster
+				excInput.after = (response, vals) => {
+					const exc = new Date(qspan.dataset.date),
+						now = new Date(),
+						modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+					if (modDate > now) {
+						tr.dataset.excused = qspan.dataset.date;
+						const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+						let excbut = tr.querySelector('.lname .excuses');
+						if (!excbut) {
+							excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
+							tr.querySelector('.lname').append(excbut);
+						}
+						excbut.title = through;
+					} else {
+						qspan.textContent = '';
+						delete tr.dataset.excused;
+						tr.querySelector('.lname .excuses')?.remove();
+					};
+					clearacts();
+				};
 
 				actions.addEventListener('click', function(e) {
 					e.preventDefault();
@@ -126,83 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
 							}
 						}).catch(console.error);
 
-					} else if (e.target.classList.contains('save')) fname.save();
-					else if (e.target.classList.contains('cancel')) fname.cancel();
-
 					//Set Excused Absences
-					else if (e.target.classList.contains('excuses')) {
-						if (!excused.textContent) excused.innerHTML = 'Excused through <span></span>';
-						const qspan = excused.querySelector('span');
-
-						const xacts = markup({tag: 'span', attrs: {class: 'actions'}, children: actionButtons(['save', 'cancel', 'delete'])});
-						function clearExcuse() {
-							excused.textContent = '';
-							delete tr.dataset.excused;
-							tr.querySelector('.lname .excuses')?.remove();
-						}
-						excused.append(xacts);
-						xacts.addEventListener('click', function(e) {
-							e.preventDefault();
-							if (e.target.classList.contains('cancel')) qspan.cancel();
-							else if (e.target.classList.contains('save')) qspan.save();
-							else if (e.target.classList.contains('delete')) {
-								const inp = qspan.querySelector('input');
-								inp.value = '';
-								inp.validate = false;
-								qspan.save();
-								clearExcuse();
-							}
-						});
-
-						function clearacts() {
-							xacts.remove();
-							if (!('excused' in tr.dataset)) excused.textContent = '';
-						};
-						function updateRosterExcuse(response) {
-							const exc = new Date(qspan.dataset.date),
-								now = new Date(),
-								modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
-							if (modDate > now) {
-								tr.dataset.excused = qspan.dataset.date;
-								const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-								let excbut = tr.querySelector('.lname .excuses');
-								if (!excbut) {
-									excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
-									tr.querySelector('.lname').append(excbut);
-								}
-								excbut.title = through;
-							} else clearExcuse();
-							clearacts();
-						}
-						makeInput(qspan, {
-							data: (inps) => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; },
-							actions: null,
-							type: 'date',
-							blur: false, //Don't save on blur since we're adding action buttons
-							after: updateRosterExcuse, cancel: clearacts
-						});
+					} else if (e.target.classList.contains('excuses')) {
+						if (!excused.textContent) excused.prepend(markup({tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '}));
+						excInput.edit();
 					}
 				});
 				
-				//Add new event
-				table.querySelector('.addnew a').addEventListener('click', function(e) {
-					e.preventDefault();
-					if (this.classList.contains('disabled')) return;
-					this.classList.add('disabled');
-					
-					const date = new Date(),
-						evtr = markup({tag: 'tr', attrs: {'data-student': tr.dataset.id}, children: [
-							{tag: 'td', attrs: {class: 'm-date', 'data-sort': Math.round(date.getTime()/1000)}, children: [date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()]},
-							{tag: 'td'},
-							{tag: 'td', attrs: {class: 'actions'}}
-						]});
-					editEvent(evtr);
-					if (table.direction) tbody.prepend(evtr);
-					else tbody.append(evtr);
-				});
-				
 				smodal.querySelector('.loader').remove();
-				smodal.children[0].append(actions, snote, excused, table);
+				smodal.children[0].append(actions, snote, excused, table.markup());
 				smodal.student = tr.dataset.id;
 			}
 			
@@ -216,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (tr.querySelector('.score').textContent)
 				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-				.then((response) => response.json()).then(studentmodal).catch(smError);
+				.then((response) => response.json()).then(studentmodal);//.catch(smError);
 			else studentmodal([]);
 		});
 
@@ -240,11 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	//Class recent events
-	let classEvents = document.querySelector('#recentevents .events tbody');
+	let classEvents = document.getElementById('recentevents');
 	if (classEvents) {
-		for (const event of events) classEvents.append(eventRow(event, true));
-		classEvents.addEventListener('click', eventActions);
-		if (!classEvents.children.length) document.getElementById('recentevents').style.display = 'none';
+		recentTable = new EventsTable(events);
+		recentTable.footer = false;
+		recentTable.sortable = false;
+		classEvents.append(recentTable.markup());
+		if (!events.length) document.getElementById('recentevents').style.display = 'none';
 	}
 	
 	//Add new student
@@ -333,9 +288,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		qedit.after = response => { li.childNodes[0].textContent = h3.textContent+' '; };
 
-		const m = modal(h3, actions);
+		const m = modal(h3, actions, {tag: 'div', attrs: {class: 'loader'}});
 		m.classList.add('question');
 		if (li.classList.contains('inactive')) m.classList.add('inactive');
+
+		const params = new URLSearchParams({req: 'eventsbyquestion', question: li.dataset.id}).toString();
+		fetch('/ajax.php?'+params, {method: 'GET'})
+		.then(response => response.json()).then(data => {
+			const container = m.querySelector('.studentmodal'),
+				table = new EventsTable(data);
+			container.querySelector('.loader').remove();
+			container.append(table.markup());
+		});
 		
 		actions.addEventListener('click', function(e2) {
 			e2.preventDefault();
@@ -491,13 +455,14 @@ function makeSortable(table, defaultsort, defaultdesc) {
 			if (th.getAttribute('class')==sortby) th.dataset.sort = desc ? 'desc' : 'asc';
 			else delete th.dataset.sort;
 		}
-		const tbody = table.querySelector('tbody');
-		let rows = Array.from(tbody.querySelectorAll('tr'));
-		rows.sort(function(a,b) {
+		const tbody = table.querySelector('tbody'),
+			rows = Array.from(tbody.querySelectorAll('tr')),
+			parseIf = val => parseInt(val)==val ? parseInt(val) : val;
+		rows.sort((a,b) => {
 			const acell = a.querySelector('.'+sortby),
 				bcell = b.querySelector('.'+sortby),
-				atext = 'sort' in acell.dataset ? parseInt(acell.dataset.sort) : acell.textContent,
-				btext = 'sort' in bcell.dataset ? parseInt(bcell.dataset.sort) : bcell.textContent;
+				atext = 'sort' in acell.dataset ? parseIf(acell.dataset.sort) : acell.textContent,
+				btext = 'sort' in bcell.dataset ? parseIf(bcell.dataset.sort) : bcell.textContent;
 			if (typeof atext=='number' && typeof btext=='number') return (atext-btext) * (desc ? -1 : 1);
 			else if (!atext && btext) return (desc ? 1 : -1);
 			else if (atext && !btext) return (desc ? -1 : 1);
@@ -554,46 +519,6 @@ function updateScore(rostercell, opts) {
 	}
 }
 
-function eventActions(e) {
-	if (!e.target.matches('.actions a')) return;
-	e.preventDefault();
-	
-	const evrow = e.target.parentNode.parentNode,
-		acttd = e.target.parentNode,
-		restd = acttd.previousElementSibling,
-		numspan = restd.querySelector('.numspan');
-	
-	//Edit event
-	if (e.target.classList.contains('edit')) editEvent(evrow, restd.dataset.val);
-	
-	//Delete event
-	else if (e.target.classList.contains('delete')) {
-		if (confirm('Are you sure you want to delete this event?')) {
-			fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
-			.then((response) => {
-				const student = evrow.dataset.student,
-					result = evrow.querySelector('td[data-val]').dataset.val,
-					evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
-				for (const row of evrows) row.remove();
-				updateScore(student, {action: 'delete', oldval: result});
-			}).catch(console.error);
-		}
-	
-	//Cancel event edits
-	} else if (e.target.classList.contains('cancel')) {
-		if (evrow.dataset.id) {
-			for (const b of restd.querySelectorAll('.unselected')) b.remove();
-			restd.classList.remove('editing');
-			acttd.textContent = '';
-			numspan.textContent = restd.dataset.val;
-			acttd.append(...actionButtons(['edit', 'delete']));
-		} else {
-			evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
-			evrow.remove();
-		}
-	}
-}
-
 //===================================
 // Generate boilerplate HTML elements
 //===================================
@@ -620,85 +545,174 @@ function studentRow(id, col1, col2, col3) {
 	return tr;
 }
 
-function eventRow(event, namecol) {
-	const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
-		modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
-		tds = [
-			markup({tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()}),
-			markup({tag: 'td'}),
-			markup({tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'}),
-			markup({tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])})
-		];
-	if (namecol) tds[1].innerHTML = event.fname+' '+event.lname; //Use InnerHTML so the HTML entities evaluate
-	else tds.splice(1,1);
-	return markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: tds});
-}
+class EventsTable {
+	events = [];
+	student = null;
+	footer = true;
+	addnew = true;
+	sortable = true;
 
-function editEvent(row) {
-	const actionsCell = row.querySelector('.actions'),
-		resultsCell = actionsCell.previousElementSibling,
-		curval = resultsCell.querySelector('.result-button')?.dataset.schemaval;
-	
-	resultsCell.classList.add('editing');
-	actionsCell.textContent = '';
-	resultsCell.textContent = '';
-	actionsCell.append(...actionButtons(['cancel']));
-	const numspan = markup({tag: 'span', attrs: {class: 'numspan'}, children: (curval ? [curval] : [])});
-	
-	for (const i of schemae[schema].items) {
-		const a = markup({tag: 'a', attrs: {class: 'result-button', 'data-schemaval': i.value}});
-		if (i.value!=curval) a.classList.add('unselected');
-		resultsCell.append(a);
+	constructor(events) { self.events = events; }
+
+	markup() {
+		let num=0, den=0;
+		const tbody = markup({tag: 'tbody'});
+		for (const event of events) {
+			tbody.append(this.row(event));
+			num += event.result;
+			den++;
+		}
+		const table = markup({tag: 'table', attrs: {class: 'events'}, children: [
+			{tag: 'thead', children: [{tag: 'tr', children: [
+				{tag: 'th', attrs: {class: 'm-date'}, children: ['Date']},
+				this.student ? null : {tag: 'th', attrs: {class: 'm-name'}, children: ['Student']},
+				{tag: 'th', attrs: {colspan: 2}, children: ['Result']}
+			]}]}, tbody,
+			this.footer ? {tag: 'tfoot', children: [{tag: 'tr', children: [
+				{tag: 'td', children: ['Total'], attrs: {colspan: this.student ? 1 : 2}},
+				{tag: 'td', attrs: {class: 'numtotal', colspan: this.student ? 1 : 2}, children: [(den ? Math.round(num/den*100)+'%' : '—')]},
+				this.student ? {tag: 'td', attrs: {class: 'addnew'}, children: [{tag: 'a', attrs: {href: '#'}, children: ['+']}]} : null
+			]}]} : null
+		]});
 		
-		a.addEventListener('click', function(e) {
-			const result = this.dataset.schemaval;
-			let url;
+		//Event action buttons
+		tbody.addEventListener('click', e => {
+			if (!e.target.matches('.actions a')) return;
+			e.preventDefault();
 			
-			const solidifyEvent = function(response) {
-				for (const b of resultsCell.querySelectorAll('.result-button')) {
-					if (b.dataset.schemaval == result) b.classList.remove('unselected');
-					else b.remove();
+			const evrow = e.target.parentNode.parentNode,
+				acttd = e.target.parentNode,
+				restd = acttd.previousElementSibling,
+				numspan = restd.querySelector('.numspan');
+			
+			//Edit event
+			if (e.target.classList.contains('edit')) this.edit(evrow);
+			
+			//Delete event
+			else if (e.target.classList.contains('delete')) {
+				if (confirm('Are you sure you want to delete this event?')) {
+					fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
+					.then((response) => {
+						const student = evrow.dataset.student,
+							result = evrow.querySelector('td[data-val]').dataset.val,
+							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
+						for (const row of evrows) row.remove();
+						updateScore(student, {action: 'delete', oldval: result});
+					}).catch(console.error);
 				}
-				numspan.textContent = result;
-				actionsCell.textContent = '';
-				actionsCell.append(...actionButtons(['edit', 'delete']));
-				resultsCell.dataset.val = result;
-				resultsCell.classList.remove('editing');
-				let opts;
-				
-				//Add to or update class events table
-				if (!curval) {
-					opts = {action: 'new', newval: result};
-					row.dataset.id = response; //Save new event ID if necessary
-					const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
-					document.querySelector('#recentevents tbody').prepend(eventRow({
-						id: row.dataset.id,
-						student: row.dataset.student,
-						fname: studentRow.querySelector('.fname').innerHTML,
-						lname: studentRow.querySelector('.lname').innerHTML,
-						result: result
-					}, true))
+			
+			//Cancel event edits
+			} else if (e.target.classList.contains('cancel')) {
+				if (evrow.dataset.id) {
+					for (const b of restd.querySelectorAll('.unselected')) b.remove();
+					restd.classList.remove('editing');
+					acttd.textContent = '';
+					numspan.textContent = restd.dataset.val;
+					acttd.append(...actionButtons(['edit', 'delete']));
 				} else {
-					opts = {action: 'update', oldval: curval, newval: result};
-					const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-val]');
-					if (recent) {
-						recent.dataset.val = result;
-						recent.querySelector('.result-button').dataset.schemaval = result;
-						recent.querySelector('.numspan').textContent = result;
-					}
+					evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
+					evrow.remove();
 				}
-				
-				row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
-				updateScore(row.dataset.student, opts);
-			};
-
-			if (curval) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+result; //Save event edits
-			else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+result; //Save new event
-
-			fetch(url, {method: 'get'}).then((response) => response.json()).then(solidifyEvent);
+			}
 		});
+		if (this.sortable) makeSortable(table, 'm-date', true);
+
+		//Add new event
+		if (this.footer && this.student) table.querySelector('.addnew a').addEventListener('click', e => {
+			e.preventDefault();
+			if (e.target.classList.contains('disabled')) return;
+			e.target.classList.add('disabled');
+			
+			const date = new Date(),
+				evtr = markup({tag: 'tr', attrs: {'data-student': this.student}, children: [
+					{tag: 'td', attrs: {class: 'm-date', 'data-sort': Math.round(date.getTime()/1000)}, children: [date.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+date.clockTime()]},
+					{tag: 'td'},
+					{tag: 'td', attrs: {class: 'actions'}}
+				]});
+			this.edit(evtr);
+			if (table.direction) tbody.prepend(evtr);
+			else tbody.append(evtr);
+		});
+		return table;
 	}
-	resultsCell.append(numspan);
+
+	row(event) {
+		const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
+			modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000);
+		return markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: [
+			{tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()},
+			this.student ? null : {tag: 'td', attrs: {'data-sort': event.lname, class: 'm-name'}, children: event.fname+' '+event.lname},
+			{tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'},
+			{tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])}
+		]});
+	}
+
+	edit(row) {
+		const actionsCell = row.querySelector('.actions'),
+			resultsCell = actionsCell.previousElementSibling,
+			curval = resultsCell.querySelector('.result-button')?.dataset.schemaval;
+		
+		resultsCell.classList.add('editing');
+		actionsCell.textContent = '';
+		resultsCell.textContent = '';
+		actionsCell.append(...actionButtons(['cancel']));
+		const numspan = markup({tag: 'span', attrs: {class: 'numspan'}, children: (curval ? [curval] : [])});
+		
+		for (const i of schemae[schema].items) {
+			const a = markup({tag: 'a', attrs: {class: 'result-button', 'data-schemaval': i.value}});
+			if (i.value!=curval) a.classList.add('unselected');
+			resultsCell.append(a);
+			
+			a.addEventListener('click', e => {
+				const result = a.dataset.schemaval;
+				let url;
+				
+				const solidifyEvent = response => {
+					for (const b of resultsCell.querySelectorAll('.result-button')) {
+						if (b.dataset.schemaval == result) b.classList.remove('unselected');
+						else b.remove();
+					}
+					numspan.textContent = result;
+					actionsCell.textContent = '';
+					actionsCell.append(...actionButtons(['edit', 'delete']));
+					resultsCell.dataset.val = result;
+					resultsCell.classList.remove('editing');
+					let opts;
+					
+					//Add to or update class events table
+					if (!curval) {
+						opts = {action: 'new', newval: result};
+						row.dataset.id = response; //Save new event ID if necessary
+						const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
+						document.querySelector('#recentevents tbody').prepend(recentTable.row({
+							id: row.dataset.id,
+							student: row.dataset.student,
+							fname: studentRow.querySelector('.fname').innerHTML,
+							lname: studentRow.querySelector('.lname').innerHTML,
+							result: result
+						}, true))
+					} else {
+						opts = {action: 'update', oldval: curval, newval: result};
+						const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-val]');
+						if (recent) {
+							recent.dataset.val = result;
+							recent.querySelector('.result-button').dataset.schemaval = result;
+							recent.querySelector('.numspan').textContent = result;
+						}
+					}
+					
+					row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
+					updateScore(row.dataset.student, opts);
+				};
+	
+				if (curval) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+result; //Save event edits
+				else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+result; //Save new event
+	
+				fetch(url, {method: 'get'}).then((response) => response.json()).then(solidifyEvent);
+			});
+		}
+		resultsCell.append(numspan);
+	}
 }
 
 function uploadCSV(e) {

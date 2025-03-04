@@ -14,6 +14,7 @@ The picker (to be used on a phone in class) randomly picks a student from the ro
 * Multiple participation schemae (✓/?/× and 1-5 included; custom also possible)
 * "Snooze" student with a tap
 * Roster sidebar to select specific students
+* Stage queued questions
 * Keyboard, mouse, and touch/swipe navigation
 
 ### The Admin Panel
@@ -24,6 +25,7 @@ The picker (to be used on a phone in class) randomly picks a student from the ro
 * View, edit, and delete individual participation events on a per-student basis
 * Set excused absences, so a student's name doesn't come up until a set date
 * Search for students across classes
+* Queue up questions and see the students who answered them
 * Create custom participation schemae
 
 ### Other
@@ -34,5 +36,4 @@ Bug reports and feature requests can be filed in the [issues tab](https://github
 
 ## Planned features
 
-* Queue up questions
 * E2E encryption

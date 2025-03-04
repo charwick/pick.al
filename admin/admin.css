@@ -63,7 +63,7 @@ button:disabled {
 	cursor: default;
 }
 
-input[type="text"], input[type="password"], input[type="date"], input[type="number"] {
+input[type="text"], input[type="password"], input[type="date"], input[type="number"], input[type="email"] {
 	box-sizing: border-box;
 	border-width: 1px;
 	border-style: solid;
@@ -578,7 +578,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
    ====== */
 
 dialog {
-	width: 540px;
+	width: 640px;
 	padding: 0;
 	background: rgb(255 255 255 / 90%);
 	backdrop-filter: blur(5px);

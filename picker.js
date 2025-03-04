@@ -55,8 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
 			const roster = document.getElementById('roster');
 			if (roster.classList.contains('open')) roster.classList.remove('open');
 			else roster.classList.add('open');
-		}
-		else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
+		} else if (e.key == 'q') {
+			if (currentQ) {
+				const nextQ = document.querySelector('#roster li[data-q="'+currentQ+'"]').nextElementSibling;
+				if ('q' in nextQ.dataset) {
+					currentQ = nextQ.dataset.q;
+					document.getElementById('qtext').textContent = nextQ.textContent;
+				} else {
+					currentQ = null;
+					document.getElementById('question').classList.remove('active');
+				}
+			} else {
+				const nextQ = document.querySelector('#roster li[data-q]');
+				currentQ = nextQ.dataset.q;
+				document.getElementById('question').classList.add('active');
+				document.getElementById('qtext').textContent = nextQ.textContent;
+			}
+		} else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
 	});
 
 	//=============

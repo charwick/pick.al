@@ -297,7 +297,7 @@ h1#logo { height: 1.5em; }
 	margin: 0;
 	box-sizing: border-box;
 }
-#roster li {
+#roster li:not(.head) {
 	padding: 0.5em 1.5em;
 	overflow: hidden;
 	text-overflow: ellipsis;
