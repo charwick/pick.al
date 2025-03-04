@@ -26,6 +26,11 @@ h1 {
 	border-radius: 3px;
 	margin-left: 0.75em;
 	vertical-align: middle;
+}
+#questions h2 + p {
+	margin-top: -0.8em;
+	margin-bottom: 1.2em;
+	color: #555;
   }
 
 .deemph-link {
@@ -535,7 +540,8 @@ table.sortable th::after {
 table.sortable th[data-sort="desc"]::after { content: '↓'; }
 table.sortable th[data-sort="asc"]::after { content: '↑'; }
 
-.actions:not(.expand) a:hover::after, #roster .excuses:hover::after, #collapse:hover::after {
+.actions:not(.expand) a:hover::after, #roster .excuses:hover::after,
+#collapse:hover::after, .events .q:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -550,7 +556,8 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	pointer-events: none;
 	line-height: 2;
 }
-.actions:not(.expand) a:hover::before, #roster .excuses:hover::before, #collapse:hover::before {
+.actions:not(.expand) a:hover::before, #roster .excuses:hover::before,
+#collapse:hover::before, .events .q:hover::before{
 	content: '';
 	display: block;
 	position: absolute;
@@ -662,6 +669,17 @@ dialog h2, dialog h3 { margin-top: 0.5em; }
 }
 .result-button.unselected:hover {
 	opacity: 0.5;
+}
+
+.events .q {
+	height: 1.18em; width: 1.18em;
+	display: inline-block;
+	background-image: url("../icon/svg.php?icon=question-circle-fill&color=777");
+	background-size: 1.18em 1.18em;
+	vertical-align: middle;
+	cursor: pointer;
+	margin-left: 1em;
+	position: relative;
 }
 
 dialog div > .actions {

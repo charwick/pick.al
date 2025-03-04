@@ -81,12 +81,17 @@ class chooser_query extends mysqli {
 	}
 
 	function get_questions(int $class, $onlyactive=false): array {
-		$oaclause = $onlyactive ? 'AND active=1' : '';
-		$q="SELECT questions.* FROM questions
+		$u = $this->current_user();
+		$oaclause = $u ? '=?' : 'IS NULL';
+		if ($onlyactive) $oaclause .= ' AND active=1';
+		
+		$q="SELECT questions.*, COUNT(events.id) AS events FROM questions
 			LEFT JOIN classes ON questions.class=classes.id
-			WHERE class=? AND user=? {$oaclause}
+			LEFT JOIN events ON events.question=questions.id
+			WHERE class=? AND user {$oaclause}
+			GROUP BY questions.id
 			ORDER BY active DESC, `date` DESC";
-		$qs = $this->execute_query($q, [$class, $_SESSION['user']]);
+		$qs = $this->execute_query($q, $u ? [$class, $_SESSION['user']] : [$class]);
 		$questions = [];
 		while ($question = $qs->fetch_object()) $questions[] = $question;
 		return $questions;
@@ -261,7 +266,7 @@ class chooser_query extends mysqli {
 	}
 
 	function get_events_by_class(int $class, int $limit=0): array {
-		$q="SELECT events.id, date, result, student, students.fname, students.lname FROM events
+		$q="SELECT events.id, date, result, student, students.fname, students.lname, question FROM events
 			LEFT JOIN students ON students.id=events.student
 			LEFT JOIN classes ON classes.id=students.class
 			WHERE class=? and classes.user=?

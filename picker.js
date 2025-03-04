@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// QUEUED QUESTIONS
 	//==================
 
-	document.querySelector('#question .actions').addEventListener('click', e => {
+	document.querySelector('#question .actions')?.addEventListener('click', e => {
 		e.preventDefault();
 		if (e.target.classList.contains('back') || e.target.classList.contains('forward')) {
 			const newq = document.querySelector('#roster li[data-q="'+e.target.dataset.q+'"]');

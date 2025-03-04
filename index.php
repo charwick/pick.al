@@ -43,7 +43,10 @@ if ($classid) {
 	headermeta(); ?>
 </head>
 
-<body<?php if ($classid && !$class->active) echo ' class="inactive"'; ?>>
+<body class="<?php
+	if (!$user) echo 'demo';
+	elseif ($classid && !$class->active) echo 'inactive';
+?>">
 	<?php if ($classid) { ?>
 		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 

@@ -175,12 +175,13 @@ if (isset($_POST['name'])) {
 
 			<section id="questions">
 				<h2 class="new-feature">Queued Questions</h2>
+				<p><em><small>Queued questions can be staged during class in the sidebar of the picker.</small></em></p>
 				<ul id="questionlist"><?php
 					$inactives = 0;
 					foreach ($sql->get_questions($classid) as $question) { ?>
 						<li data-id="<?php echo $question->id; ?>"<?php if (!$question->active) echo ' class="inactive"'; ?>>
 							<?php echo $question->text; ?>
-							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?></span>
+							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?> — <?php echo $question->events; ?> Events</span>
 							<?php if (!$question->active) $inactives++; ?>
 						</li>
 					<?php }

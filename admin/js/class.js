@@ -345,6 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					fetch('/ajax.php?' + params, {method: 'GET'})
 					.then(response => response.text()).then(data => {
 						if (data === "1") {
+							for (const event of document.querySelectorAll('.events tr[data-question="'+li.dataset.id+'"]')) {
+								delete event.dataset.question;
+								event.querySelector('.q')?.remove();
+							}
 							li.remove();
 							m.close();
 						} else console.error('Error deleting the question.');
@@ -367,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				fetch('/ajax.php?'+params, {method: 'GET'})
 				.then(response => response.json()).then(data => {
 					const date = new Date().toLocaleDateString(),
-						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)}</span>`});
+						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)} — 0 events</span>`});
 					li.dataset.id = data;
 					qlist.prepend(li);
 					document.querySelector('dialog').close();
@@ -580,8 +584,8 @@ class EventsTable {
 			if (!e.target.matches('.actions a')) return;
 			e.preventDefault();
 			
-			const evrow = e.target.parentNode.parentNode,
-				acttd = e.target.parentNode,
+			const evrow = e.target.closest('tr'),
+				acttd = e.target.closest('.actions'),
 				restd = acttd.previousElementSibling,
 				numspan = restd.querySelector('.numspan');
 			
@@ -593,11 +597,19 @@ class EventsTable {
 				if (confirm('Are you sure you want to delete this event?')) {
 					fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
 					.then((response) => {
-						const student = evrow.dataset.student,
-							result = evrow.querySelector('td[data-val]').dataset.val,
+						const result = evrow.querySelector('td[data-val]').dataset.val,
 							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
+						if ('question' in evrow.dataset) {
+							const qinfo = document.querySelector('#questionlist li[data-id="'+evrow.dataset.question+'"] .date'),
+								match = qinfo.textContent.match(/(\d+) Events/);
+							if (match) {
+								const eventCount = parseInt(match[1]) - 1;
+								qinfo.textContent = qinfo.textContent.replace(/\d+ Events/, `${eventCount} Events`);
+							}
+						}
 						for (const row of evrows) row.remove();
-						updateScore(student, {action: 'delete', oldval: result});
+						
+						updateScore(evrow.dataset.student, {action: 'delete', oldval: result});
 					}).catch(console.error);
 				}
 			
@@ -638,13 +650,18 @@ class EventsTable {
 
 	row(event) {
 		const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
-			modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000);
-		return markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: [
-			{tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime()},
-			this.student ? null : {tag: 'td', attrs: {'data-sort': event.lname, class: 'm-name'}, children: event.fname+' '+event.lname},
-			{tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'},
-			{tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])}
-		]});
+			modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
+			tr = markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: [
+				{tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: [
+					modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime(),
+					event.question ? {tag: 'span', attrs: {title: document.querySelector('#questionlist li[data-id="'+event.question+'"]')?.childNodes[0].textContent.trim(), class: 'q'}} : null
+				]},
+				this.student ? null : {tag: 'td', attrs: {'data-sort': event.lname, class: 'm-name'}, children: event.fname+' '+event.lname},
+				{tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'},
+				{tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])}
+			]});
+		if (event.question) tr.dataset.question = event.question;
+		return tr;
 	}
 
 	edit(row) {

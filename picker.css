@@ -335,13 +335,15 @@ h1#logo { height: 1.5em; }
 	border-radius: 10px;
 	font-size: 1.5em;
 	line-height: 1.5;
-	margin-top: 12em;
+	max-width: 800px;
+ 	margin: 12em auto 0;
+ 	box-sizing: border-box;
 	display: none;
 	position: relative;
 }
 #question.active { display: block; }
 #question .actions {
-	margin: 0.5em 0 1.5em;
+	margin: 0.5em auto 1.5em;
 	font-size: 0.56em;
 }
 
