@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (tr.querySelector('.score').textContent)
 				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-				.then((response) => response.json()).then(studentmodal);//.catch(smError);
+				.then((response) => response.json()).then(studentmodal).catch(smError);
 			else studentmodal([]);
 		});
 
@@ -556,12 +556,12 @@ class EventsTable {
 	addnew = true;
 	sortable = true;
 
-	constructor(events) { self.events = events; }
+	constructor(events) { this.events = events; }
 
 	markup() {
 		let num=0, den=0;
 		const tbody = markup({tag: 'tbody'});
-		for (const event of events) {
+		for (const event of this.events) {
 			tbody.append(this.row(event));
 			num += event.result;
 			den++;
@@ -622,7 +622,7 @@ class EventsTable {
 					numspan.textContent = restd.dataset.val;
 					acttd.append(...actionButtons(['edit', 'delete']));
 				} else {
-					evrow.parentNode.parentNode.querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
+					evrow.closest('table').querySelector('tfoot')?.querySelector('.addnew a').classList.remove('disabled');
 					evrow.remove();
 				}
 			}

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const now = new Date();
 			let excdate, fn;
 			if (!isExcused(hist[histIndex].info)) { //Set excused
-				excdate = now.toISOString().split('T')[0];
+				excdate = now.toLocaleDateString('en-CA');
 				fn = function() {
 					now.setHours(23); now.setMinutes(59);
 					hist[histIndex].info.excuseduntil = now;

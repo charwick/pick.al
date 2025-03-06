@@ -19,7 +19,7 @@ class makeInput {
 	data = null; //A function that takes the inputs, and returns data to send to the server
 	validate = null;
 	actions = [];
-	editActions = ['save', 'cancel']; //Additions should define a `action`func method attached to the object
+	editActions = ['save', 'cancel']; //Additions should define a `action` method attached to the object
 
 	constructor(actionsbox=null) {
 		this.actionsbox = actionsbox;
@@ -65,10 +65,8 @@ class makeInput {
 				}
 				if (!('required' in attrs)) attrs['required'] = true;
 				for (const attr of ['min', 'max', 'placeholder', 'required', 'autocomplete'])
-					if (attr in attrs) {
-						const val = attrs[attr] instanceof Array ? attrs[attr][i] : attrs[attr];
-						if (val !== false) inp.setAttribute(attr, val);
-					}
+					if (attr in attrs && attrs[attr] !== false)
+						inp.setAttribute(attr, attrs[attr]);
 			}
 
 			inp.name = element.id || element.getAttribute('class');
@@ -119,14 +117,14 @@ class makeInput {
 		const valid = validate(inps);
 		if (valid===0 || (this.validate instanceof Function && !this.validate(inps))) return;
 		if (valid!=null || !inps.length) {
-			onerror = response =>  {
+			hasError = response =>  {
 				if (this.error instanceof Function) this.error(response, inps);
 				else for (const inp of inps) inp.classList.add('error');
 			};
 	
 			fetch('../ajax.php?'+(new URLSearchParams(this.data(inps)).toString()), {method: 'get'})
 			.then(response => response.json()).then(response => {
-				if (!response) onerror(response);
+				if (!response) hasError(response);
 				else {
 					const vals = [];
 					for (const inp of inps) {
@@ -136,7 +134,7 @@ class makeInput {
 					this.solidify();
 					if (this.after instanceof Function) this.after(response, vals);
 				}
-			}).catch(onerror);
+			}).catch(hasError);
 			
 		} else this.solidify();
 	};
@@ -171,13 +169,8 @@ function actionButtons(list) {
 		archive: {title: 'Archive'},
 		excuses: {title: 'Set excused absences'}
 	}, actions = [];
-	for (const item of list) {
-		const a = document.createElement('a');
-		a.classList.add(item);
-		a.href = '#';
-		a.title = buttons[item].title;
-		actions.push(a);
-	}
+	for (const item of list)
+		actions.push(markup({tag: 'a', attrs: {class: item, href: '#', title: buttons[item].title}}));
 	return actions;
 }
 
@@ -201,7 +194,7 @@ function validate(elements) {
 		if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName)) element = element.querySelector('input,select,textarea');
 		element.classList.remove('error');
 		if (element.value != element.oldValue) changed = true;
-		if (Object.hasOwn(element, 'validate') && !element.validate) continue; //Let fields be skipped
+		if ('validate' in element && !element.validate) continue; //Let fields be skipped
 		if (!element.validity.valid) { //Takes care of blank+required, num ranges, and email
 			element.classList.add('error');
 			element.focus();
@@ -224,10 +217,10 @@ function modal(...content) {
 			) return;
 
 			modal.classList.add('transit');
-			setTimeout(() => { modal.remove(); }, 250);
+			setTimeout(() => modal.remove(), 250);
 		}
 	});
-	modal.addEventListener('close', modal.remove);
+	modal.addEventListener('close', () => modal.remove() );
 	modal.showModal();
 	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason

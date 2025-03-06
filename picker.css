@@ -9,7 +9,7 @@ body {
 body.inactive { background: #555; }
 #bodywrap { /* Necessary because of a dumb Samsung Browser bug */
 	overflow-x: hidden;
-	padding: 40px 20px;
+	padding: 30px 20px;
 	height: 100vh; height: 100svh; /* incl. fallback */
 	width: 100vw;
 	box-sizing: border-box;
@@ -18,12 +18,11 @@ body.inactive { background: #555; }
 
 h1 {
 	font-weight: normal;
-	margin: 6vh 0 0;
+	margin: 1.25em 0 0;
 	font-size: 2.5em;
 }
 p.subtitle {
 	color: #999;
-	margin-top: 1.25em;
 	font-size: 1.2em;
 }
 .inactive .subtitle::after {
@@ -44,7 +43,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	display: flex;
 	justify-content: space-between;
 	max-width: 800px;
-	margin: 2.25em auto 0;
+	margin: 2em auto 0;
 }
 .actions a {
 	height: 3em; width: 3em;
@@ -89,9 +88,9 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #sinfo { position: relative; }
 #sinfo > div {
-	margin: 1em auto 0;
+	margin: 0.5em auto 0;
 	background: rgb(255 255 255 / 15%);
-	padding: 2.25em 0 0;
+	padding: 2em 0 0;
 	border-radius: 10px;
 	position: absolute;
 	transition: left 0.25s;
@@ -139,13 +138,13 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 
 #pickwrap {
 	position: absolute;
-	bottom: 8vh;
+	bottom: 30px;
 	left: 40px; right: 40px;
 }
 #pick {
 	width: 100%;
 	background: #3A3;
-	padding: 28px;
+	padding: 0.75em;
 	border-radius: 50px;
 	font-size: 2rem;
 	display: inline-block;
@@ -232,23 +231,22 @@ h1#logo { height: 1.5em; }
 }
 #backbutton, #rosterlist {
 	color: #FFF;
-	opacity: 0.25;
-	text-decoration: none;
+	opacity: 0.3;
 	position: absolute;
-	top: 40px;
+	top: 25px;
+	height: 2em; width: 2em;
 }
 #backbutton {
+	background: url("icon/svg.php?icon=arrow-left&color=FFF") center/2em 2em no-repeat;
 	left: 30px;
-	font-size: 3em;
-	font-weight: bold;
+	text-indent: -9999em;
 }
-#backbutton:hover, #rosterlist:hover, #rosterclose a:hover { opacity: 0.4; }
+#backbutton:hover, #rosterlist:hover, #rosterclose a:hover { opacity: 0.5; }
 
 /* Roster list */
 
 #rosterlist {
 	background: url("icon/svg.php?icon=list&color=FFF") center/2em 2em no-repeat;
-	height: 2em; width: 2em;
 	right: 30px;
 	text-indent: -9999em;
 }
@@ -329,14 +327,14 @@ h1#logo { height: 1.5em; }
 }
 
 #question {
-	padding: .2em 2em 1.2em;
+	padding: .2em 1em 1em;
 	color: #CCC;
 	background: #222;
 	border-radius: 10px;
-	font-size: 1.5em;
+	font-size: 1.4em;
 	line-height: 1.5;
 	max-width: 800px;
- 	margin: 12em auto 0;
+ 	margin: 11em auto 0;
  	box-sizing: border-box;
 	display: none;
 	position: relative;
@@ -344,21 +342,20 @@ h1#logo { height: 1.5em; }
 #question.active { display: block; }
 #question .actions {
 	margin: 0.5em auto 1.5em;
-	font-size: 0.56em;
+	font-size: 0.5em;
 }
 
 /* Small phones */
 
-@media screen and (max-height: 62em) {
+@media screen and (max-height: 51em) {
 	body {font-size: 0.8em; }
 	#bodywrap { padding: 20px; }
 	#backbutton, #rosterlist { top: 20px; }
-	#pickwrap { bottom: 6vh; }
 	#pick {
 		padding: 20px;
 		font-size: 1.6rem;
 	}
 }
-@media screen and (max-height: 48em) {
+@media screen and (max-height: 42em) {
 	.subtitle { display: none; }
 }
