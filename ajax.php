@@ -17,9 +17,9 @@ switch ($req) {
 	//=========
 
 	case 'updateclassinfo':
-		$response = $sql->edit_class($_GET['class'], $_GET['title'] ?? null, $_GET['semester'] ?? null, $_GET['year'] ?? null, $_GET['activeuntil'] ?? null, $_GET['schema'] ?? null);
+		$response = $sql->edit_class($_POST['class'], $_POST['title'] ?? null, $_POST['semester'] ?? null, $_POST['year'] ?? null, $_POST['activeuntil'] ?? null, $_POST['schema'] ?? null);
 		if ($response) {
-			$schema = $sql->get_schema($_GET['schema']);
+			$schema = $sql->get_schema($_POST['schema']);
 			echo json_encode([
 				'weights' => $schema->items,
 				'css' => $schema->output_css(false, false),
@@ -29,25 +29,20 @@ switch ($req) {
 		else http_response_code(403);
 		break;
 	
-	case 'getschemabuttons':
-		$schema = $sql->get_schema($_GET['schema']);
-		echo $schema->output_buttons(true);
-		break;
-	
 	case 'newquestion':
-		echo $sql->new_question($_GET['class'], $_GET['text']);
+		echo $sql->new_question($_POST['class'], $_POST['text']);
 		break;
 	
 	case 'editquestion':
-		echo $sql->edit_question($_GET['id'], $_GET['text']);
+		echo $sql->edit_question($_POST['id'], $_POST['text']);
 		break;
 	
 	case 'deletequestion':
-		echo $sql->delete_question($_GET['id']);
+		echo $sql->delete_question($_POST['id']);
 		break;
 	
 	case 'archivequestion':
-		echo $sql->archive_question($_GET['id'], (bool)$_GET['archive']);
+		echo $sql->archive_question($_POST['id'], (bool)$_POST['archive']);
 		break;
 	
 	//==========
@@ -55,23 +50,23 @@ switch ($req) {
 	//==========
 
 	case 'editstudent':
-		$response = $sql->edit_student($_GET['student'], $_GET['fname'], $_GET['lname'], $_GET['note']);
+		$response = $sql->edit_student($_POST['student'], $_POST['fname'], $_POST['lname'], $_POST['note']);
 		if ($response) echo $response;
 		else http_response_code(403);
 		break;
 	
 	case 'addstudent':
-		$id = $sql->add_student($_GET['classid'], $_GET['fname'], $_GET['lname'], $_GET['note']);
+		$id = $sql->add_student($_POST['classid'], $_POST['fname'], $_POST['lname'], $_POST['note']);
 		if ($id) echo $id;
 		else http_response_code(403);
 		break;
 	
 	case 'deletestudent':
-		echo $sql->delete_student($_GET['id']);
+		echo $sql->delete_student($_POST['id']);
 		break;
 	
 	case 'studentexcused':
-		echo $sql->student_excused($_GET['id'], $_GET['excused'] ?: null);
+		echo $sql->student_excused($_POST['id'], $_POST['excused'] ?: null);
 		break;
 
 	case 'uploadroster':
@@ -119,19 +114,19 @@ switch ($req) {
 		break;
 
 	case 'writeevent':
-		$q = $_GET['q'] ?? null;
+		$q = $_POST['q'] ?? null;
 		$q = ($q && is_numeric($q)) ? (int)$q : null;
-		echo $sql->new_event($_GET['rosterid'], $_GET['result'], $q);
+		echo $sql->new_event($_POST['rosterid'], $_POST['result'], $q);
 		break;
 	
 	case 'updateevent':
-		$q = $_GET['q'] ?? null;
+		$q = $_POST['q'] ?? null;
 		if ($q) $q = $q=='null' ? 0 : $q; //Pass 0 to clear, pass null to leave unchanged
-		echo $sql->edit_event($_GET['event'], $_GET['result'], $q);
+		echo $sql->edit_event($_POST['event'], $_POST['result'], $q);
 		break;
 	
 	case 'deleteevent':
-		echo $sql->delete_event($_GET['event']);
+		echo $sql->delete_event($_POST['event']);
 		break;
 	
 	//=========
@@ -139,7 +134,7 @@ switch ($req) {
 	//=========
 
 	case 'updateschema':
-		echo $sql->edit_schema($_GET['id'], $_GET['name']);
+		echo $sql->edit_schema($_POST['id'], $_POST['name']);
 		break;
 	
 	case 'editschemaitems':
@@ -175,6 +170,11 @@ switch ($req) {
 		echo json_encode($result);
 		break;
 
+	case 'getschemabuttons':
+		$schema = $sql->get_schema($_GET['schema']);
+		echo $schema->output_buttons(true);
+		break;
+
 	//========
 	// USERS
 	//========
@@ -187,15 +187,15 @@ switch ($req) {
 		break;
 	
 	case 'edituser':
-		if (!in_array($_GET['k'], ['email'])) $response = False;
-		else $response = $sql->edit_user($_GET['k'], $_GET['v']);
+		if (!in_array($_POST['k'], ['email'])) $response = False;
+		else $response = $sql->edit_user($_POST['k'], $_POST['v']);
 
 		if ($response) echo json_encode($response);
 		if (!$response || !is_numeric($response)) http_response_code(403);
 		break;
 	
 	case 'editpw':
-		echo json_encode($sql->edit_pw($_GET['current'], $_GET['new']));
+		echo json_encode($sql->edit_pw($_POST['current'], $_POST['new']));
 		break;
 	
 	case 'deleteorcid':

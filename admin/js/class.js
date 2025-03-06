@@ -66,7 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			function studentmodal(events) {
 				const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
-					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? ['Excused through ', {tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}] : [{tag: 'span'}])}),
+					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? [
+						{tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '},
+						{tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}
+					] : [{tag: 'span'}])}),
 					actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
 					nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
 					table = new EventsTable(events);
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					tr.querySelector('.note').innerHTML = vals[2];
 				}
 
-				const qspan = excused.querySelector('span');
+				const qspan = excused.querySelector('span:not(.mtx)');
 				function clearacts() {
 					if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
 				};
@@ -132,8 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					//Delete student
 					if (e.target.classList.contains('delete')) {
 						if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
-						fetch('../ajax.php?req=deletestudent&id='+tr.dataset.id, {method: 'get'})
-						.then((response) => response.json()).then((response) => {
+						post('../ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
 							if (response != 1) console.error('There was an error deleting the student.');
 							else {
 								//Delete recent participation events
@@ -145,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 								snum.textContent = parseInt(snum.textContent)-1;
 								document.querySelector('dialog').remove();
 							}
-						}).catch(console.error);
+						});
 
 					//Set Excused Absences
 					} else if (e.target.classList.contains('excuses')) {
@@ -224,9 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					else for (const inp of inputs) inp.classList.add('error');
 				};
 
-				const params = new URLSearchParams({req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}).toString()
-				fetch('../ajax.php?'+params, {method: 'get'})
-				.then((response) => response.json()).then((sid) => {
+				post('../ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
 					if (!sid) onerror(sid);
 					else {
 						studentRow(sid, fname.value, lname.value, note.value);
@@ -307,10 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			//Archive or unarchive question
 			if (e2.target.classList.contains('archive')) {
 				const li = e.target.closest('li'),
-					active = + li.classList.contains('inactive'),
-					params = new URLSearchParams({req: 'archivequestion', id: li.dataset.id, archive: active}).toString();
-				fetch('/ajax.php?'+params, {method: 'GET'})
-				.then(response => response.json()).then(data => {
+					active = + li.classList.contains('inactive');
+				post('/ajax.php', {req: 'archivequestion', id: li.dataset.id, archive: active}, data => {
 					if (active) {
 						li.classList.remove('inactive');
 						m.classList.remove('inactive');
@@ -335,16 +333,14 @@ document.addEventListener('DOMContentLoaded', () => {
 						return parseInt(b.dataset.id) - parseInt(a.dataset.id);
 					});
 					for (const li of lis) ul.appendChild(li);
-				}).catch(console.error);
+				});
 			
 			//Delete question
 			} else if (e2.target.classList.contains('delete')) {
 				const li = e.target.closest('li');
 				if (confirm('Are you sure you want to delete this question rather than archiving it?')) {
-					const params = new URLSearchParams({req: 'deletequestion', id: li.dataset.id}).toString();
-					fetch('/ajax.php?' + params, {method: 'GET'})
-					.then(response => response.text()).then(data => {
-						if (data === "1") {
+					post('/ajax.php', {req: 'deletequestion', id: li.dataset.id}, data => {
+						if (data == "1") {
 							for (const event of document.querySelectorAll('.events tr[data-question="'+li.dataset.id+'"]')) {
 								delete event.dataset.question;
 								event.querySelector('.q')?.remove();
@@ -352,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							li.remove();
 							m.close();
 						} else console.error('Error deleting the question.');
-					}).catch(console.error);
+					});
 				}
 			}
 		});
@@ -367,15 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		function questionSave() {
 			if (validate([textarea])) {
-				const params = new URLSearchParams({req: 'newquestion', class: classid, text: textarea.value}).toString()
-				fetch('/ajax.php?'+params, {method: 'GET'})
-				.then(response => response.json()).then(data => {
+				post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
 					const date = new Date().toLocaleDateString(),
 						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)} — 0 events</span>`});
 					li.dataset.id = data;
 					qlist.prepend(li);
 					document.querySelector('dialog').close();
-				}).catch(console.error);
+				});
 			}
 		}
 
@@ -595,8 +589,7 @@ class EventsTable {
 			//Delete event
 			else if (e.target.classList.contains('delete')) {
 				if (confirm('Are you sure you want to delete this event?')) {
-					fetch('../ajax.php?req=deleteevent&event='+evrow.dataset.id, {method: 'get'})
-					.then((response) => {
+					post('../ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
 						const result = evrow.querySelector('td[data-val]').dataset.val,
 							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
 						if ('question' in evrow.dataset) {
@@ -610,7 +603,7 @@ class EventsTable {
 						for (const row of evrows) row.remove();
 						
 						updateScore(evrow.dataset.student, {action: 'delete', oldval: result});
-					}).catch(console.error);
+					});
 				}
 			
 			//Cancel event edits
@@ -721,11 +714,12 @@ class EventsTable {
 					row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
 					updateScore(row.dataset.student, opts);
 				};
+				
+				let params;
+				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
+				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
 	
-				if (curval) url ='../ajax.php?req=updateevent&event='+row.dataset.id+'&result='+result; //Save event edits
-				else url = '../ajax.php?req=writeevent&rosterid='+document.querySelector('dialog').student+'&result='+result; //Save new event
-	
-				fetch(url, {method: 'get'}).then((response) => response.json()).then(solidifyEvent);
+				post('../ajax.php', params, solidifyEvent);
 			});
 		}
 		resultsCell.append(numspan);
@@ -741,12 +735,7 @@ function uploadCSV(e) {
 	document.querySelector('.info')?.remove();
 	
 	reader.onload = function(e) {
-		const formData = new FormData();
-		formData.append("csv", e.target.result);
-		formData.append("req", "uploadroster");
-		formData.append("class", ''+classid);
-		fetch("../ajax.php", {method: 'post', body: formData})
-		.then((response) => response.json()).then((response) => {
+		post("../ajax.php", {req: 'uploadroster', csv: e.target.result, class: ''+classid}, response => {
 			if (!response) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));

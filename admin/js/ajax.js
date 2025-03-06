@@ -117,13 +117,12 @@ class makeInput {
 		const valid = validate(inps);
 		if (valid===0 || (this.validate instanceof Function && !this.validate(inps))) return;
 		if (valid!=null || !inps.length) {
-			hasError = response =>  {
+			const hasError = response =>  {
 				if (this.error instanceof Function) this.error(response, inps);
 				else for (const inp of inps) inp.classList.add('error');
 			};
 	
-			fetch('../ajax.php?'+(new URLSearchParams(this.data(inps)).toString()), {method: 'get'})
-			.then(response => response.json()).then(response => {
+			post('../ajax.php', this.data(inps), response => {
 				if (!response) hasError(response);
 				else {
 					const vals = [];
@@ -134,7 +133,7 @@ class makeInput {
 					this.solidify();
 					if (this.after instanceof Function) this.after(response, vals);
 				}
-			}).catch(hasError);
+			}, hasError);
 			
 		} else this.solidify();
 	};
@@ -225,4 +224,12 @@ function modal(...content) {
 	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
+}
+
+function post(url, data, then, error) {
+	const formData = new FormData();
+	for (const key in data) formData.append(key, data[key]);
+	fetch(url, {method: 'POST', body: formData})
+		.then((response) => response.json()).then(then)
+		.catch(error || console.error);
 }

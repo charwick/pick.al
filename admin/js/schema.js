@@ -106,10 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		this.textContent = 'Saving...';
 		this.disabled = true;
 
-		const formData = new FormData();
-		formData.append("req", "editschemaitems");
 		const params = {'schema': schemaid, 'delete': deleted, 'new': [], 'update': []};
-
 		for (const tr of tbody.querySelectorAll('tr')) {
 			if (!tr.dataset.dirty) continue;
 			const trdata = {};
@@ -118,11 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if ('id' in tr.dataset) params.update.push(trdata);
 			else params.new.push(trdata);
 		}
-		formData.append('params', JSON.stringify(params));
-		fetch('../ajax.php', {
-			method: 'post',
-			body: formData
-		}).then((response) => response.json()).then((response) => {
+		post('../ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
 			//Update window.schema and UI
 			this.textContent = 'Saved';
 			for (const d of deleted) {
@@ -154,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				delete tr.dataset.dirty;
 			}
-		}).catch(console.log);
+		});
 	});
 
 	//Confirm before closing if dirty
