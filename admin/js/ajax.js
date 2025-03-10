@@ -226,10 +226,19 @@ function modal(...content) {
 	return modal;
 }
 
+function interThen(response) {
+	if (response.status === 401) {
+		window.location.href = '/login/login.php?action=logout';
+		return;
+	}
+	if (!response.ok) throw {status: response.status};
+	return response.json();
+}
+
 function post(url, data, then, error) {
 	const formData = new FormData();
 	for (const key in data) formData.append(key, data[key]);
 	fetch(url, {method: 'POST', body: formData})
-		.then((response) => response.json()).then(then)
+		.then(interThen).then(then)
 		.catch(error || console.error);
 }

@@ -160,18 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				smodal.children[0].append(actions, snote, excused, table.markup());
 				smodal.student = tr.dataset.id;
 			}
-			
-			function smError() {
-				smodal.querySelector('.loader').remove();
-				const p = document.createElement('p');
-				p.classList.add('error');
-				p.innerHTML = 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.';
-				smodal.append(p);
-			}
 
 			if (tr.querySelector('.score').textContent)
 				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-				.then((response) => response.json()).then(studentmodal).catch(smError);
+				.then(interThen).then(studentmodal).catch(e => modalError(smodal, e));
 			else studentmodal([]);
 		});
 
@@ -294,12 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const params = new URLSearchParams({req: 'eventsbyquestion', question: li.dataset.id}).toString();
 		fetch('/ajax.php?'+params, {method: 'GET'})
-		.then(response => response.json()).then(data => {
+		.then(interThen).then(data => {
 			const container = m.querySelector('.studentmodal'),
 				table = new EventsTable(data);
 			container.querySelector('.loader').remove();
 			container.append(table.markup());
-		});
+		}).catch(e => modalError(m, e));
 		
 		actions.addEventListener('click', function(e2) {
 			e2.preventDefault();
@@ -365,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (validate([textarea])) {
 				post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
 					const date = new Date().toLocaleDateString(),
-						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)} — 0 events</span>`});
+						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)} — 0 Events</span>`});
 					li.dataset.id = data;
 					qlist.prepend(li);
 					document.querySelector('dialog').close();
@@ -525,6 +517,12 @@ function infoElement(message, classname, tag) {
 	const info = markup({tag: tag || 'p', attrs: {class: 'info'}, children: [message]});
 	if (classname) info.classList.add(classname);
 	return info;
+}
+
+function modalError(smodal, error) {
+	smodal.querySelector('.loader').remove();
+	const p = markup({tag: 'div', attrs: {class: 'error'}, children: 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.'})
+	smodal.append(p);
 }
 
 function studentRow(id, col1, col2, col3) {

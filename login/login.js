@@ -129,7 +129,6 @@ function switchInputs(clearInfo=true) {
 		form.id = null;
 		const inps = drawInputs(inpContainer, ['uoremail', 'password']);
 		inps[1].autocomplete = 'current-password';
-		console.log(inps[1]);
 		document.getElementById('resetlink').style.display = 'inline';
 		document.getElementById('terms').style.display = 'none';
 	} else if (val=='register') {

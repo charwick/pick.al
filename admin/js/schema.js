@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					{tag: 'div', attrs: {class: 'loader'}}
 				);
 				fetch('../ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
-				.then((response) => response.json()).then((response) => {
+				.then(interThen).then((response) => {
 					let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
 					dmodal.querySelector('.loader').remove();
 					console.log(dmodal);

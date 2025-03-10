@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		timeouts.push(setTimeout(() => {
 			fetch('../ajax.php?'+(new URLSearchParams({req: 'searchstudent', phrase: val}).toString()), {method: 'get'})
-			.then((response) => response.json()).then((response) => {
+			.then(interThen).then(response => {
 				cache[val] = response;
 				drawList(response);
 			}).catch(console.error);

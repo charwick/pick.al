@@ -10,6 +10,12 @@ header("Last-Modified: {$now} GMT");
 
 $req = $_POST['req'] ?? $_GET['req'];
 
+//Error if we're not logged in
+if (!$sql->userid && !in_array($req, ['userexists', 'resetpwlink'])) {
+	http_response_code(401);
+	exit();
+}
+
 switch ($req) {
 
 	//=========
