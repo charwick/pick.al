@@ -185,16 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			modal(h2, content);
 		});
 	}
-
-	//Class recent events
-	let classEvents = document.getElementById('recentevents');
-	if (classEvents) {
-		recentTable = new EventsTable(events);
-		recentTable.footer = false;
-		recentTable.sortable = false;
-		classEvents.append(recentTable.markup());
-		if (!events.length) document.getElementById('recentevents').style.display = 'none';
-	}
 	
 	//Add new student
 	const addStudent = document.querySelector('#roster .addnew a');
@@ -262,89 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!pass) e.preventDefault();
 	});
 
-	//Open question modal
 	const qlist = document.querySelector('#questionlist');
-	qlist?.addEventListener('click', function(e) {
-		const li = e.target.closest('li');
-		if (!li) return;
-		const question = li.childNodes[0].textContent.trim(),
-			h3 = markup({tag: 'h3', children: question}),
-			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'archive', 'delete'])}),
-			qedit = new makeInput(actions);
-		qedit.addElement(h3, {placeholder: 'Question', required: true, type: 'textarea'});
-		qedit.data = inps => ({req: 'editquestion', id: li.dataset.id, text: inps[0].value});
-		qedit.editfunc = inps => {
-			const shrink = e => { inps[0].style.height = ""; inps[0].style.height = (inps[0].scrollHeight+6) + "px"; };
-			inps[0].addEventListener('input', shrink);
-			shrink();
-		}
-		qedit.after = response => { li.childNodes[0].textContent = h3.textContent+' '; };
-
-		const m = modal(h3, actions, {tag: 'div', attrs: {class: 'loader'}});
-		m.classList.add('question');
-		if (li.classList.contains('inactive')) m.classList.add('inactive');
-
-		const params = new URLSearchParams({req: 'eventsbyquestion', question: li.dataset.id}).toString();
-		fetch('/ajax.php?'+params, {method: 'GET'})
-		.then(interThen).then(data => {
-			const container = m.querySelector('.studentmodal'),
-				table = new EventsTable(data);
-			container.querySelector('.loader').remove();
-			container.append(table.markup());
-		}).catch(e => modalError(m, e));
-		
-		actions.addEventListener('click', function(e2) {
-			e2.preventDefault();
-								
-			//Archive or unarchive question
-			if (e2.target.classList.contains('archive')) {
-				const li = e.target.closest('li'),
-					active = + li.classList.contains('inactive');
-				post('/ajax.php', {req: 'archivequestion', id: li.dataset.id, archive: active}, data => {
-					if (active) {
-						li.classList.remove('inactive');
-						m.classList.remove('inactive');
-						if (!document.querySelectorAll('#questionlist .inactive').length)
-							document.querySelector('#qactions .expand').classList.add('disabled');
-					} else {
-						li.classList.add('inactive');
-						m.classList.add('inactive');
-						document.querySelector('#qactions .expand').classList.remove('disabled');
-					}
-
-					//Sort inactive at bottom, and then descending by ID
-					const ul = li.parentNode,
-						lis = Array.from(ul.querySelectorAll('li'));
-					lis.sort((a, b) => {
-						if (a.classList.contains('addnew')) return 1;
-						if (b.classList.contains('addnew')) return -1;
-						const aInactive = a.classList.contains('inactive'),
-							bInactive = b.classList.contains('inactive');
-						if (aInactive && !bInactive) return 1;
-						if (!aInactive && bInactive) return -1;
-						return parseInt(b.dataset.id) - parseInt(a.dataset.id);
-					});
-					for (const li of lis) ul.appendChild(li);
-				});
-			
-			//Delete question
-			} else if (e2.target.classList.contains('delete')) {
-				const li = e.target.closest('li');
-				if (confirm('Are you sure you want to delete this question rather than archiving it?')) {
-					post('/ajax.php', {req: 'deletequestion', id: li.dataset.id}, data => {
-						if (data == "1") {
-							for (const event of document.querySelectorAll('.events tr[data-question="'+li.dataset.id+'"]')) {
-								delete event.dataset.question;
-								event.querySelector('.q')?.remove();
-							}
-							li.remove();
-							m.close();
-						} else console.error('Error deleting the question.');
-					});
-				}
-			}
-		});
-	});
+	if (qlist) for (const q of qlist.querySelectorAll('li')) new Question(q);
 
 	//Add new question
 	document.querySelector('#qactions .addnew')?.addEventListener('click', e => {
@@ -356,10 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		function questionSave() {
 			if (validate([textarea])) {
 				post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
-					const date = new Date().toLocaleDateString(),
-						li = markup({tag: 'li', children: `${textarea.value} <span class="date">${datetostr(date)} — 0 Events</span>`});
-					li.dataset.id = data;
-					qlist.prepend(li);
+					new Question(data, textarea.value);
 					document.querySelector('dialog').close();
 				});
 			}
@@ -398,9 +304,19 @@ document.addEventListener('DOMContentLoaded', () => {
 	toggleQuestions();
 	qexpand?.addEventListener('click', function(e) {
 		e.preventDefault();
-		localStorage['hide-inactive-qs'] = localStorage['hide-inactive-qs'] == 'true' ? 'false' : 'true';
+		localStorage['hide-inactive-qs'] = 'hide-inactive-qs' in localStorage && localStorage['hide-inactive-qs'] == 'true' ? 'false' : 'true';
 		toggleQuestions();
 	});
+
+	//Class recent events
+	let classEvents = document.getElementById('recentevents');
+	if (classEvents) {
+		recentTable = new EventsTable(events);
+		recentTable.footer = false;
+		recentTable.sortable = false;
+		classEvents.append(recentTable.markup());
+		if (!events.length) document.getElementById('recentevents').style.display = 'none';
+	}
 
 	//Highlight student from autocomplete
 	if (window.location.hash.includes('#student-')) {
@@ -476,8 +392,7 @@ function makeSortable(table, defaultsort, defaultdesc) {
 function updateScore(rostercell, opts) {
 	if (!(rostercell instanceof Element)) rostercell = document.querySelector('#roster tr[data-id="'+rostercell+'"] .score');
 
-	const evcell = document.querySelector('dialog td.numtotal'),
-		scoretext = rostercell.textContent;
+	const scoretext = rostercell.textContent;
 	let num, den;
 	
 	if (scoretext) {
@@ -502,11 +417,8 @@ function updateScore(rostercell, opts) {
 	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
 
 	//Update modal totals if necessary
-	if (evcell) {
-		evcell.textContent = den ? Math.round(num/den*100)+'%' : '—'
-		const spannum = document.querySelector('dialog span.num');
-		if (spannum) spannum.textContent = den;
-	}
+	const spannum = document.querySelector('dialog span.num');
+	if (spannum) spannum.textContent = den;
 }
 
 //===================================
@@ -539,6 +451,119 @@ function studentRow(id, col1, col2, col3) {
 		setTimeout(() => { tr.style.transition = null; }, 1000);
 	}, 250);
 	return tr;
+}
+
+class Question {
+	#text = '';
+	#active = true;
+	modal = null;
+	eventButtons = [];
+
+	constructor(id, text) {
+		if (id instanceof Element) {
+			this.id = parseInt(id.dataset.id);
+			this.#text = id.childNodes[0].textContent.trim();
+			this.#active = !id.classList.contains('inactive');
+			this.listItem = id;
+		} else {
+			this.id = id;
+			this.#text = text;
+			this.#active = true;
+
+			const date = new Date().toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+			this.listItem = markup({tag: 'li', children: `${text} <span class="date">${datetostr(date)} — 0 Events</span>`, attrs: {'data-id': id}});
+			document.querySelector('#questionlist').prepend(this.listItem);
+		}
+		this.listItem.addEventListener('click', this.openModal.bind(this));
+		this.listItem.obj = this;
+	}
+
+	get text() { return this.#text; }
+	set text(val) {
+		this.#text = val;
+		this.listItem.childNodes[0].textContent = val+' ';
+		for (const btn of this.eventButtons) btn.title = val;
+	}
+
+	get active() { return this.#active; }
+	set active(val) {
+		this.#active = val;
+		if (val) {
+			this.listItem.classList.remove('inactive');
+			if (this.modal) this.modal.classList.remove('inactive');
+			if (!document.querySelectorAll('#questionlist .inactive').length)
+				document.querySelector('#qactions .expand').classList.add('disabled');
+		} else {
+			this.listItem.classList.add('inactive');
+			if (this.modal) this.modal.classList.add('inactive');
+			document.querySelector('#qactions .expand').classList.remove('disabled');
+		}
+
+		//Sort inactive at bottom, and then descending by ID
+		const ul = this.listItem.parentNode,
+			lis = Array.from(ul.querySelectorAll('li'));
+		lis.sort((a, b) => {
+			if (a.classList.contains('addnew')) return 1;
+			if (b.classList.contains('addnew')) return -1;
+			const aInactive = a.classList.contains('inactive'),
+				bInactive = b.classList.contains('inactive');
+			if (aInactive && !bInactive) return 1;
+			if (!aInactive && bInactive) return -1;
+			return parseInt(b.dataset.id) - parseInt(a.dataset.id);
+		});
+		for (const li of lis) ul.appendChild(li);
+	}
+
+	openModal() {
+		const h3 = markup({tag: 'h3', children: this.text}),
+			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'archive', 'delete'])}),
+			qedit = new makeInput(actions);
+		qedit.addElement(h3, {placeholder: 'Question', required: true, type: 'textarea'});
+		qedit.data = inps => ({req: 'editquestion', id: this.id, text: inps[0].value});
+		qedit.editfunc = inps => {
+			const shrink = e => { inps[0].style.height = ""; inps[0].style.height = (inps[0].scrollHeight+6) + "px"; };
+			inps[0].addEventListener('input', shrink);
+			shrink();
+		}
+		qedit.after = response => { this.text = h3.textContent; };
+
+		this.modal = modal(h3, actions, {tag: 'div', attrs: {class: 'loader'}});
+		this.modal.classList.add('question');
+		this.modal.dataset.id = this.id;
+		if (!this.active) this.modal.classList.add('inactive');
+
+		const params = new URLSearchParams({req: 'eventsbyquestion', question: this.id}).toString();
+		fetch('/ajax.php?'+params, {method: 'GET'})
+		.then(interThen).then(data => {
+			const container = this.modal.querySelector('.studentmodal'),
+				table = new EventsTable(data);
+			container.querySelector('.loader').remove();
+			container.append(table.markup());
+		}).catch(e => modalError(this.modal, e));
+		
+		actions.addEventListener('click', e2 => {
+			e2.preventDefault();
+								
+			//Archive or unarchive question
+			if (e2.target.classList.contains('archive'))
+				post('/ajax.php', {req: 'archivequestion', id: this.id, archive: +!this.active}, data => { if (data==1) this.active = !this.active; });
+			
+			//Delete question
+			else if (e2.target.classList.contains('delete') && confirm('Are you sure you want to delete this question rather than archiving it?')) {
+				post('/ajax.php', {req: 'deletequestion', id: this.id}, data => {
+					if (data == "1") {
+						for (const event of this.eventButtons) {
+							delete event.closest('tr').dataset.question;
+							event.remove();
+						}
+						this.listItem.remove();
+						this.listItem = null;
+						this.modal.close();
+					} else console.error('Error deleting the question.');
+				});
+			}
+		});
+	}
 }
 
 class EventsTable {
@@ -589,18 +614,19 @@ class EventsTable {
 				if (confirm('Are you sure you want to delete this event?')) {
 					post('../ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
 						const result = evrow.querySelector('td[data-val]').dataset.val,
-							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'); //Remove it from the recents list too if applicable
-						if ('question' in evrow.dataset) {
-							const qinfo = document.querySelector('#questionlist li[data-id="'+evrow.dataset.question+'"] .date'),
-								match = qinfo.textContent.match(/(\d+) Events/);
+							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'), //Remove it from the recents list too if applicable
+							q = evrow.dataset.question ?? evrow.closest('dialog')?.dataset.id;
+						if (q) {
+							const qinfo = document.querySelector('#questionlist li[data-id="'+q+'"] .date'),
+								match = qinfo.textContent.match(/(\d+) Event(s?)/);
 							if (match) {
 								const eventCount = parseInt(match[1]) - 1;
-								qinfo.textContent = qinfo.textContent.replace(/\d+ Events/, `${eventCount} Events`);
+								qinfo.textContent = qinfo.textContent.replace(/\d+ Event(s?)/, `${eventCount} Event`+(eventCount!=1 ? 's' : ''));
 							}
 						}
 						for (const row of evrows) row.remove();
-						
 						updateScore(evrow.dataset.student, {action: 'delete', oldval: result});
+						this.reTotal();
 					});
 				}
 			
@@ -636,16 +662,28 @@ class EventsTable {
 			if (table.direction) tbody.prepend(evtr);
 			else tbody.append(evtr);
 		});
+		this.table = table;
 		return table;
 	}
 
 	row(event) {
+		let qbutton;
+		if (event.question) {
+			let qli = document.querySelector('#questionlist li[data-id="'+event.question+'"]');
+			if (qli) {
+				qbutton = markup({tag: 'span', attrs: {title: qli?.childNodes[0].textContent.trim(), class: 'q'}});
+				qbutton.addEventListener('click', e => { qli.obj.openModal() });
+				qli.obj.eventButtons.push(qbutton);
+				qbutton.obj = qli.obj;
+			} else qbutton = null;
+		} else qbutton = null;
+
 		const exc = 'date' in event ? new Date(event.date) : new Date(), //Apparently it's impossible to pass any value to Date() that makes it now
 			modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000),
 			tr = markup({tag: 'tr', attrs: {'data-id': event.id, 'data-student': event.student}, children: [
 				{tag: 'td', attrs: {class: 'm-date', 'data-sort': modDate.getTime()/1000}, children: [
 					modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'})+' at '+modDate.clockTime(),
-					event.question ? {tag: 'span', attrs: {title: document.querySelector('#questionlist li[data-id="'+event.question+'"]')?.childNodes[0].textContent.trim(), class: 'q'}} : null
+					qbutton
 				]},
 				this.student ? null : {tag: 'td', attrs: {'data-sort': event.lname, class: 'm-name'}, children: event.fname+' '+event.lname},
 				{tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'},
@@ -653,6 +691,20 @@ class EventsTable {
 			]});
 		if (event.question) tr.dataset.question = event.question;
 		return tr;
+	}
+
+	reTotal() {
+		if (!this.table) return;
+		const total = this.table.querySelector('.numtotal');
+		if (!total) return;
+
+		let num=0, den=0;
+		for (const row of this.table.querySelectorAll('tbody td[data-val]')) {
+			num += parseFloat(row.dataset.val);
+			den += 1;
+		}
+
+		total.textContent = den ? Math.round(num/den*100)+'%' : '—'
 	}
 
 	edit(row) {
@@ -672,10 +724,12 @@ class EventsTable {
 			resultsCell.append(a);
 			
 			a.addEventListener('click', e => {
-				const result = a.dataset.schemaval;
-				let url;
-				
-				const solidifyEvent = response => {
+				const result = a.dataset.schemaval;				
+				let params;
+				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
+				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
+	
+				post('../ajax.php', params, response => {
 					for (const b of resultsCell.querySelectorAll('.result-button')) {
 						if (b.dataset.schemaval == result) b.classList.remove('unselected');
 						else b.remove();
@@ -709,15 +763,10 @@ class EventsTable {
 						}
 					}
 					
-					row.parentNode.parentNode.querySelector('.addnew a')?.classList.remove('disabled');
+					row.closest('table').querySelector('.addnew a')?.classList.remove('disabled');
 					updateScore(row.dataset.student, opts);
-				};
-				
-				let params;
-				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
-				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
-	
-				post('../ajax.php', params, solidifyEvent);
+					this.reTotal();
+				});
 			});
 		}
 		resultsCell.append(numspan);
@@ -746,7 +795,7 @@ function uploadCSV(e) {
 				document.getElementsByTagName('dialog')[0].remove();
 				roster.sort(roster.sortby, roster.direction);
 			}
-		}).catch((response) => {
+		}, response => {
 			const error = infoElement('There was an error uploading this CSV.', 'error');
 			csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 		});

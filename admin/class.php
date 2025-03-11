@@ -181,7 +181,7 @@ if (isset($_POST['name'])) {
 					foreach ($sql->get_questions($classid) as $question) { ?>
 						<li data-id="<?php echo $question->id; ?>"<?php if (!$question->active) echo ' class="inactive"'; ?>>
 							<?php echo $question->text; ?>
-							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?> — <?php echo $question->events; ?> Events</span>
+							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?> — <?php echo $question->events; ?> Event<?php echo $question->events != 1 ? 's' : ''; ?></span>
 							<?php if (!$question->active) $inactives++; ?>
 						</li>
 					<?php }
