@@ -45,12 +45,12 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	max-width: 800px;
 	margin: 2em auto 0;
 }
-.actions a {
+.actions a, #q-queue {
 	height: 3em; width: 3em;
 	text-indent: -9999px;
 	opacity: 0.5;
 }
-.actions a:hover { opacity: 0.75; }
+.actions a:hover, #q-queue:hover { opacity: 0.75; }
 .actions a.disabled {
 	opacity: 0.1;
 	pointer-events: none;
@@ -64,6 +64,13 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 .actions .archive { background: url("icon/svg.php?icon=archive&color=FFF") right/2.5em 2.5em no-repeat; }
 .archived .actions .archive { background: url("icon/svg.php?icon=unarchive&color=FFF") right/2.5em 2.5em no-repeat; }
 .actions .clear { background: url("icon/svg.php?icon=x-lg&color=FFF") right/2.5em 2.5em no-repeat; }
+#q-queue {
+	display: block;
+	margin: 15em auto 0;
+	opacity: 0.1;
+	background: url("icon/svg.php?icon=question-circle-fill&color=FFF") right/2.5em 2.5em no-repeat;
+}
+#question.active + #q-queue { display: none; }
 .snooze[data-excused]::after {
 	content: attr(data-excused);
 	position: absolute;

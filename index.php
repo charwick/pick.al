@@ -47,7 +47,8 @@ if ($classid) {
 	if (!$user) echo 'demo';
 	elseif ($classid && !$class->active) echo 'inactive';
 ?>">
-	<?php if ($classid) { ?>
+	<?php if ($classid) {
+		$qs = $sql->get_questions($classid, true); ?>
 		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
 			<div id="logo">Pick.al</div>
@@ -75,6 +76,7 @@ if ($classid) {
 				</div>
 				<div id="qtext"></div>
 			</div>
+			<?php if ($qs) echo '<a href="#" id="q-queue"></a>'; ?>
 
 			<div id="roster">
 				<div id="topbar">
@@ -82,8 +84,7 @@ if ($classid) {
 					<a href="#" id="rosterclose">×</a>
 				</div>
 				<ul>
-					<?php $qs = $sql->get_questions($classid, true);
-					if ($qs) { ?>
+					<?php if ($qs) { ?>
 						<li class="head">Questions</li>
 						<?php foreach ($qs as $q) echo "<li data-q='{$q->id}'>{$q->text}</li>";
 					} ?>

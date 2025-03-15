@@ -38,6 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
 
+	function firstQuestion(e) {
+		if (e) e.preventDefault();
+		const nextQ = document.querySelector('#roster li[data-q]');
+		currentQ = nextQ.dataset.q;
+		document.getElementById('question').classList.add('active');
+		document.getElementById('qtext').textContent = nextQ.textContent;
+		setQbuttons();
+	}
+	document.getElementById('q-queue')?.addEventListener('click', firstQuestion);
+
 	//Keyboard Navigation
 	document.addEventListener('keydown', function(e) {
 		if (!window.classid) return;
@@ -65,12 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					currentQ = null;
 					document.getElementById('question').classList.remove('active');
 				}
-			} else {
-				const nextQ = document.querySelector('#roster li[data-q]');
-				currentQ = nextQ.dataset.q;
-				document.getElementById('question').classList.add('active');
-				document.getElementById('qtext').textContent = nextQ.textContent;
-			}
+				setQbuttons();
+			} else firstQuestion();
 		} else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
 	});
 
@@ -160,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						document.getElementById('question').classList.remove('active');
 						currentQ = null;
 						document.querySelector('#roster li.head').remove();
+						document.querySelector('#q-queue').remove();
 					}
 				}
 			});
