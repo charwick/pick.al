@@ -329,15 +329,17 @@ function addSchemaButtons() {
 	const target = document.getElementById('schemaselect'),
 		schema = target.querySelector('select')?.value ?? window.schema;
 	
-	if (schema=='__addnew__') {
-		window.location.href = '/admin/schema.php';
-		return;
-	}
-
 	function drawButtons(html) {
 		const cont = target.querySelector('.schemalist');
 		cont.textContent = '';
 		cont.innerHTML = html;
+	}
+	
+	if (schema=='__addnew__') {
+		const def = target.querySelector('#selectgoeshere')?.dataset.default
+		target.querySelector('select').value = def ?? 1;
+		drawButtons(schemabuttons[def ?? 1]);
+		return newSchema();
 	}
 	
 	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);

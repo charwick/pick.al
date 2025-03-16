@@ -210,13 +210,15 @@ function modal(...content) {
 	document.body.append(modal);
 	modal.addEventListener('click', (e) => { //Click the backdrop to close (requires a div wrapper)
 		if (e.target.nodeName === 'DIALOG') {
-			if (
-				modal.querySelector('input[name="fname"], input.fname') &&
-				!confirm('Do you want to save the entered info? Press cancel to return or OK to close without saving.')
-			) return;
+			let pass = true;
+			const inps = modal.querySelectorAll('input, textarea');
+			for (const inp of inps)
+				if (('oldValue' in inp && inp.oldValue != inp.value) || (!('oldValue' in inp) && inp.value))
+					pass = false;
+			if (!pass && !confirm('Do you want to save the entered info? Press cancel to return or OK to close without saving.')) return;
 
 			modal.classList.add('transit');
-			setTimeout(() => modal.remove(), 250);
+			setTimeout(() => modal.close(), 250);
 		}
 	});
 	modal.addEventListener('close', () => modal.remove() );
@@ -224,6 +226,25 @@ function modal(...content) {
 	modal.classList.remove('transit');
 	document.activeElement.blur() //The + button gets focused for some reason
 	return modal;
+}
+
+function newSchema(e) {
+	if (e) e.preventDefault();
+	const nsmodal = modal(
+		{tag: 'h2', children: 'New Button Schema'},
+		{tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])},
+		{tag: 'form', attrs: {action: 'schema.php', method: 'post'}, children: [
+			{tag: 'p', attrs: {id: 'name'}, children: [
+				{tag: 'input', attrs: {type: 'text', name: 'name', placeholder: 'Schema name', required: ''}}
+			]}
+		]}
+	);
+	nsmodal.querySelector('.actions').addEventListener('click', e => {
+		e.preventDefault();
+		if (e.target.classList.contains('cancel')) nsmodal.close();
+		else if (e.target.classList.contains('save') && validate(nsmodal.querySelectorAll('input')) )
+			nsmodal.querySelector('form').submit();
+	});
 }
 
 function interThen(response) {

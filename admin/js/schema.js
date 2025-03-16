@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!e.target.classList.contains('delete')) return;
 			const delform = document.getElementById('deleteform');
 			if (!classes) {
-				if (confirm('Are you sure you want to delete '+title.textContent+'?')) delform.submit();
+				if (confirm('Are you sure you want to delete '+title.textContent.trim()+'?')) delform.submit();
 			} else {
 				const dmodal = modal(
 					{tag: 'h2', children: 'Delete '+title.textContent},

@@ -68,7 +68,7 @@ foreach ($sql->get_classes() as $class) {
 				<p>Get started by creating a class and uploading a roster.</p>
 			</a>
 		<?php } ?>
-		<p><a class="button" href="class.php">New class</a></p>
+		<p><a class="button" href="class.php" id="newclass">New Class</a></p>
 
 		<h2 class="new-feature">Button Schemae</h2>
 
@@ -88,7 +88,7 @@ foreach ($sql->get_classes() as $class) {
 				</tr>
 			<?php } ?>
 		</table>
-		<p><a class="button" href="schema.php">New schema</a></p>
+		<p><a class="button" href="#newschema" id="newschema">New Schema</a></p>
 
 	</main>
 

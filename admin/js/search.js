@@ -94,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			document.getElementById('search').focus();
 		}
 	});
+
+	document.getElementById('newschema').addEventListener('click', newSchema);
+	if (window.location.hash === '#newschema') newSchema();
 });
 
 function setInactives() {

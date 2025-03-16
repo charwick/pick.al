@@ -79,12 +79,12 @@ input[type="text"], input[type="password"], input[type="date"], input[type="numb
 input[type="password"] { margin-right: 1em; }
 input[type="number"] { padding-right: 3px; }
 
+h1#name input { margin: calc(-0.3em - 1px) 0 calc(-0.3em - 1px) calc(-0.6em - 1px); }
 #name input {
-	margin: calc(-0.3em - 1px) 0 calc(-0.3em - 1px) calc(-0.6em - 1px);
 	font: bold 1em 'Lucida Grande',Calibri,sans-serif;
 	max-width: 100%;
 }
-.admin-new #name input { font-size: 1.5em; }
+dialog #name input, .admin-new #name input { font-size: 1.5em; }
 h2 input {
 	font-size: 1em;
 	width: 38%;
@@ -500,7 +500,7 @@ span.num::before { content: ' / '; }
 	position: relative;
 	height: 1em; width: 1em;
 	background-size: 1em 1em;
-	opacity: 0.25;
+	opacity: 0.3;
 	font-size: 0.75em;
 	font-weight: normal;
 	background-position: right;
