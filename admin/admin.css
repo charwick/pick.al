@@ -933,7 +933,7 @@ main .gravatar {
 		margin-left: 0;
 	}
 
-	#name input {
+	h1#name input {
 		padding: 0.3em 0.4em;
 		margin: calc(-0.3em - 1px) calc(-0.4em - 1px);
 	  }

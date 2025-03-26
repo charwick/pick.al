@@ -21,17 +21,17 @@ function validate() {
 	} elseif (str_contains($_POST['username'], '@')) return 'Username cannot contain \'@\'.';
 }
 
-if (isset($_SESSION['message'])) {
-	$message = $_SESSION['message'];
-	unset($_SESSION['message']);
-}
-
 if (isset($_GET['action']) && $_GET['action']=='logout') {
 	session_start();
 	$_SESSION = [];
 	session_destroy();
 	header("Location: ../"); //This script is called directly and not included
 	exit;
+}
+
+if (isset($_SESSION['message'])) {
+	$message = $_SESSION['message'];
+	unset($_SESSION['message']);
 }
 
 elseif (!isset($sql)) exit; //Only run from the front page

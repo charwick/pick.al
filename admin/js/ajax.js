@@ -245,6 +245,7 @@ function newSchema(e) {
 		else if (e.target.classList.contains('save') && validate(nsmodal.querySelectorAll('input')) )
 			nsmodal.querySelector('form').submit();
 	});
+	nsmodal.querySelector('input').focus();
 }
 
 function interThen(response) {
