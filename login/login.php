@@ -22,8 +22,8 @@ function validate() {
 }
 
 if (isset($_GET['action']) && $_GET['action']=='logout') {
-	session_start();
-	$_SESSION = [];
+	require_once('../query.php');
+	$sql = new chooser_query();
 	session_destroy();
 	header("Location: ../"); //This script is called directly and not included
 	exit;
@@ -75,7 +75,9 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 		
 		$user = $sql->get_user_by($loginby, $_POST['username']);
 		if (password_verify($_POST['password'], $user->password)) {
+			session_regenerate_id(true);
 			$_SESSION['user'] = $user->id;
+			$_SESSION['ua'] = ua();
 			header("Location: .");
 		} else {
 			$message = "The password was incorrect.";

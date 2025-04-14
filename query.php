@@ -2,10 +2,6 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-if (!@session_start()) {
-	session_gc();
-	session_start();
-}
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -17,8 +13,14 @@ class chooser_query extends mysqli {
 	function __construct() {
 		parent::__construct(...connectionvars());
 		$this->set_charset("utf8mb4");
-		$this->userid = $_SESSION['user'] ?? null;
 		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+		//Check & set session
+		$sessions = new PickalSessions($this);
+		session_set_save_handler($sessions);
+		session_start();
+		if (($_SESSION['ua'] ?? null) != ua()) session_unset();
+		$this->userid = $_SESSION['user'] ?? null;
 	}
 	
 	//=========
@@ -495,6 +497,38 @@ class chooser_query extends mysqli {
 	}
 }
 
+//==========
+// SESSIONS
+//==========
+
+class PickalSessions implements SessionHandlerInterface {
+	private $sql;
+
+	function __construct($sql) { $this->sql = $sql; }
+
+	function open($save_path, $session_name): bool { return true; }
+	function close(): bool { return true; }
+
+	#[\ReturnTypeWillChange]
+	function read($id) {
+		$result = $this->sql->execute_query("SELECT data FROM sessions WHERE id = ?", [$id]);
+		return ($row = $result->fetch_assoc()) ? $row['data'] : '';
+	}
+
+	function write($id, $data): bool {
+		return $this->sql->execute_query("REPLACE INTO sessions (id, data) VALUES (?, ?)", [$id, $data]);
+	}
+
+	function destroy($id): bool {
+		return $this->sql->execute_query("DELETE FROM sessions WHERE id = ?", [$id]);
+	}
+
+	#[\ReturnTypeWillChange]
+	function gc($maxlifetime) {
+		return $this->sql->execute_query("DELETE FROM sessions WHERE last_access < NOW() - INTERVAL ? SECOND", [$maxlifetime]);
+	}
+}
+
 class Schema {
 	public int $id;
 	public string $name;
@@ -632,4 +666,13 @@ function get_root_directory(): string  {
 		if ($dir=='pick.al') $tripped = true;
 	}
 	return implode('/', $relative);
+}
+
+function ua(): string {
+	$ua = $_SERVER['HTTP_USER_AGENT'];
+	if (stripos($ua, 'Firefox') !== false) return 'Firefox';
+	if (stripos($ua, 'Chrome') !== false && stripos($ua, 'Edg') === false) return 'Chrome';
+	if (stripos($ua, 'Safari') !== false && stripos($ua, 'Chrome') === false) return 'Safari';
+	if (stripos($ua, 'Edg') !== false) return 'Edge';
+	return 'Other';
 }
