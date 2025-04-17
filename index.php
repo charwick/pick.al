@@ -48,7 +48,7 @@ if ($classid) {
 	elseif ($classid && !$class->active) echo 'inactive';
 ?>">
 	<?php if ($classid) {
-		$qs = $sql->get_questions($classid, true); ?>
+		$qs = $sql->get_questions($classid, true, 'ASC'); ?>
 		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
 			<div id="logo">Pick.al</div>

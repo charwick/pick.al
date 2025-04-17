@@ -86,7 +86,7 @@ class chooser_query extends mysqli {
 		return $this->affected_rows;
 	}
 
-	function get_questions(int $class, $onlyactive=false): array {
+	function get_questions(int $class, bool $onlyactive=false, string $sort='DESC'): array {
 		$u = $this->current_user();
 		$oaclause = $u ? '=?' : 'IS NULL';
 		if ($onlyactive) $oaclause .= ' AND active=1';
@@ -96,7 +96,7 @@ class chooser_query extends mysqli {
 			LEFT JOIN events ON events.question=questions.id
 			WHERE class=? AND user {$oaclause}
 			GROUP BY questions.id
-			ORDER BY active DESC, `date` DESC";
+			ORDER BY active {$sort}, `date` {$sort}";
 		$qs = $this->execute_query($q, $u ? [$class, $this->userid] : [$class]);
 		$questions = [];
 		while ($question = $qs->fetch_object()) $questions[] = $question;
@@ -525,7 +525,7 @@ class PickalSessions implements SessionHandlerInterface {
 
 	#[\ReturnTypeWillChange]
 	function gc($maxlifetime) {
-		return $this->sql->execute_query("DELETE FROM sessions WHERE last_access < NOW() - INTERVAL ? SECOND", [$maxlifetime]);
+		return $this->sql->execute_query("DELETE FROM sessions WHERE `data`='' OR last_access < NOW() - INTERVAL ? SECOND", [$maxlifetime]);
 	}
 }
 
