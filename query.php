@@ -501,10 +501,10 @@ class chooser_query extends mysqli {
 // SESSIONS
 //==========
 
-class PickalSessions implements SessionHandlerInterface {
-	private $sql;
+class PickalSessions implements SessionHandlerInterface, SessionUpdateTimestampHandlerInterface {
+	private mysqli $sql;
 
-	function __construct($sql) { $this->sql = $sql; }
+	function __construct(mysqli $sql) { $this->sql = $sql; }
 
 	function open($save_path, $session_name): bool { return true; }
 	function close(): bool { return true; }
@@ -525,7 +525,16 @@ class PickalSessions implements SessionHandlerInterface {
 
 	#[\ReturnTypeWillChange]
 	function gc($maxlifetime) {
-		return $this->sql->execute_query("DELETE FROM sessions WHERE `data`='' OR last_access < NOW() - INTERVAL ? SECOND", [$maxlifetime]);
+		//Ignore maxlifetime
+		return $this->sql->execute_query("DELETE FROM sessions WHERE `data`='' OR last_access < NOW() - INTERVAL 72 HOUR");
+	}
+
+	public function validateId(string $id): bool {
+		return (bool) $this->sql->execute_query("SELECT 1 FROM sessions WHERE id = ? LIMIT 1", [$id])->fetch_row();
+	}
+
+	public function updateTimestamp(string $id, string $data): bool {
+		return $this->sql->execute_query("UPDATE sessions SET last_access = NOW() WHERE id = ?", [$id]);
 	}
 }
 
