@@ -54,117 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	
 		//Student details modal
-		roster.addEventListener('click', function(e) {
-			let tr = e.target.closest('TR');
-
-			const fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
-				lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
-				smodal = modal(
-					{tag: 'h2', children: [fname, ' ', lname, ' ']},
-					{tag: 'div', attrs: {class: 'loader'}}
-				);
-
-			function studentmodal(events) {
-				const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
-					excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? [
-						{tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '},
-						{tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}
-					] : [{tag: 'span'}])}),
-					actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
-					nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
-					table = new EventsTable(events);
-				smodal.querySelector('h2').append(nevents);
-				table.student = tr.dataset.id;
-				
-				const studentedit = new makeInput(actions);
-				studentedit.addElement(fname, {placeholder: 'First Name'});
-				studentedit.addElement(lname, {placeholder: 'Last name'});
-				studentedit.addElement(snote, {placeholder: 'Note', required: false});
-				studentedit.data = inputs => ({req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value});
-				
-				//Update roster with any changes
-				studentedit.after = (response, vals) => {
-					tr.querySelector('.fname').innerHTML = vals[0];
-					tr.querySelector('.lname').innerHTML = vals[1];
-					tr.querySelector('.note').innerHTML = vals[2];
-				}
-
-				const qspan = excused.querySelector('span:not(.mtx)');
-				function clearacts() {
-					if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
-				};
-				const excInput = new makeInput();
-				excInput.addElement(qspan, {type: 'date'});
-				excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
-				excInput.cancelfunc = clearacts;
-				excInput.editActions.push('delete');
-				excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInpit.after. */
-					const inp = qspan.querySelector('input');
-					inp.value = '';
-					inp.validate = false;
-					delete qspan.dataset.date;
-					excInput.save();
-					if (!inp.oldValue) excInput.after();
-				}
-
-				//Update roster
-				excInput.after = (response, vals) => {
-					const exc = new Date(qspan.dataset.date),
-						now = new Date(),
-						modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
-					if (modDate > now) {
-						tr.dataset.excused = qspan.dataset.date;
-						const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-						let excbut = tr.querySelector('.lname .excuses');
-						if (!excbut) {
-							excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
-							tr.querySelector('.lname').append(excbut);
-						}
-						excbut.title = through;
-					} else {
-						qspan.textContent = '';
-						delete tr.dataset.excused;
-						tr.querySelector('.lname .excuses')?.remove();
-					};
-					clearacts();
-				};
-
-				actions.addEventListener('click', function(e) {
-					e.preventDefault();
-
-					//Delete student
-					if (e.target.classList.contains('delete')) {
-						if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
-						post('../ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
-							if (response != 1) console.error('There was an error deleting the student.');
-							else {
-								//Delete recent participation events
-								const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
-								for (const evrow of evrows) evrow.remove();
-
-								tr.remove(); //Delete roster row
-								const snum = document.getElementById('num_students');
-								snum.textContent = parseInt(snum.textContent)-1;
-								document.querySelector('dialog').remove();
-							}
-						});
-
-					//Set Excused Absences
-					} else if (e.target.classList.contains('excuses')) {
-						if (!excused.textContent) excused.prepend(markup({tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '}));
-						excInput.edit();
-					}
-				});
-				
-				smodal.querySelector('.loader').remove();
-				smodal.children[0].append(actions, snote, excused, table.markup());
-				smodal.student = tr.dataset.id;
-			}
-
-			if (tr.querySelector('.score').textContent)
-				fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-				.then(interThen).then(studentmodal).catch(e => modalError(smodal, e));
-			else studentmodal([]);
+		roster.addEventListener('click', (e) => {
+			studentmodal(e.target.closest('TR').dataset.id);
 		});
 
 		//CSV Upload
@@ -321,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Highlight student from autocomplete
 	if (window.location.hash.includes('#student-')) {
 		const student = parseInt(window.location.hash.replace('#student-', ''));
-		document.querySelector('#roster tr[data-id="'+student+'"]')?.classList.add('new');
+		document.querySelector(`#roster tr[data-id="${student}"]`)?.classList.add('new');
 	}
 });
 
@@ -453,6 +344,119 @@ function studentRow(id, col1, col2, col3) {
 		setTimeout(() => { tr.style.transition = null; }, 1000);
 	}, 250);
 	return tr;
+}
+
+function studentmodal(id, hlight) {
+	const tr = document.querySelector(`#roster tr[data-id="${id}"]`),
+		fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
+		lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
+		smodal = modal(
+			{tag: 'h2', children: [fname, ' ', lname, ' ']},
+			{tag: 'div', attrs: {class: 'loader'}}
+		);
+	
+	function render(events) {
+		const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
+			excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? [
+				{tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '},
+				{tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}
+			] : [{tag: 'span'}])}),
+			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
+			nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
+			table = new EventsTable(events);
+		smodal.querySelector('h2').append(nevents);
+		table.student = tr.dataset.id;
+		
+		const studentedit = new makeInput(actions);
+		studentedit.addElement(fname, {placeholder: 'First Name'});
+		studentedit.addElement(lname, {placeholder: 'Last name'});
+		studentedit.addElement(snote, {placeholder: 'Note', required: false});
+		studentedit.data = inputs => ({req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value});
+		
+		//Update roster with any changes
+		studentedit.after = (response, vals) => {
+			tr.querySelector('.fname').innerHTML = vals[0];
+			tr.querySelector('.lname').innerHTML = vals[1];
+			tr.querySelector('.note').innerHTML = vals[2];
+		}
+
+		const qspan = excused.querySelector('span:not(.mtx)');
+		function clearacts() {
+			if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
+		};
+		const excInput = new makeInput();
+		excInput.addElement(qspan, {type: 'date'});
+		excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
+		excInput.cancelfunc = clearacts;
+		excInput.editActions.push('delete');
+		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInpit.after. */
+			const inp = qspan.querySelector('input');
+			inp.value = '';
+			inp.validate = false;
+			delete qspan.dataset.date;
+			excInput.save();
+			if (!inp.oldValue) excInput.after();
+		}
+
+		//Update roster
+		excInput.after = (response, vals) => {
+			const exc = new Date(qspan.dataset.date),
+				now = new Date(),
+				modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+			if (modDate > now) {
+				tr.dataset.excused = qspan.dataset.date;
+				const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+				let excbut = tr.querySelector('.lname .excuses');
+				if (!excbut) {
+					excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
+					tr.querySelector('.lname').append(excbut);
+				}
+				excbut.title = through;
+			} else {
+				qspan.textContent = '';
+				delete tr.dataset.excused;
+				tr.querySelector('.lname .excuses')?.remove();
+			};
+			clearacts();
+		};
+
+		actions.addEventListener('click', function(e) {
+			e.preventDefault();
+
+			//Delete student
+			if (e.target.classList.contains('delete')) {
+				if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
+				post('../ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
+					if (response != 1) console.error('There was an error deleting the student.');
+					else {
+						//Delete recent participation events
+						const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
+						for (const evrow of evrows) evrow.remove();
+
+						tr.remove(); //Delete roster row
+						const snum = document.getElementById('num_students');
+						snum.textContent = parseInt(snum.textContent)-1;
+						document.querySelector('dialog').remove();
+					}
+				});
+
+			//Set Excused Absences
+			} else if (e.target.classList.contains('excuses')) {
+				if (!excused.textContent) excused.prepend(markup({tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '}));
+				excInput.edit();
+			}
+		});
+		
+		smodal.querySelector('.loader').remove();
+		smodal.children[0].append(actions, snote, excused, table.markup());
+		if (hlight) smodal.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
+		smodal.student = tr.dataset.id;
+	}
+
+	if (tr.querySelector('.score').textContent)
+		fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
+		.then(interThen).then(render).catch(e => modalError(smodal, e));
+	else render([]);
 }
 
 class Question {
@@ -600,6 +604,13 @@ class EventsTable {
 		
 		//Event action buttons
 		tbody.addEventListener('click', e => {
+
+			//Open student modal, but not if we're already in a modal
+			if (e.target.classList.contains('m-name') && !e.target.closest('dialog')) {
+				const tr = e.target.closest('TR');
+				return studentmodal(tr.dataset.student, tr.dataset.id);
+			}
+
 			if (!e.target.matches('.actions a')) return;
 			e.preventDefault();
 			

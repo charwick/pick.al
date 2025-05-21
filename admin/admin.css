@@ -375,10 +375,11 @@ table tbody:empty::before, #questionlist:empty::before {
 
 input.error, textarea.error { box-shadow: 0 0 3px 1px #D22; }
 
-#roster tbody tr:hover td, table.sortable th[class]:hover {
+#roster tbody tr:hover td, table.sortable th[class]:hover, .events tbody .m-name:hover {
 	cursor: pointer;
 	background: rgb(160 180 230 / 20%);
 }
+dialog .events tbody .m-name:hover { cursor: default; background: none; }
 table.sortable th[class]:hover { background: rgb(0 0 0 / 5%); }
 table tr.new { background: #FFF3C0; }
 
