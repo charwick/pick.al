@@ -143,7 +143,7 @@ class makeInput {
 		for (const [el, attrs] of this.elements) {
 			el.classList.remove('editing');
 			const inp = el.querySelector('input, select, textarea');
-			if (attrs.type=='select') inp.parentNode.textContent = inp.querySelector('[value="'+inp.value+'"]').textContent;
+			if (attrs.type=='select') inp.parentNode.textContent = inp.querySelector(`[value="${inp.value}"]`).textContent;
 			else if (attrs.type == 'date' && inp.value) {
 				el.dataset.date = inp.value;
 				el.textContent = datetostr(inp.value);

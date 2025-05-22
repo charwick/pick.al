@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {
 		const exc = new Date(s.excuseduntil);
 		s.excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
-		if (isExcused(s)) document.querySelector('li[data-id="'+s.id+'"]').classList.add('excused');
+		if (isExcused(s)) document.querySelector(`li[data-id="${s.id}"]`).classList.add('excused');
 	}
 	document.querySelector('#bodywrap > .actions')?.addEventListener('click', function(e) {
 		e.preventDefault();
@@ -23,14 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
 					now.setHours(23); now.setMinutes(59);
 					hist[histIndex].info.excuseduntil = now;
 					e.target.dataset.excused = 'Excused until tomorrow';
-					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.add('excused');
+					document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.add('excused');
 				}
 			} else { //Clear excused
 				excdate = '';
 				fn = function() {
 					hist[histIndex].info.excuseduntil = null;
 					delete e.target.dataset.excused
-					document.querySelector('#roster [data-id="'+hist[histIndex].info.id+'"]').classList.remove('excused');
+					document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
 				}
 			}
 			fetchif(!demo, 'ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			else roster.classList.add('open');
 		} else if (e.key == 'q') {
 			if (currentQ) {
-				const nextQ = document.querySelector('#roster li[data-q="'+currentQ+'"]').nextElementSibling;
+				const nextQ = document.querySelector(`#roster li[data-q="${currentQ}"]`).nextElementSibling;
 				if ('q' in nextQ.dataset) {
 					currentQ = nextQ.dataset.q;
 					document.getElementById('qtext').textContent = nextQ.textContent;
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.querySelector('#question .actions')?.addEventListener('click', e => {
 		e.preventDefault();
 		if (e.target.classList.contains('back') || e.target.classList.contains('forward')) {
-			const newq = document.querySelector('#roster li[data-q="'+e.target.dataset.q+'"]');
+			const newq = document.querySelector(`#roster li[data-q="${e.target.dataset.q}"]`);
 			document.getElementById('qtext').textContent = newq.textContent;
 			currentQ = e.target.dataset.q;
 			setQbuttons();
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					li.textContent = document.getElementById('qtext').textContent;
 					lihead.insertAdjacentElement('afterend', li);
 				} else {
-					document.querySelector('#roster li[data-q="'+currentQ+'"').remove()
+					document.querySelector(`#roster li[data-q="${currentQ}"]`).remove()
 					let newq = document.querySelector('#question .actions .forward').dataset.q;
 					if (!newq) newq = document.querySelector('#question .actions .back').dataset.q;
 					
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					
 					//If we have more questions, swap to the next question
 					} else if (newq) {
-						document.getElementById('qtext').textContent = document.querySelector('#roster li[data-q="'+newq+'"]').textContent;
+						document.getElementById('qtext').textContent = document.querySelector(`#roster li[data-q="${newq}"]`).textContent;
 						currentQ = newq;
 						setQbuttons();
 					
@@ -229,7 +229,7 @@ class StudentEvent {
 		});
 		this.element.addEventListener('touchmove', (e) => {
 			if (new Date().getTime() > this.swipetime + 100)
-				this.element.style.left = 'calc(50% + '+(e.changedTouches[0].pageX-this.swipepos)+'px)';
+				this.element.style.left = `calc(50% + ${e.changedTouches[0].pageX-this.swipepos}px)`;
 		});
 		this.element.addEventListener('touchend', (e) => {
 			if (e.changedTouches[0].pageX-this.swipepos < -this.element.offsetWidth/3) {
@@ -252,7 +252,7 @@ class StudentEvent {
 	send(result) {
 		let btn;
 		for (const s of schema) if (s.value==result) {
-			btn = this.#actionlist.querySelector('button[data-schemaval="'+s.value+'"]');
+			btn = this.#actionlist.querySelector(`button[data-schemaval="${s.value}"]`);
 			break;
 		}
 

@@ -67,15 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (tab=='register') {
 					for (const [inp, matches] of Object.entries(result)) if (matches) {
 						pass = false;
-						const input = inpContainer.querySelector('input[name="'+inp+'"]');
+						const input = inpContainer.querySelector(`input[name="${inp}"]`);
 						input.classList.add('error');
-						infoElement('The '+inp+' \''+input.value+'\' is already taken. Please choose another.', 'error');
+						infoElement(`The ${inp} '${input.value}' is already taken. Please choose another.`, 'error');
 					}
 				
 				} else if (tab=='login') {
 					if (!Object.entries(result)[0][1]) {
 						pass = false;
-						infoElement('The '+Object.entries(result)[0][0]+' \''+un.value+'\' does not exist.', 'error');
+						infoElement(`The ${Object.entries(result)[0][0]} '${un.value}' does not exist.`, 'error');
 					}
 				}
 				
@@ -147,7 +147,7 @@ function drawInputs(container, list) {
 	const inps = [], els = [];
 	for (const inp of list) {
 		const inpname = ('name' in inputs[inp] ? inputs[inp].name : inp);
-		let el = container.querySelector('input[name="'+inpname+'"]'), li;
+		let el = container.querySelector(`input[name="${inpname}"]`), li;
 		
 		if (el) li = el.parentNode;
 		else {

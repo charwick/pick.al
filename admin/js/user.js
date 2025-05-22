@@ -1,7 +1,5 @@
 "use strict";
 document.addEventListener('DOMContentLoaded', () => {
-	function fieldData(inputs) { return ['req=edituser', 'k='+inputs[0].name, 'v='+inputs[0].value] }
-
 	const emailedit = new makeInput(document.querySelector('#email + .actions'));
 	emailedit.addElement(document.getElementById('email'), {type: 'email', placeholder: 'Email address', autocomplete: 'email'});
 	emailedit.data = inps => ({req: 'edituser', k: 'email', v: inps[0].value});

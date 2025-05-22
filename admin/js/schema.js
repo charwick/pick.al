@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!e.target.classList.contains('delete')) return;
 			const delform = document.getElementById('deleteform');
 			if (!classes) {
-				if (confirm('Are you sure you want to delete '+title.textContent.trim()+'?')) delform.submit();
+				if (confirm(`Are you sure you want to delete ${title.textContent.trim()}?`)) delform.submit();
 			} else {
 				const dmodal = modal(
 					{tag: 'h2', children: 'Delete '+title.textContent},
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					console.log(dmodal);
 					const modalbody = dmodal.querySelector('div');
 					if (!response.length) {
-						classes += ' There are no compatible schemae with which to replace it. Please create a compatible schema before deleting '+title.textContent+'.';
+						classes += ` There are no compatible schemae with which to replace it. Please create a compatible schema before deleting ${title.textContent.trim()}.`;
 						modalbody.append(markup({tag: 'p', children: classes}));
 					} else {
 						classes += ' Please choose a compatible schema with which to replace it.';
@@ -211,10 +211,10 @@ function preview() {
 			symbol = tr.querySelector('input[type="text"]').value,
 			btn = markup({tag: 'li', children: [{tag: 'button', attrs: {'data-schemaval': trv}, children: symbol}]});
 		ul.append(btn);
-		css += 'button[data-schemaval="'+trv+'"] { background: '+color+'; }';
-		css += 'button[data-schemaval="'+trv+'"]:hover { background-color: color(from '+color+' srgb calc(r * 0.85) calc(g * 0.85) calc(b * 0.85)) !important; }';
+		css += `button[data-schemaval="${trv}"] { background: ${color}; }
+				button[data-schemaval="${trv}"]:hover { background-color: color(from ${color} srgb calc(r * 0.85) calc(g * 0.85) calc(b * 0.85)) !important; }`;
 		if (symbol in icons)
-			css += 'button[data-schemaval="'+trv+'"] { text-indent: -9999em; background-image: url("/icon/svg.php?icon='+icons[symbol]+'&color=FFF"); }';
+			css += `button[data-schemaval="${trv}"] { text-indent: -9999em; background-image: url("/icon/svg.php?icon=${icons[symbol]}&color=FFF"); }`;
 		document.getElementById('previewcss').textContent = css;
 	}
 }

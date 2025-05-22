@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			if (!e.target.classList.contains('delete')) return;
 			const delform = document.getElementById('deleteform');
-			if (confirm('Are you sure you want to delete '+title.textContent.trim()+' and all its students?')) delform.submit();
+			if (confirm(`Are you sure you want to delete ${title.textContent.trim()} and all its students?`)) delform.submit();
 		});
 	
 	} else addSchemaButtons();
@@ -283,7 +283,7 @@ function makeSortable(table, defaultsort, defaultdesc) {
 
 //Student can be a student ID, or a td.score cell
 function updateScore(rostercell, opts) {
-	if (!(rostercell instanceof Element)) rostercell = document.querySelector('#roster tr[data-id="'+rostercell+'"] .score');
+	if (!(rostercell instanceof Element)) rostercell = document.querySelector(`#roster tr[data-id="${rostercell}"] .score`);
 
 	const scoretext = rostercell.textContent;
 	let num, den;
@@ -527,7 +527,7 @@ class Question {
 		qedit.addElement(h3, {placeholder: 'Question', required: true, type: 'textarea'});
 		qedit.data = inps => ({req: 'editquestion', id: this.id, text: inps[0].value});
 		qedit.editfunc = inps => {
-			const shrink = e => { inps[0].style.height = ""; inps[0].style.height = (inps[0].scrollHeight+6) + "px"; };
+			const shrink = e => { inps[0].style.height = ''; inps[0].style.height = (inps[0].scrollHeight+6) + 'px'; };
 			inps[0].addEventListener('input', shrink);
 			shrink();
 		}
@@ -629,10 +629,10 @@ class EventsTable {
 				if (confirm('Are you sure you want to delete this event?')) {
 					post('../ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
 						const result = evrow.querySelector('td[data-val]').dataset.val,
-							evrows = document.querySelectorAll('.events tr[data-id="'+evrow.dataset.id+'"]'), //Remove it from the recents list too if applicable
+							evrows = document.querySelectorAll(`.events tr[data-id="${evrow.dataset.id}"]`), //Remove it from the recents list too if applicable
 							q = evrow.dataset.question ?? evrow.closest('dialog')?.dataset.id;
 						if (q) {
-							const qinfo = document.querySelector('#questionlist li[data-id="'+q+'"] .date'),
+							const qinfo = document.querySelector(`#questionlist li[data-id="${q}"] .date`),
 								match = qinfo.textContent.match(/(\d+) Event(s?)/);
 							if (match) {
 								const eventCount = parseInt(match[1]) - 1;
@@ -760,7 +760,7 @@ class EventsTable {
 					if (!curval) {
 						opts = {action: 'new', newval: result};
 						row.dataset.id = response; //Save new event ID if necessary
-						const studentRow = document.querySelector('#roster tr[data-id="'+row.dataset.student+'"]');
+						const studentRow = document.querySelector(`#roster tr[data-id="${row.dataset.student}"]`);
 						document.querySelector('#recentevents tbody').prepend(recentTable.row({
 							id: row.dataset.id,
 							student: row.dataset.student,
@@ -770,7 +770,7 @@ class EventsTable {
 						}, true))
 					} else {
 						opts = {action: 'update', oldval: curval, newval: result};
-						const recent = document.querySelector('#recentevents tr[data-id="'+row.dataset.id+'"] td[data-val]');
+						const recent = document.querySelector(`#recentevents tr[data-id="${row.dataset.id}"] td[data-val]`);
 						if (recent) {
 							recent.dataset.val = result;
 							recent.querySelector('.result-button').dataset.schemaval = result;
@@ -802,7 +802,7 @@ function uploadCSV(e) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 			} else {
-				const info = infoElement("Uploaded "+response.length+" students"),
+				const info = infoElement(`Uploaded ${response.length} students`),
 					roster = document.getElementById('roster');
 				document.querySelector('#students h2').after(info);
 				for (const row of response) studentRow(row['id'], row['fname'], row['lname'], row['note']);
