@@ -425,12 +425,12 @@ function studentmodal(id, hlight) {
 
 			//Delete student
 			if (e.target.classList.contains('delete')) {
-				if (!confirm('Are you sure you want to remove '+fname.textContent+' '+lname.textContent+' from the class roster?')) return;
+				if (!confirm(`Are you sure you want to remove ${fname.textContent} ${lname.textContent} from the class roster?`)) return;
 				post('../ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
 					if (response != 1) console.error('There was an error deleting the student.');
 					else {
 						//Delete recent participation events
-						const evrows = document.querySelectorAll('#recentevents tr[data-student="'+tr.dataset.id+'"]');
+						const evrows = document.querySelectorAll(`#recentevents tr[data-student="${tr.dataset.id}"]`);
 						for (const evrow of evrows) evrow.remove();
 
 						tr.remove(); //Delete roster row
@@ -520,7 +520,7 @@ class Question {
 		for (const li of lis) ul.appendChild(li);
 	}
 
-	openModal() {
+	openModal(hlight) {
 		const h3 = markup({tag: 'h3', children: this.text}),
 			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'archive', 'delete'])}),
 			qedit = new makeInput(actions);
@@ -545,6 +545,8 @@ class Question {
 				table = new EventsTable(data);
 			container.querySelector('.loader').remove();
 			container.append(table.markup());
+
+			if (hlight) container.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
 		}).catch(e => modalError(this.modal, e));
 		
 		actions.addEventListener('click', e2 => {
@@ -682,10 +684,10 @@ class EventsTable {
 	row(event) {
 		let qbutton;
 		if (event.question) {
-			let qli = document.querySelector('#questionlist li[data-id="'+event.question+'"]');
+			let qli = document.querySelector(`#questionlist li[data-id="${event.question}"]`);
 			if (qli) {
 				qbutton = markup({tag: 'span', attrs: {title: qli?.childNodes[0].textContent.trim(), class: 'q'}});
-				qbutton.addEventListener('click', e => { qli.obj.openModal() });
+				qbutton.addEventListener('click', e => { qli.obj.openModal(event.id) });
 				qli.obj.eventButtons.push(qbutton);
 				qbutton.obj = qli.obj;
 			} else qbutton = null;
@@ -699,7 +701,7 @@ class EventsTable {
 					qbutton
 				]},
 				this.student ? null : {tag: 'td', attrs: {'data-sort': event.lname, class: 'm-name'}, children: event.fname+' '+event.lname},
-				{tag: 'td', attrs: {'data-val': event.result}, children: '<div class="result-button" data-schemaval="'+event.result+'"></div><span class="numspan">'+event.result+'</span>'},
+				{tag: 'td', attrs: {'data-val': event.result}, children: `<div class="result-button" data-schemaval="${event.result}"></div><span class="numspan">${event.result}</span>`},
 				{tag: 'td', attrs: {class: 'actions'}, children: actionButtons(['edit', 'delete'])}
 			]});
 		if (event.question) tr.dataset.question = event.question;
