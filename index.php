@@ -125,18 +125,20 @@ if ($classid) {
 		</div>
 	<?php } ?>
 	<dialog id="shortcuts">
+		<a class="close" href="#">&times;</a>
+		<h2>Keyboard Shortcuts</h2>
 		<ul>
 			<?php $maxkey = $classid ? count($class->schema->items) : 5; ?>
-			<li>Choose student <span><span class="key">space</span></span></li>
-			<li>Previous chosen student <span><span class="key">&larr;</span></span></li>
-			<li>Next chosen student <span><span class="key">&rarr;</span></span></li>
-			<li>Evaluate student <span><span class="key">1</span>-<span class="key"><?php echo $maxkey; ?></span></span></li>
-			<li>Clear evaluation <span><span class="key">0</span></span></li>
-			<li>Snooze student until tomorrow <span><span class="key">Z</span></span></li>
-			<li>Open/close roster <span><span class="key">R</span></span></li>
-			<li>Cycle through questions <span><span class="key">Q</span></span></li>
-			<li>Manage class <span><span class="key">M</span></span></li>
-			<li>Show keyboard shortcuts <span><span class="key">?</span></span></li>
+			<li>Choose student <span><kbd>space</kbd></span></li>
+			<li>Previous chosen student <span><kbd>&larr;</kbd></span></li>
+			<li>Next chosen student <span><kbd>&rarr;</kbd></span></li>
+			<li>Evaluate student <span><kbd>1</kbd>-<kbd><?php echo $maxkey; ?></kbd></span></li>
+			<li>Clear evaluation <span><kbd>0</kbd></span></li>
+			<li>Snooze student until tomorrow <span><kbd>Z</kbd></span></li>
+			<li>Open/close roster <span><kbd>R</kbd></span></li>
+			<li>Cycle through questions <span><kbd>Q</kbd></span></li>
+			<li>Manage class <span><kbd>M</kbd></span></li>
+			<li>Show keyboard shortcuts <span><kbd>?</kbd></span></li>
 		</ul>
 	</dialog>
 </body>

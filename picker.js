@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else if (e.key == 'm') {
 			if (!window.classid) window.location.href = '/admin';
 			else window.location.href = '/admin/class.php?class='+classid;
+		} else if (e.key == 'Escape') {
+			if (document.getElementById('roster')?.classList.contains('open')) document.getElementById('roster').classList.remove('open');
+			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
 		}
 
 		if (!window.classid) return;
@@ -88,11 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				setQbuttons();
 			} else firstQuestion();
-		} else if (e.key == 'Escape') {
-			if (document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open');
-			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
 		}
 	});
+
+	document.querySelector('dialog .close').addEventListener('click', function(e) {
+		e.preventDefault();
+		this.closest('dialog').close();
+	})
 
 	//Active/inactive class list switcher
 	for (const i of document.querySelectorAll('.switchable')) i.addEventListener('click', function(e) {
