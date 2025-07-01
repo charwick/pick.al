@@ -94,7 +94,7 @@ if ($classid) {
 			</div>
 		</div>
 
-		<div id="pickwrap">
+		<div id="bottom-anchor">
 			<?php if ($roster) echo '<button id="pick">Choose Student</button>';
 			else echo '<a href="/admin/class.php?class='.$classid.'" id="pick" class="button">Add Students</a>'; ?>			
 		</div>
@@ -104,15 +104,25 @@ if ($classid) {
 
 		<h1 id="logo">Pick.al</h1>
 		
-		<ul id="classlist">
-			<?php $classes = $sql->get_classes(true);
-			if (!$classes) echo '<li class="noclasses">No active classes <a href="admin/class.php" class="button" id="pick">New Class</a></li>';
-			else {
-				echo "<li><h2>Active Classes <span>/ ".($user ? $user->username : 'Demo User')."</span></h2></li>";
-				foreach ($classes as $class)
-					echo "<li><a href='?class={$class->id}".($user ? '' : '&try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>";
-			} ?>
-		</ul>
-	<?php }?>
+		<div id="bottom-anchor">
+			<?php $active = []; $inactive = [];
+			foreach ($sql->get_classes() as $class) if ($class->active) $active[] = $class; else $inactive[] = $class;
+			if (!$active) echo '<div class="classlist active noclasses'.($inactive ? ' switchable' : '').'">No active classes <a href="admin/class.php" class="button" id="pick">New Class</a></div>';
+			else { ?>
+				<h2 class="active<?php if ($inactive) echo ' switchable'; ?>">Active Classes <span>/ <?php echo $user ? $user->username : 'Demo User'; ?></span></h2>
+				<ul class="classlist active">
+					<?php foreach ($active as $class)
+						echo "<li><a href='?class={$class->id}".($user ? '' : '&try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
+				</ul>
+			<?php }
+			if ($inactive) { ?>
+				<h2 class="switchable inactive">Inactive Classes <span>/ <?php echo $user ? $user->username : 'Demo User'; ?></span></h2>
+				<ul class="classlist inactive">
+					<?php foreach ($inactive as $class)
+						echo "<li><a href='?class={$class->id}".($user ? '' : '&try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
+				</ul>
+			<?php } ?>
+		</div>
+	<?php } ?>
 </body>
 </html>

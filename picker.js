@@ -2,7 +2,8 @@
 var hist = [], //Reverse coded: current student = index[0]
 	histIndex = null,
 	currentAnim = false,
-	currentQ = null;
+	currentQ = null,
+	activeVis = true;
 
 document.addEventListener('DOMContentLoaded', () => {
 	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {
@@ -78,6 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				setQbuttons();
 			} else firstQuestion();
 		} else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
+	});
+
+	//Active/inactive class list switcher
+	for (const i of document.querySelectorAll('.switchable')) i.addEventListener('click', function(e) {
+		activeVis = !activeVis;
+		for (const j of document.querySelectorAll('.active')) j.style.display = activeVis ? 'block' : 'none';
+		for (const j of document.querySelectorAll('.inactive')) j.style.display = activeVis ? 'none' : 'block';
 	});
 
 	//=============

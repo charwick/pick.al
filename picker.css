@@ -19,7 +19,7 @@ body.inactive { background: #555; }
 h1 {
 	font-weight: normal;
 	margin: 1.25em 0 0;
-	font-size: 2.5em;
+	font-size: 2.25em;
 }
 p.subtitle {
 	color: #999;
@@ -107,7 +107,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 }
 #sinfo > .out { left: -420px; }
 #sinfo > .in { left: calc(100vw + 380px); } /* Asymmetric because of our centering trick with translateX */
-#sinfo > div, #pick, #classlist a { max-width: 800px; }
+#sinfo > div, #pick, ul.classlist a { max-width: 800px; }
 #sinfo h2 {
 	margin: 0;
 	font-size: 1.75em;
@@ -143,7 +143,7 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #sinfo li:first-child button { border-radius: 0 0 0 10px; }
 #sinfo li:last-child button { border-radius: 0 0 10px 0; }
 
-#pickwrap {
+#bottom-anchor {
 	position: absolute;
 	bottom: 30px;
 	left: 40px; right: 40px;
@@ -160,15 +160,14 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 #pick:hover { background: #292;}
 #pick:active { background: #181; }
 
-#classlist {
+ul.classlist {
 	margin: 0; padding: 0;
 	list-style: none;
-	position: absolute;
-	left: 40px; right: 40px;
-	bottom: 40px;
+	max-height: 36em;
+	overflow-y: scroll;
 }
 
-#classlist a:not(#pick) {
+ul.classlist a:not(#pick) {
 	display: block;
 	font-size: 1.8em;
 	color: #CCC;
@@ -178,33 +177,35 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	border-top: 1px solid rgb(255 255 255 / 20%);
 	margin-left: auto; margin-right: auto;
 }
-#classlist a:not(#pick):hover {
+ul.classlist a:not(#pick):hover {
 	background: rgb(255 255 255 / 5%);
 	color: #DDD;
 }
-#classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgb(255 255 255 / 20%); }
-#classlist a span {
+ul.classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgb(255 255 255 / 20%); }
+ul.classlist a span {
 	display: block;
 	font-size: 0.555em;
 	margin-top: 0.25em;
 	color: #999;
 }
-#classlist h2 {
+#bottom-anchor h2 {
 	font-size: 1em;
 	text-transform: uppercase;
 }
-#classlist h2 span {
+#bottom-anchor h2 span {
 	color: #999;
 	font-weight: normal;
 	text-transform: none;
 }
+.switchable { cursor: pointer; }
+ul.classlist.inactive, h2.inactive { display: none; }
 .noclasses {
 	font-size: 2.25em;
 	color: #777;
 }
 .noclasses #pick {
 	display: block;
-	margin: 2em auto;
+	margin: 2em auto 1em;
 	width: auto;
 }
 
