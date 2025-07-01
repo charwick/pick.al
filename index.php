@@ -80,7 +80,7 @@ if ($classid) {
 
 			<div id="roster">
 				<div id="topbar">
-					<a href="/admin/class.php?class=<?php echo $classid; ?>" id="rosteredit" class="button">Edit</a>
+					<a href="/admin/class.php?class=<?php echo $classid; ?>" id="rosteredit" class="button">Manage</a>
 					<a href="#" id="rosterclose">×</a>
 				</div>
 				<ul>
@@ -124,5 +124,20 @@ if ($classid) {
 			<?php } ?>
 		</div>
 	<?php } ?>
+	<dialog id="shortcuts">
+		<ul>
+			<?php $maxkey = $classid ? count($class->schema->items) : 5; ?>
+			<li>Choose student <span><span class="key">space</span></span></li>
+			<li>Previous chosen student <span><span class="key">&larr;</span></span></li>
+			<li>Next chosen student <span><span class="key">&rarr;</span></span></li>
+			<li>Evaluate student <span><span class="key">1</span>-<span class="key"><?php echo $maxkey; ?></span></span></li>
+			<li>Clear evaluation <span><span class="key">0</span></span></li>
+			<li>Snooze student until tomorrow <span><span class="key">Z</span></span></li>
+			<li>Open/close roster <span><span class="key">R</span></span></li>
+			<li>Cycle through questions <span><span class="key">Q</span></span></li>
+			<li>Manage class <span><span class="key">M</span></span></li>
+			<li>Show keyboard shortcuts <span><span class="key">?</span></span></li>
+		</ul>
+	</dialog>
 </body>
 </html>

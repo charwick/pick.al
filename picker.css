@@ -273,7 +273,7 @@ h1#logo { height: 1.5em; }
 }
 #roster.open {
 	right: 0;
-	box-shadow: -1em 0 2em rgba(0, 0, 0, 0.15);
+	box-shadow: -1em 0 2em rgb(0 0 0 / 0.15);
 }
 #roster #topbar {
 	position: absolute; 
@@ -351,6 +351,44 @@ h1#logo { height: 1.5em; }
 #question .actions {
 	margin: 0.5em auto 1.5em;
 	font-size: 0.5em;
+}
+
+/* Keyboard help */
+
+dialog {
+	top: 50%; left: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0; padding: 2em;
+	background: rgb(75 75 75 / 85%);
+	backdrop-filter: blur(10px);
+	color: #FFF;
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 1em 2em rgb(0, 0, 0, 0.15);
+	text-align: left;
+	outline: none;
+}
+dialog ul {
+	list-style: none;
+	margin: 0; padding: 0;
+}
+dialog li {
+	border-bottom: 1px solid rgb(255 255 255 / 0.1);
+	padding: 0.25em 0;
+}
+dialog li:last-child { border-bottom: none; }
+dialog li > span {
+	float: right;
+	margin-left: 2em;
+}
+.key {
+	font-size: 0.75em;
+	border: 1px solid rgb(255, 255, 255, 0.2);
+	padding: 0.1em 0.4em;
+	border-radius: 2px;
+	background: rgb(255, 255, 255, 0.075);
+	border-top-color: rgb(255, 255, 255, 0.325);
+	box-shadow: 0 1px 0 rgb(0, 0, 0, 0.25);
 }
 
 /* Small phones */

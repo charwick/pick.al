@@ -51,17 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Keyboard Navigation
 	document.addEventListener('keydown', function(e) {
+		if (e.key == '?') {
+			const d = document.getElementById('shortcuts');
+			if (d.open) d.close();
+			else d.show();
+		} else if (e.key == 'm') {
+			if (!window.classid) window.location.href = '/admin';
+			else window.location.href = '/admin/class.php?class='+classid;
+		}
+
 		if (!window.classid) return;
+
 		if (e.key == ' ') buttonFunc('choose')();
 		else if (e.key == 'ArrowLeft' && histIndex < hist.length-1) buttonFunc('back')();
 		else if (e.key == 'ArrowRight' && histIndex) buttonFunc('forward')();
-		else if (['1','2','3','4','5'].includes(e.key)) {
+		else if (['1','2','3','4','5'].includes(e.key) && histIndex != null) {
 			const i = parseInt(e.key),
 				buttons = hist[histIndex].element.querySelectorAll('button');
 			if (buttons.length < i) return;
 			buttons[i-1].click();
-		} else if (e.key == '0') hist[histIndex].element.querySelector('button.picked')?.click();
-		else if (e.key == 'x') document.querySelector('.snooze').click();
+		} else if (e.key == '0' && histIndex != null) hist[histIndex].element.querySelector('button.picked')?.click();
+		else if (e.key == 'z') document.querySelector('.snooze').click();
 		else if (e.key == 'r') {
 			const roster = document.getElementById('roster');
 			if (roster.classList.contains('open')) roster.classList.remove('open');
@@ -78,7 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				setQbuttons();
 			} else firstQuestion();
-		} else if (e.key == 'Escape' && document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open')
+		} else if (e.key == 'Escape') {
+			if (document.getElementById('roster').classList.contains('open')) document.getElementById('roster').classList.remove('open');
+			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
+		}
 	});
 
 	//Active/inactive class list switcher
@@ -193,6 +206,7 @@ class StudentEvent {
 	#actions = [];
 
 	constructor(student) {
+		if (student == undefined) return;
 		this.info = student; //This will update the original roster data too
 		
 		//Create the HTML
