@@ -19,12 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		classedit.addElement(document.getElementById('selectgoeshere'), {type: 'select', opts: schemaOpts});
 		classedit.data = inputs => ({req: 'updateclassinfo', class: classid, title: inputs[0].value, semester: inputs[1].value, year: inputs[2].value, activeuntil: inputs[3].value, schema: inputs[4].value});
 		classedit.after = (response, vals) => {
+			//Update score scale if button schema changed
 			document.querySelector('.schema-css').textContent = response.css;
 			document.getElementById('selectgoeshere').textContent = '';
 			const oldmax = window.schemae[window.schema].limits[1];
 			window.schema = vals[4];
 			window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
 			for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
+
+			//Update active/inactive
+			document.getElementById('activeuntil').previousSibling.textContent = vals[3] >= (new Date()).toISOString().slice(0, 10) ? 'Active until ' : 'Inactive since ';
 		}
 		classedit.cancelfunc = () => {
 			addSchemaButtons();
@@ -389,7 +393,7 @@ function studentmodal(id, hlight) {
 		excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
 		excInput.cancelfunc = clearacts;
 		excInput.editActions.push('delete');
-		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInpit.after. */
+		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInPit.after. */
 			const inp = qspan.querySelector('input');
 			inp.value = '';
 			inp.validate = false;
