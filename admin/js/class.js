@@ -393,7 +393,7 @@ function studentmodal(id, hlight) {
 		excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
 		excInput.cancelfunc = clearacts;
 		excInput.editActions.push('delete');
-		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInPit.after. */
+		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInput.after. */
 			const inp = qspan.querySelector('input');
 			inp.value = '';
 			inp.validate = false;

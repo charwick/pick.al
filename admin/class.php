@@ -33,7 +33,7 @@ if (isset($_POST['name'])) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title><?php echo $classid ? "Editing {$class->name} ({$class->semester} {$class->year})" : "New Class"; ?> | Pick.al</title>
+	<title><?php echo $classid ? "Editing {$class->name} (".ucfirst($class->semester)." {$class->year})" : "New Class"; ?> | Pick.al</title>
 	<script type="text/javascript">
 		var classid = <?php echo $classid ?: 'null'; ?>;
 		<?php if ($classid) {

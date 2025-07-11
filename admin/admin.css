@@ -368,7 +368,7 @@ table tbody:empty::before, #questionlist:empty::before {
 .events tbody:empty::before { content: 'No events yet'; }
 #roster tbody:empty::before { content: 'No students yet. You can add them individually, or upload a CSV roster, below.' }
 #questionlist:empty::before {
-	content: 'None yet.';
+	content: 'No questions yet.';
 	display: list-item;
 	position: static;
 }

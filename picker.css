@@ -312,7 +312,7 @@ h1#logo { height: 1.5em; }
 	font-size: 1.2em;
 	color: rgb(255 255 255 / 75%);
 }
-#roster li:not(.head):hover {
+#roster li.selected {
 	background: rgb(255 255 255 / 10%);
 	color: #FFF;
 }

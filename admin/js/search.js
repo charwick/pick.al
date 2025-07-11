@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			li.addEventListener('mouseover', function(e) {
 				for (const a of list.querySelectorAll('a')) a.classList.remove('selected');
 				li.classList.add('selected');
-			})
+			});
 			student.semester = student.semester[0].toUpperCase() + student.semester.slice(1);
 			list.append(li);
 		}

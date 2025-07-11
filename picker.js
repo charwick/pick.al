@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Keyboard Navigation
 	document.addEventListener('keydown', function(e) {
+		const roster = document.getElementById('roster');
 		if (e.key == '?') {
 			const d = document.getElementById('shortcuts');
 			if (d.open) d.close();
@@ -59,11 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!window.classid) window.location.href = '/admin';
 			else window.location.href = '/admin/class.php?class='+classid;
 		} else if (e.key == 'Escape') {
-			if (document.getElementById('roster')?.classList.contains('open')) document.getElementById('roster').classList.remove('open');
+			if (roster?.classList.contains('open')) roster.classList.remove('open');
 			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
 		}
 
-		if (!window.classid) return;
+		if (!window.classid) return; //Picker-specific keys after this
 
 		if (e.key == ' ') buttonFunc('choose')();
 		else if (e.key == 'ArrowLeft' && histIndex < hist.length-1) buttonFunc('back')();
@@ -76,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else if (e.key == '0' && histIndex != null) hist[histIndex].element.querySelector('button.picked')?.click();
 		else if (e.key == 'z') document.querySelector('.snooze').click();
 		else if (e.key == 'r') {
-			const roster = document.getElementById('roster');
 			if (roster.classList.contains('open')) roster.classList.remove('open');
 			else roster.classList.add('open');
 		} else if (e.key == 'q') {
@@ -91,6 +91,42 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				setQbuttons();
 			} else firstQuestion();
+		} else if (roster.classList.contains('open')) {
+			const selected = roster.querySelector('.selected');
+			if (e.key=='ArrowUp') {
+				if (selected) {
+					let newselect = selected.previousElementSibling;
+					if (!newselect) return;
+					if (newselect.classList.contains('head')) newselect = newselect.previousElementSibling;
+					if (newselect) {
+						selected.classList.remove('selected');
+						newselect.classList.add('selected');
+					}
+				} else { // No selected item: select last li and scroll to bottom
+					const rosterList = roster.querySelectorAll('li:not(.head)');
+					if (rosterList.length) {
+						rosterList[rosterList.length - 1].classList.add('selected');
+						roster.querySelector('ul').scrollTop = roster.scrollHeight;
+					}
+				}
+			} else if (e.key=='ArrowDown') {
+				if (selected) {
+					let newselect = selected.nextElementSibling;
+					if (!newselect) return;
+					if (newselect.classList.contains('head')) newselect = newselect.nextElementSibling;
+					if (newselect) {
+						selected.classList.remove('selected');
+						newselect.classList.add('selected');
+					}
+				} else { // No selected item: select last li and scroll to bottom
+					const rosterList = roster.querySelectorAll('li:not(.head)');
+					if (rosterList.length) {
+						rosterList[0].classList.add('selected');
+						roster.querySelector('ul').scrollTop = 0;
+					}
+				}
+			} else if (e.key=='Enter' && selected)
+				selected.click()
 		}
 	});
 
@@ -116,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		document.getElementById('roster').classList.add('open');
 	});
 
+	//Click
 	document.getElementById('roster')?.addEventListener('click', function(e) {
 		if ('id' in e.target.dataset) {
 			const index = roster.findIndex(item => item.id==e.target.dataset.id);
@@ -130,6 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			setQbuttons();
 		}
 	});
+
+	//Select
+	document.getElementById('roster')?.addEventListener('mouseover', function(e) {
+		if (!e.target.matches('li:not(.head)')) return;
+		for (const a of this.querySelectorAll('li')) a.classList.remove('selected');
+		e.target.classList.add('selected');
+	});
+
 	//Close
 	document.getElementById('rosterclose')?.addEventListener('click', function(e) {
 		e.preventDefault();
