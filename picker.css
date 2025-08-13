@@ -226,6 +226,7 @@ h1#logo { height: 1.5em; }
 	border-radius: 30px;
 	position: absolute;
 	top: 20px; right: 20px;
+	z-index: 999;
 }
 #rosteredit {
 	position: static;

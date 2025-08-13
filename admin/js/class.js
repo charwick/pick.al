@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					else for (const inp of inputs) inp.classList.add('error');
 				};
 
-				post('../ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
+				post('/ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
 					if (!sid) onerror(sid);
 					else {
 						studentRow(sid, fname.value, lname.value, note.value);
@@ -239,7 +239,7 @@ function addSchemaButtons() {
 	
 	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
 	else {
-		fetch('../ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
+		fetch('/ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
 		.then((response) => response.text()).then((response) => {
 			schemabuttons[schema] = response;
 			drawButtons(response);
@@ -329,7 +329,8 @@ function infoElement(message, classname, tag) {
 }
 
 function modalError(smodal, error) {
-	smodal.querySelector('.loader').remove();
+	console.log(error);
+	smodal.querySelector('.loader')?.remove();
 	const p = markup({tag: 'div', attrs: {class: 'error'}, children: 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.'})
 	smodal.append(p);
 }
@@ -430,7 +431,7 @@ function studentmodal(id, hlight) {
 			//Delete student
 			if (e.target.classList.contains('delete')) {
 				if (!confirm(`Are you sure you want to remove ${fname.textContent} ${lname.textContent} from the class roster?`)) return;
-				post('../ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
+				post('/ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
 					if (response != 1) console.error('There was an error deleting the student.');
 					else {
 						//Delete recent participation events
@@ -458,7 +459,7 @@ function studentmodal(id, hlight) {
 	}
 
 	if (tr.querySelector('.score').textContent)
-		fetch('../ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
+		fetch('/ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
 		.then(interThen).then(render).catch(e => modalError(smodal, e));
 	else render([]);
 }
@@ -550,7 +551,7 @@ class Question {
 			container.querySelector('.loader').remove();
 			container.append(table.markup());
 
-			if (hlight) container.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
+			if (hlight) container.querySelector(`tr[data-id="${hlight}"]`)?.classList.add('new');
 		}).catch(e => modalError(this.modal, e));
 		
 		actions.addEventListener('click', e2 => {
@@ -631,7 +632,7 @@ class EventsTable {
 			//Delete event
 			else if (e.target.classList.contains('delete')) {
 				if (confirm('Are you sure you want to delete this event?')) {
-					post('../ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
+					post('/ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
 						const result = evrow.querySelector('td[data-val]').dataset.val,
 							evrows = document.querySelectorAll(`.events tr[data-id="${evrow.dataset.id}"]`), //Remove it from the recents list too if applicable
 							q = evrow.dataset.question ?? evrow.closest('dialog')?.dataset.id;
@@ -748,7 +749,7 @@ class EventsTable {
 				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
 				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
 	
-				post('../ajax.php', params, response => {
+				post('/ajax.php', params, response => {
 					for (const b of resultsCell.querySelectorAll('.result-button')) {
 						if (b.dataset.schemaval == result) b.classList.remove('unselected');
 						else b.remove();
@@ -801,7 +802,7 @@ function uploadCSV(e) {
 	document.querySelector('.info')?.remove();
 	
 	reader.onload = function(e) {
-		post("../ajax.php", {req: 'uploadroster', csv: e.target.result, class: ''+classid}, response => {
+		post("/ajax.php", {req: 'uploadroster', csv: e.target.result, class: ''+classid}, response => {
 			if (!response) {
 				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));

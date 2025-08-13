@@ -2,7 +2,7 @@
 
 A lightweight app for picking students at random and recording participation. Register and try it out at [pick.al](https://pick.al).
 
-The picker (to be used on a phone in class) randomly picks a student from the roster to be called upon, and records the result.
+The picker (to be used by the instructor in class, either on a phone or computer) randomly picks a student from the roster to be called upon, and records the result.
 
 [See how it works here](https://twitter.com/C_Harwick/status/1615481096161861632).
 

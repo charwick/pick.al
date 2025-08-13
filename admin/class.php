@@ -24,7 +24,7 @@ $error = false;
 if (isset($_POST['name'])) {
 	$id = $sql->new_class($_POST['name'], $_POST['semester'], $_POST['year'], $_POST['activeuntil'], $_POST['schema']);
 	if ($id) {
-		$url = "class.php?class={$id}";
+		$url = "/admin/class/{$id}";
 		header("Location: {$url}");
 		exit;
 	} else $error = true;
@@ -70,7 +70,7 @@ if (isset($_POST['name'])) {
 </head>
 
 <body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
-	<?php userbar($sql, '.', 'Admin'); ?>
+	<?php userbar($sql, '/admin', 'Admin'); ?>
 	<main>
 		<form id="classinfo" action="" method="post">
 			<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
@@ -199,7 +199,7 @@ if (isset($_POST['name'])) {
 				<h2>Recent Participation Events</h2>
 			</section>
 			
-			<form id="deleteform" action="." method="post">
+			<form id="deleteform" action="/admin/" method="post">
 				<input type="hidden" name="action" value="delete" />
 				<input type="hidden" name="class" value="<?php echo $classid; ?>" />
 			</form>

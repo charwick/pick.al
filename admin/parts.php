@@ -9,7 +9,7 @@
 		<?php if ($backlink) echo "<a href='{$backlink}' id='backlink'>← <span>Back to</span> {$backtext}</a>"; ?>
 		<a href="/" id="logo">Pick.al</a>
 		<div id="rightside">
-			<a href="user.php">
+			<a href="/admin/user">
 				<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=40&d=mp" class="gravatar" />
 				<?php echo $user->username; ?>
 			</a>
@@ -41,13 +41,13 @@ function headermeta($admin=false): void {
 //Increment version to invalidate cache
 function embed_asset(string $asset): void {
 	$assets = [ // filename => [path, version]
-		'ajax.js' => ['/admin/js', 6],
-		'class.js' => ['/admin/js', 6],
-		'search.js' => ['/admin/js', 2],
+		'ajax.js' => ['/admin/js', 7],
+		'class.js' => ['/admin/js', 7],
+		'search.js' => ['/admin/js', 3],
 		'user.js' => ['/admin/js', 2],
-		'schema.js' => ['/admin/js', 4],
+		'schema.js' => ['/admin/js', 5],
 		'admin.css' => ['/admin', 3],
-		'picker.js' => ['', 6],
+		'picker.js' => ['', 7],
 		'picker.css' => ['', 6],
 		'login.js' => ['/login', 1],
 		'login.css' => ['/login', 1]

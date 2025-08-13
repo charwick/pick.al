@@ -122,7 +122,7 @@ class makeInput {
 				else for (const inp of inps) inp.classList.add('error');
 			};
 	
-			post('../ajax.php', this.data(inps), response => {
+			post('/ajax.php', this.data(inps), response => {
 				if (!response) hasError(response);
 				else {
 					const vals = [];

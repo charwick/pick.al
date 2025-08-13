@@ -1,1 +1,19 @@
 ErrorDocument 404 /404.php
+
+RewriteEngine On
+RewriteBase /
+
+# /class/n  -> index.php?class=n
+RewriteRule ^class/([0-9]+)$ index.php?class=$1 [L,QSA]
+
+# /admin/class/new -> admin/class.php (no class param)
+RewriteRule ^admin/class/new$ admin/class.php [L,QSA]
+
+# /admin/class/n -> admin/class.php?class=n
+RewriteRule ^admin/class/([0-9]+)$ admin/class.php?class=$1 [L,QSA]
+
+# /admin/schema/n -> admin/schema.php?schema=n
+RewriteRule ^admin/schema/([0-9]+)$ admin/schema.php?schema=$1 [L,QSA]
+
+# /admin/user -> admin/user.php
+RewriteRule ^admin/user$ admin/user.php [L,QSA]

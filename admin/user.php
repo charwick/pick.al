@@ -49,7 +49,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 </head>
 
 <body class="admin-user">
-	<?php userbar($sql, '.', 'Admin'); ?>
+	<?php userbar($sql, '/admin', 'Admin'); ?>
 	<main>
 		<a href="http://gravatar.com/" id="gravatar-link" target="_gravatar">
 			<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=160&d=mp" class="gravatar" />

@@ -52,7 +52,7 @@ foreach ($sql->get_classes() as $class) {
 		<ul class="classes">
 			<?php foreach (['active', 'inactive'] as $classes) foreach ($$classes as $class) {
 				echo "<li>";
-				echo "<a href='class.php?class={$class->id}' class='classbox {$classes}'>
+				echo "<a href='class/{$class->id}' class='classbox {$classes}'>
 					<span class='title'>{$class->name}</span>
 					<span class='semester'>".ucwords($class->semester)." {$class->year}</span>&nbsp; •&nbsp; 
 					<span class='students'>{$class->students}</span>
@@ -63,12 +63,12 @@ foreach ($sql->get_classes() as $class) {
 		</ul>
 		
 		<?php if (!$inactive && !$active) { ?>
-			<a id="welcome" class="classbox active" href="class.php">
+			<a id="welcome" class="classbox active" href="class/new">
 				<h2 class="title">Welcome to Pick.al!</h2>
 				<p>Get started by creating a class and uploading a roster.</p>
 			</a>
 		<?php } ?>
-		<p><a class="button" href="class.php" id="newclass">New Class</a></p>
+		<p><a class="button" href="class/new" id="newclass">New Class</a></p>
 
 		<h2 class="new-feature">Button Schemae</h2>
 
@@ -78,7 +78,7 @@ foreach ($sql->get_classes() as $class) {
 				foreach (array_merge($active, $inactive) as $class) if ($class->schema==$schema->id) $count++; ?>
 				<tr>
 					<td>
-						<?php if (!$schema->global) { ?><a href="/admin/schema.php?schema=<?php echo $schema->id; ?>"><?php }
+						<?php if (!$schema->global) { ?><a href="/admin/schema/<?php echo $schema->id; ?>"><?php }
 						echo $schema->name;
 						if (!$schema->global) echo '</a>'; ?>
 					</td>

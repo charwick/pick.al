@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
 				}
 			}
-			fetchif(!demo, 'ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
+			fetchif(!demo, '/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
 		}
 	});
 	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			else d.show();
 		} else if (e.key == 'm') {
 			if (!window.classid) window.location.href = '/admin';
-			else window.location.href = '/admin/class.php?class='+classid;
+			else window.location.href = '/admin/class/'+classid;
 		} else if (e.key == 'Escape') {
 			if (roster?.classList.contains('open')) roster.classList.remove('open');
 			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		} else if (e.target.classList.contains('archive')) {
 			const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
-			fetchif(!demo, 'ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, response => {
+			fetchif(!demo, '/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, response => {
 
 				//If we're unarchiving
 				if (archived) {
@@ -331,7 +331,7 @@ class StudentEvent {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				fetchif(!demo, 'ajax.php', {req: 'deleteevent', event: this.event}, id => {
+				fetchif(!demo, '/ajax.php', {req: 'deleteevent', event: this.event}, id => {
 					this.info.score -= this.result;
 					this.info.denominator--;
 					this.event = null;
@@ -346,7 +346,7 @@ class StudentEvent {
 				this.qid = currentQ;
 				this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-				fetchif(!demo, 'ajax.php', {req: 'updateevent', event: this.event, result: result, q: currentQ}, id => {
+				fetchif(!demo, '/ajax.php', {req: 'updateevent', event: this.event, result: result, q: currentQ}, id => {
 					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
@@ -359,7 +359,7 @@ class StudentEvent {
 			this.qid = currentQ;
 			this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-			fetchif(!demo, 'ajax.php',{req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, id => {
+			fetchif(!demo, '/ajax.php',{req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, id => {
 				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');

@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					{tag: 'h2', children: 'Delete '+title.textContent},
 					{tag: 'div', attrs: {class: 'loader'}}
 				);
-				fetch('../ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
+				fetch('/ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
 				.then(interThen).then((response) => {
 					let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
 					dmodal.querySelector('.loader').remove();
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if ('id' in tr.dataset) params.update.push(trdata);
 			else params.new.push(trdata);
 		}
-		post('../ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
+		post('/ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
 			//Update window.schema and UI
 			this.textContent = 'Saved';
 			for (const d of deleted) {

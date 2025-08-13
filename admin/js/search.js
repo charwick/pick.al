@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	function drawList(response) {
 		list.textContent = ''; //Clear existing results
 		for (const student of response) {
-			const li = markup({tag: 'a', attrs: {href: `/admin/class.php?class=${student.classid}#student-${student.id}`}, children: [
+			const li = markup({tag: 'a', attrs: {href: `/admin/class/${student.classid}#student-${student.id}`}, children: [
 				{tag: 'span', attrs: {class: 'student'}, children: student.fname+' '+student.lname},
 				{tag: 'span', attrs: {class: 'class'}, children: student.name+`<span class="semester">${student.semester} ${student.year}</span>`},
 			]});
