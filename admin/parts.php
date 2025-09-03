@@ -13,7 +13,7 @@
 				<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=40&d=mp" class="gravatar" />
 				<?php echo $user->username; ?>
 			</a>
-			<a href="../login/login.php?action=logout">Log out</a>
+			<a href="/login/login.php?action=logout">Log out</a>
 		</div>
 	</div>
 <?php }
@@ -49,7 +49,7 @@ function embed_asset(string $asset): void {
 		'admin.css' => ['/admin', 3],
 		'picker.js' => ['', 7],
 		'picker.css' => ['', 6],
-		'login.js' => ['/login', 1],
+		'login.js' => ['/login', 2],
 		'login.css' => ['/login', 1]
 	];
 

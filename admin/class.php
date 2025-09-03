@@ -199,7 +199,7 @@ if (isset($_POST['name'])) {
 				<h2>Recent Participation Events</h2>
 			</section>
 			
-			<form id="deleteform" action="/admin/" method="post">
+			<form id="deleteform" action="/admin" method="post">
 				<input type="hidden" name="action" value="delete" />
 				<input type="hidden" name="class" value="<?php echo $classid; ?>" />
 			</form>

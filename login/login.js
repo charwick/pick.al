@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const un = inpContainer.querySelector('input[name="username"]');
 			let data = [(un.value.includes('@') ? 'email' : 'username')+'='+un.value]
 			if (tab == 'register') data.push('email='+inpContainer.querySelector('input[name="email"]').value);
-			fetch('ajax.php?req=userexists&'+data.join('&'), {method: 'get'})
+			fetch('/ajax.php?req=userexists&'+data.join('&'), {method: 'get'})
 			.then((response) => response.json()).then((result) => {
 				let pass = true;
 				
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			if (rpwform.submitted) return; //Don't allow to hit more than once
 			rpwform.submitted = true;
-			fetch('ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
+			fetch('/ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
 			.then((response) => {
 				if (response.status != 200) {
 					infoElement('There was an error sending the reset email. Please try again later.', 'error')

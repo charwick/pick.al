@@ -2,8 +2,11 @@
 $sql = new chooser_query();
 
 $user = $sql->current_user();
+
+//Redirect to root and show login
 if (!$user && !isset($_GET['try'])) {
-	require_once('login/login.php');
+	if ($_SERVER['REQUEST_URI'] !== '/' && $_SERVER['REQUEST_URI'] !== '/index.php') header('Location: /');
+	else require_once('login/login.php');
 	exit;
 }
 
