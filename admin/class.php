@@ -33,9 +33,9 @@ if (isset($_POST['name'])) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title><?php echo $classid ? "Editing {$class->name} (".ucfirst($class->semester)." {$class->year})" : "New Class"; ?> | Pick.al</title>
+	<title><?= $classid ? "Editing {$class->name} (".ucfirst($class->semester)." {$class->year})" : "New Class"; ?> | Pick.al</title>
 	<script type="text/javascript">
-		var classid = <?php echo $classid ?: 'null'; ?>;
+		var classid = <?= $classid ?: 'null'; ?>;
 		<?php if ($classid) {
 			$schemae = [$class->schema->name => $class->schema];
 			
@@ -69,16 +69,16 @@ if (isset($_POST['name'])) {
 	headermeta(true); ?>
 </head>
 
-<body class="admin-<?php echo $classid ? 'edit' : 'new'; ?>">
+<body class="admin-<?= $classid ? 'edit' : 'new'; ?>">
 	<?php userbar($sql, '/admin', 'Admin'); ?>
 	<main>
 		<form id="classinfo" action="" method="post">
 			<?php if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>';
 			
 			if ($classid) { ?>
-				<input type='hidden' name='classid' value='<?php echo $classid; ?>'>
+				<input type='hidden' name='classid' value='<?= $classid; ?>'>
 				<h1 id='name'>
-					<?php echo $class->name;
+					<?= $class->name;
 					?><span class="actions"><a class="edit" href="#" title="Edit"></a><a class="delete" href="#" title="Delete"></a></span>
 				</h1>
 			<?php } else {
@@ -89,15 +89,15 @@ if (isset($_POST['name'])) {
 			<?php if ($classid) { ?>
 				<p id="classmeta">
 					<span class="meta-item">
-						<span id="semester"> <?php echo ucwords($class->semester); ?></span>
-						<span id="year"><?php echo $class->year; ?></span>
+						<span id="semester"> <?= ucwords($class->semester); ?></span>
+						<span id="year"><?= $class->year; ?></span>
 					</span>
 					<span class="meta-item">
-						<?php echo time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
-						<span id="activeuntil" data-date="<?php echo $class->activeuntil; ?>"><?php echo date('M j, Y', strtotime($class->activeuntil)); ?></span>
+						<?= time() < strtotime($class->activeuntil) ? 'Active until' : 'Inactive since'; ?>
+						<span id="activeuntil" data-date="<?= $class->activeuntil; ?>"><?= date('M j, Y', strtotime($class->activeuntil)); ?></span>
 					</span>
 					<span class="meta-item" id="schemaselect">
-						Button schema: <span id="selectgoeshere" data-default="<?php echo $class->schema->id; ?>"></span> <span class="schemalist"><?php echo $class->schema->output_buttons(true); ?></span>
+						Button schema: <span id="selectgoeshere" data-default="<?= $class->schema->id; ?>"></span> <span class="schemalist"><?= $class->schema->output_buttons(true); ?></span>
 					</span>
 				</p>
 			<?php } else {
@@ -109,8 +109,8 @@ if (isset($_POST['name'])) {
 						<?php foreach ($seasons as $season)
 							echo "<option value='".strtolower($season)."'".($selected==strtolower($season) ? ' selected' : '').">{$season}</option>"; ?>
 					</select>
-					<input type="number" min="2023" max="2100" name="year" value="<?php echo $error ? $_POST['year'] : date("Y"); ?>" required="">
-					Active until <input type="date" name="activeuntil" value="<?php echo $error ? $_POST['activeuntil'] : ''; ?>" required="">
+					<input type="number" min="2023" max="2100" name="year" value="<?= $error ? $_POST['year'] : date("Y"); ?>" required="">
+					Active until <input type="date" name="activeuntil" value="<?= $error ? $_POST['activeuntil'] : ''; ?>" required="">
 				</p>
 				<p id="schemaselect">
 					Button schema:
@@ -132,8 +132,8 @@ if (isset($_POST['name'])) {
 			$roster = $sql->get_roster($classid); ?>
 			<section id="students">
 				<h2>
-					Roster <span class="num" id="num_students"><?php echo count($roster); ?></span>
-					<?php if ($roster) echo '<a href="csv.php?class='.$classid.'" class="deemph-link" id="csvdown">CSV</a>'; ?>
+					Roster <span class="num" id="num_students"><?= count($roster); ?></span>
+					<?php if ($roster) echo '<a href="/admin/csv.php?class='.$classid.'" class="deemph-link" id="csvdown">CSV</a>'; ?>
 				</h2>
 			
 				<table id="roster">
@@ -179,9 +179,9 @@ if (isset($_POST['name'])) {
 				<ul id="questionlist"><?php
 					$inactives = 0;
 					foreach ($sql->get_questions($classid) as $question) { ?>
-						<li data-id="<?php echo $question->id; ?>"<?php if (!$question->active) echo ' class="inactive"'; ?>>
-							<?php echo $question->text; ?>
-							<span class="date"><?php echo date('M j, Y', strtotime($question->date)); ?> — <?php echo $question->events; ?> Event<?php echo $question->events != 1 ? 's' : ''; ?></span>
+						<li data-id="<?= $question->id; ?>"<?php if (!$question->active) echo ' class="inactive"'; ?>>
+							<?= $question->text; ?>
+							<span class="date"><?= date('M j, Y', strtotime($question->date)); ?> — <?= $question->events; ?> Event<?= $question->events != 1 ? 's' : ''; ?></span>
 							<?php if (!$question->active) $inactives++; ?>
 						</li>
 					<?php }
@@ -194,14 +194,14 @@ if (isset($_POST['name'])) {
 
 			<?php //Render in JS because PHP doesn't know the right timezone
 			array_splice($events, 10); ?>
-			<script type="text/javascript">var events = <?php echo json_encode($events); ?>;</script>
+			<script type="text/javascript">var events = <?= json_encode($events); ?>;</script>
 			<section id="recentevents">
 				<h2>Recent Participation Events</h2>
 			</section>
 			
 			<form id="deleteform" action="/admin" method="post">
 				<input type="hidden" name="action" value="delete" />
-				<input type="hidden" name="class" value="<?php echo $classid; ?>" />
+				<input type="hidden" name="class" value="<?= $classid; ?>" />
 			</form>
 		
 		<?php } ?>

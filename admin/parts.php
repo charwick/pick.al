@@ -10,8 +10,8 @@
 		<a href="/" id="logo">Pick.al</a>
 		<div id="rightside">
 			<a href="/admin/user">
-				<img src="https://www.gravatar.com/avatar/<?php echo md5(strtolower(trim($user->email))); ?>?s=40&d=mp" class="gravatar" />
-				<?php echo $user->username; ?>
+				<img src="https://www.gravatar.com/avatar/<?= md5(strtolower(trim($user->email))); ?>?s=40&d=mp" class="gravatar" />
+				<?= $user->username; ?>
 			</a>
 			<a href="/login/login.php?action=logout">Log out</a>
 		</div>

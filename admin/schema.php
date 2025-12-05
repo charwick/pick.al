@@ -43,7 +43,7 @@ if (isset($_GET['duplicate']) && $_GET['duplicate']) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title><?php echo $schemaid ? "Editing Schema {$schema->name}" : "New Schema"; ?> | Pick.al</title>
+	<title><?= $schemaid ? "Editing Schema {$schema->name}" : "New Schema"; ?> | Pick.al</title>
 	<?php if ($schemaid) { ?>
 		<style type="text/css" id="previewcss">/*filled by JS*/</style>
 		<script type="text/javascript">
@@ -70,9 +70,9 @@ if (isset($_GET['duplicate']) && $_GET['duplicate']) {
 	<?php userbar($sql, '/admin', 'Admin');
 	if ($error) echo '<p class="error">There was an error saving your class. Please try again.</p>'; ?>
 	<main>
-		<input type='hidden' name='schemaid' value='<?php echo $schemaid; ?>'>
+		<input type='hidden' name='schemaid' value='<?= $schemaid; ?>'>
 		<h1 id='name'>
-			<?php echo $schema->name;
+			<?= $schema->name;
 			?><span class="actions"><a class="edit" href="#" title="Edit"></a><a class="delete" href="#" title="Delete"></a></span>
 		</h1>
 		<p id="classmeta">
@@ -136,7 +136,7 @@ if (isset($_GET['duplicate']) && $_GET['duplicate']) {
 
 		<form id="deleteform" action="/admin/" method="post">
 			<input type="hidden" name="action" value="delete" />
-			<input type="hidden" name="schema" value="<?php echo $schemaid; ?>" />
+			<input type="hidden" name="schema" value="<?= $schemaid; ?>" />
 		</form>
 		<template id="schemaitem">
 			<tr>

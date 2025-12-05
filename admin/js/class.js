@@ -822,6 +822,7 @@ function uploadCSV(e) {
 	};
 	let file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
 	document.querySelector('label[for="csvfile"]').classList.remove('active');
+	if (!file) return;
 	if (file.type.toLowerCase().includes('csv') || file.name.toLowerCase().slice(-4) == '.csv') reader.readAsText(file);
 	else {
 		const error = infoElement("This file isn't a CSV!", 'error');

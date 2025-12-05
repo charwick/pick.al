@@ -78,13 +78,13 @@ foreach ($sql->get_classes() as $class) {
 				foreach (array_merge($active, $inactive) as $class) if ($class->schema==$schema->id) $count++; ?>
 				<tr>
 					<td>
-						<?php if (!$schema->global) { ?><a href="/admin/schema/<?php echo $schema->id; ?>"><?php }
+						<?php if (!$schema->global) { ?><a href="/admin/schema/<?= $schema->id; ?>"><?php }
 						echo $schema->name;
 						if (!$schema->global) echo '</a>'; ?>
 					</td>
-					<td><?php echo $schema->output_buttons(true); ?></td>
-					<td><?php echo $count; ?> classes</td>
-					<td class="actions"><a href="/admin/schema.php?schema=<?php echo $schema->id; ?>&duplicate=1" class="copy" title="Duplicate"></a></td>
+					<td><?= $schema->output_buttons(true); ?></td>
+					<td><?= $count; ?> classes</td>
+					<td class="actions"><a href="/admin/schema.php?schema=<?= $schema->id; ?>&duplicate=1" class="copy" title="Duplicate"></a></td>
 				</tr>
 			<?php } ?>
 		</table>

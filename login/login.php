@@ -147,7 +147,7 @@ require_once('admin/parts.php'); ?>
 	<meta name="description" content="Pick.al is a lightweight app for calling on students at random during class and recording participation.">
 </head>
 
-<body id="login" class="<?php echo $bodyclass; ?>">
+<body id="login" class="<?= $bodyclass; ?>">
 	<main>
 		<h1 id="logo">Pick.al</h1>
 		<section id="split">
@@ -171,10 +171,10 @@ require_once('admin/parts.php'); ?>
 					<div id="formbody">
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries">
-							<li><input name="username" type="text" placeholder="Username" value="<?php echo $username; ?>" autocomplete="username"></li>
-							<li><input name="email" type="email" placeholder="Email Address" value="<?php echo $email; ?>" autocomplete="email"></li>
+							<li><input name="username" type="text" placeholder="Username" value="<?= $username; ?>" autocomplete="username"></li>
+							<li><input name="email" type="email" placeholder="Email Address" value="<?= $email; ?>" autocomplete="email"></li>
 							<li id="orcid">
-								OrcId: <?php echo $_SESSION['orcid']; ?>
+								OrcId: <?= $_SESSION['orcid']; ?>
 								<span class="actions"><a href="/" class="cancel" title="Remove OrcID"></a></span>
 							</li>
 						</ul>
@@ -194,19 +194,19 @@ require_once('admin/parts.php'); ?>
 							<li><input name="confirm_password" type="password" placeholder="Confirm Password" required="" autocomplete="new-password"></li>
 						</ul>
 						<input type="hidden" name="action" value="resetpw" />
-						<input type="hidden" name="user" value="<?php echo $_GET['user']; ?>" />
-						<input type="hidden" name="key" value="<?php echo $_GET['key']; ?>" />
+						<input type="hidden" name="user" value="<?= $_GET['user']; ?>" />
+						<input type="hidden" name="key" value="<?= $_GET['key']; ?>" />
 						<input type="submit" value="Submit" />
 					</div>
 
 				<?php } else { ?>
 					<ul id="tabs">
 						<li>
-							<input type="radio" name="action" value="register" id="tab_register" <?php echo $defaulttab=='register' ? 'checked' : ''; ?> />
+							<input type="radio" name="action" value="register" id="tab_register" <?= $defaulttab=='register' ? 'checked' : ''; ?> />
 							<label for="tab_register">Register</label>
 						</li>
 						<li>
-							<input type="radio" name="action" value="login" id="tab_login" <?php echo $defaulttab=='login' ? 'checked' : ''; ?> />
+							<input type="radio" name="action" value="login" id="tab_login" <?= $defaulttab=='login' ? 'checked' : ''; ?> />
 							<label for="tab_login">Log in</label>
 						</li>
 					</ul>
@@ -221,7 +221,7 @@ require_once('admin/parts.php'); ?>
 					</div>
 
 					<div id="actionbuttons">
-						<a href="<?php echo $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcID</a>
+						<a href="<?= $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcID</a>
 						<a href="/?try" class="button" id="try">Try a Demo</a>
 					</div>
 				<?php } ?>

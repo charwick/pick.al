@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		for (const student of response) {
 			const li = markup({tag: 'a', attrs: {href: `/admin/class/${student.classid}#student-${student.id}`}, children: [
 				{tag: 'span', attrs: {class: 'student'}, children: student.fname+' '+student.lname},
-				{tag: 'span', attrs: {class: 'class'}, children: student.name+`<span class="semester">${student.semester} ${student.year}</span>`},
+				{tag: 'span', attrs: {class: 'class'}, children: student.name+`<span class="semester">${student.semester[0].toUpperCase()}${student.semester.slice(1)} ${student.year}</span>`},
 			]});
 			li.addEventListener('mouseover', function(e) {
 				for (const a of list.querySelectorAll('a')) a.classList.remove('selected');

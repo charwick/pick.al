@@ -1,6 +1,5 @@
 <?php require_once('query.php');
 $sql = new chooser_query();
-
 $user = $sql->current_user();
 
 //Redirect to root and show login
@@ -24,19 +23,19 @@ if ($classid) {
 <head>
 	<?php if ($classid) {
 		$roster = $sql->get_roster($classid); ?>
-		<title><?php echo "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
+		<title><?= "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
 		<script type="text/javascript">
-			var classid = <?php echo $classid; ?>,
-				roster = <?php echo json_encode($roster); ?>,
-				demo = <?php echo $user ? 'false' : 'true'; ?>;
-			<?php echo $class->schema->output_js(true); ?>
+			var classid = <?= $classid; ?>,
+				roster = <?= json_encode($roster); ?>,
+				demo = <?= $user ? 'false' : 'true'; ?>;
+			<?= $class->schema->output_js(true); ?>
 		</script>
 		<?php 
 		echo $class->schema->output_css();
 	} else { ?>
 		<title>Available Classes | Pick.al</title>
 		<?php if ($user) { //Remember username on login page ?>
-			<script type="text/javascript">localStorage.username = "<?php echo $user->username; ?>";</script>
+			<script type="text/javascript">localStorage.username = "<?= $user->username; ?>";</script>
 		<?php }
 	}
 	
@@ -55,9 +54,9 @@ if ($classid) {
 		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
 			<div id="logo">Pick.al</div>
-			<h1 id="classname"><?php echo $class->name; ?></h1>
+			<h1 id="classname"><?= $class->name; ?></h1>
 			<a href="/" title="Back" id="backbutton">←</a>
-			<p class="subtitle"><?php echo ucwords($class->semester)." {$class->year}"; ?></p>
+			<p class="subtitle"><?= ucwords($class->semester)." {$class->year}"; ?></p>
 			<a href="#" title="Roster" id="rosterlist">Roster</a>
 
 			<div class="actions">
@@ -83,7 +82,7 @@ if ($classid) {
 
 			<div id="roster">
 				<div id="topbar">
-					<a href="/admin/class/<?php echo $classid; ?>" id="rosteredit" class="button">Manage</a>
+					<a href="/admin/class/<?= $classid; ?>" id="rosteredit" class="button">Manage</a>
 					<a href="#" id="rosterclose">×</a>
 				</div>
 				<ul>
@@ -112,14 +111,14 @@ if ($classid) {
 			foreach ($sql->get_classes() as $class) if ($class->active) $active[] = $class; else $inactive[] = $class;
 			if (!$active) echo '<div class="classlist active noclasses'.($inactive ? ' switchable' : '').'">No active classes <a href="/admin/class/new" class="button" id="pick">New Class</a></div>';
 			else { ?>
-				<h2 class="active<?php if ($inactive) echo ' switchable'; ?>">Active Classes <span>/ <?php echo $user ? $user->username : 'Demo User'; ?></span></h2>
+				<h2 class="active<?php if ($inactive) echo ' switchable'; ?>">Active Classes <span>/ <?= $user ? $user->username : 'Demo User'; ?></span></h2>
 				<ul class="classlist active">
 					<?php foreach ($active as $class)
 						echo "<li><a href='/class/{$class->id}".($user ? '' : '?try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
 				</ul>
 			<?php }
 			if ($inactive) { ?>
-				<h2 class="switchable inactive">Inactive Classes <span>/ <?php echo $user ? $user->username : 'Demo User'; ?></span></h2>
+				<h2 class="switchable inactive">Inactive Classes <span>/ <?= $user ? $user->username : 'Demo User'; ?></span></h2>
 				<ul class="classlist inactive">
 					<?php foreach ($inactive as $class)
 						echo "<li><a href='/class/{$class->id}".($user ? '' : '?try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
@@ -135,7 +134,7 @@ if ($classid) {
 			<li>Choose student <span><kbd>space</kbd></span></li>
 			<li>Previous chosen student <span><kbd>&larr;</kbd></span></li>
 			<li>Next chosen student <span><kbd>&rarr;</kbd></span></li>
-			<li>Evaluate student <span><kbd>1</kbd>-<kbd><?php echo $maxkey; ?></kbd></span></li>
+			<li>Evaluate student <span><kbd>1</kbd>-<kbd><?= $maxkey; ?></kbd></span></li>
 			<li>Clear evaluation <span><kbd>0</kbd></span></li>
 			<li>Snooze student until tomorrow <span><kbd>Z</kbd></span></li>
 			<li>Open/close roster <span><kbd>R</kbd></span></li>
