@@ -49,46 +49,50 @@ foreach ($sql->get_classes() as $class) {
 
 		<?php if (isset($message)) echo $message; ?>
 
-		<ul class="classes">
-			<?php foreach (['active', 'inactive'] as $classes) foreach ($$classes as $class) {
-				echo "<li>";
-				echo "<a href='class/{$class->id}' class='classbox {$classes}'>
-					<span class='title'>{$class->name}</span>
-					<span class='semester'>".ucwords($class->semester)." {$class->year}</span>&nbsp; •&nbsp; 
-					<span class='students'>{$class->students}</span>
-				</a>";
-				echo "</li>";
-			}
-			if ($inactive) echo '<li id="collapse"></li>'; ?>
-		</ul>
-		
-		<?php if (!$inactive && !$active) { ?>
-			<a id="welcome" class="classbox active" href="class/new">
-				<h2 class="title">Welcome to Pick.al!</h2>
-				<p>Get started by creating a class and uploading a roster.</p>
-			</a>
-		<?php } ?>
-		<p><a class="button" href="class/new" id="newclass">New Class</a></p>
-
-		<h2 class="new-feature">Button Schemae</h2>
-
-		<table id="schemae">
-			<?php foreach ($sql->get_available_schemae() as $schema) {
-				$count = 0;
-				foreach (array_merge($active, $inactive) as $class) if ($class->schema==$schema->id) $count++; ?>
-				<tr>
-					<td>
-						<?php if (!$schema->global) { ?><a href="/admin/schema/<?= $schema->id; ?>"><?php }
-						echo $schema->name;
-						if (!$schema->global) echo '</a>'; ?>
-					</td>
-					<td><?= $schema->output_buttons(true); ?></td>
-					<td><?= $count; ?> classes</td>
-					<td class="actions"><a href="/admin/schema.php?schema=<?= $schema->id; ?>&duplicate=1" class="copy" title="Duplicate"></a></td>
-				</tr>
+		<section>
+			<ul class="classes">
+				<?php foreach (['active', 'inactive'] as $classes) foreach ($$classes as $class) {
+					echo "<li>";
+					echo "<a href='class/{$class->id}' class='classbox {$classes}'>
+						<span class='title'>{$class->name}</span>
+						<span class='semester'>".ucwords($class->semester)." {$class->year}</span>&nbsp; •&nbsp; 
+						<span class='students'>{$class->students}</span>
+					</a>";
+					echo "</li>";
+				}
+				if ($inactive) echo '<li id="collapse"></li>'; ?>
+			</ul>
+			
+			<?php if (!$inactive && !$active) { ?>
+				<a id="welcome" class="classbox active" href="class/new">
+					<h2 class="title">Welcome to Pick.al!</h2>
+					<p>Get started by creating a class and uploading a roster.</p>
+				</a>
 			<?php } ?>
-		</table>
-		<p><a class="button" href="#newschema" id="newschema">New Schema</a></p>
+			<p><a class="button" href="class/new" id="newclass">New Class</a></p>
+		</section>
+
+		<section>
+			<h2>Button Schemae</h2>
+
+			<table id="schemae">
+				<?php foreach ($sql->get_available_schemae() as $schema) {
+					$count = 0;
+					foreach (array_merge($active, $inactive) as $class) if ($class->schema==$schema->id) $count++; ?>
+					<tr>
+						<td>
+							<?php if (!$schema->global) { ?><a href="/admin/schema/<?= $schema->id; ?>"><?php }
+							echo $schema->name;
+							if (!$schema->global) echo '</a>'; ?>
+						</td>
+						<td><?= $schema->output_buttons(true); ?></td>
+						<td><?= $count; ?> classes</td>
+						<td class="actions"><a href="/admin/schema.php?schema=<?= $schema->id; ?>&duplicate=1" class="copy" title="Duplicate"></a></td>
+					</tr>
+				<?php } ?>
+			</table>
+			<p><a class="button" href="#newschema" id="newschema">New Schema</a></p>
+		</section>
 
 	</main>
 

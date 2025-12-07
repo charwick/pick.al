@@ -174,7 +174,7 @@ if (isset($_POST['name'])) {
 			</section>
 
 			<section id="questions">
-				<h2 class="new-feature">Queued Questions</h2>
+				<h2>Queued Questions</h2>
 				<p><em><small>Queued questions can be staged during class in the sidebar of the picker.</small></em></p>
 				<ul id="questionlist"><?php
 					$inactives = 0;

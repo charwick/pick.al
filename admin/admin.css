@@ -15,7 +15,7 @@ h1 {
 	margin: 0.25em 0;
 	line-height: 1.5;
 }
-.new-feature { margin-top: 2em; }
+section ~ section h2 { margin-top: 1.5em; }
 .new-feature::after {
 	content: 'NEW';
 	display: inline-block;
@@ -51,7 +51,6 @@ a.button, button, input[type='submit'] {
 	border: none;
 	border-bottom: 3px solid rgb(0 0 0 / 25%);
 	border-radius: 30px;
-	margin-top: 1em;
 	cursor: pointer;
 	font-size: 1.15em;
 	font-family: 'Lucida Grande', Calibri, sans-serif;
