@@ -3,7 +3,8 @@ require_once('parts.php');
 $sql = new chooser_query();
 
 //Login-wall
-if (!$sql->current_user()) {
+$user = $sql->current_user();
+if (!$user) {
 	header("Location: ../");
 	exit;
 }
@@ -98,7 +99,10 @@ if (isset($_POST['name'])) {
 					</span>
 					<span class="meta-item" id="schemaselect">
 						Button schema: <span id="selectgoeshere" data-default="<?= $class->schema->id; ?>"></span> <span class="schemalist"><?= $class->schema->output_buttons(true); ?></span>
-					</span>
+					</span><?php
+					if ($user->options->publicapi ?? false) {
+						?><span class="apipublic <?= $class->apipublic ? '' : 'private'; ?>" title="<?= $class->apipublic ? 'API public' : 'API private'; ?>"></span>
+					<?php } ?>
 				</p>
 			<?php } else {
 				$seasons = ['Spring', 'Fall', 'Winter', 'Summer'];

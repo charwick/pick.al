@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		modal({tag: 'div', children: '<h2>What is the Pick.al API?</h2>'
 			+'<p>The Pick.al API is a public JSON representation of the information for your classes that you can use to connect to other web applications. For example your personal website could display an up-to-date list of classes taught, pulled live from Pick.al.</p>'
 			+'<p>It includes metadata about your classes and the number of students, but NO information identifying either you or students.</p>'
-			+'<p>When enabled, classes are included by default, but may be excluded individually in the class settings.</p>'
+			+'<p>When enabled, classes are included by default, but may be excluded individually in the class settings with the <span class="apipublic" title="API Public"></span> icon.</p>'
 		});
 	});
 

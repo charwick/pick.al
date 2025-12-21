@@ -65,13 +65,14 @@ class chooser_query extends mysqli {
 		return $this->insert_id;
 	}
 	
-	function edit_class(int $class, ?string $name=null, ?string $semester=null, ?int $year=null, ?string $activeuntil=null, ?int $schema=null): int {
+	function edit_class(int $class, ?string $name=null, ?string $semester=null, ?int $year=null, ?string $activeuntil=null, ?int $schema=null, ?bool $public=null): int {
 		$params = []; $cols = [];
 		if ($name) { $params[] = sanitize($name); $cols[] = '`name`=?'; }
 		if ($semester) { $params[] = $semester; $cols[] = '`semester`=?'; }
 		if ($year) { $params[] = $year; $cols[] = '`year`=?'; }
 		if ($activeuntil) { $params[] = $activeuntil; $cols[] = '`activeuntil`=?'; }
 		if ($schema) { $params[] = $schema; $cols[] = '`schema`=?'; }
+		if (isset($public)) { $params[] = (int)$public; $cols[] = '`apipublic`=?'; }
 
 		$params = array_merge($params, [$class, $this->userid]);
 		$cols = implode(', ', $cols);

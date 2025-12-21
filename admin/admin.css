@@ -498,19 +498,26 @@ span.num::before { content: ' / '; }
 .copy { background: url('../icon/copy.svg') center no-repeat; }
 .archive { background: url('../icon/archive.svg') center no-repeat; }
 .inactive .archive { background: url('../icon/unarchive.svg') center no-repeat; }
+.apipublic.private { background: url('../icon/eye-slash.svg') center no-repeat; }
 
-.edit, .actions a, #roster .excuses {
+.edit, .actions a, #roster .excuses, .apipublic {
 	color: #000;
 	display: inline-block;
 	margin: 0 0.5em;
 	position: relative;
 	height: 1em; width: 1em;
-	background-size: 1em 1em;
+	background-size: 1em 1em !important;
 	opacity: 0.3;
 	font-size: 0.75em;
 	font-weight: normal;
 	background-position: right;
 	line-height: 1;
+}
+.apipublic {
+	background: url('../icon/eye.svg') center no-repeat;
+	vertical-align: middle;
+	font-size: 1.2rem;
+	cursor: pointer;
 }
 #roster .excuses {
 	float: right;
@@ -525,7 +532,7 @@ h1 .actions a { font-size: 0.5em; }
 }
 .actions.expand a::before { content: attr(title); }
 
-.edit:hover, .actions a:hover, #roster .excuses:hover { opacity: 0.75; }
+.edit:hover, .actions a:hover, #roster .excuses:hover, .apipublic:hover { opacity: 0.75; }
 table .actions {
 	border-left-color: transparent;
 	padding: 0 5px;
@@ -547,7 +554,7 @@ table.sortable th[data-sort="desc"]::after { content: '↓'; }
 table.sortable th[data-sort="asc"]::after { content: '↑'; }
 
 .actions:not(.expand) a:hover::after, #roster .excuses:hover::after,
-#collapse:hover::after, .events .q:hover::after {
+#collapse:hover::after, .events .q:hover::after, .apipublic:hover::after {
 	content: attr(title);
 	display: block;
 	position: absolute;
@@ -563,7 +570,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 	line-height: 2;
 }
 .actions:not(.expand) a:hover::before, #roster .excuses:hover::before,
-#collapse:hover::before, .events .q:hover::before{
+#collapse:hover::before, .events .q:hover::before, .apipublic:hover::before {
 	content: '';
 	display: block;
 	position: absolute;

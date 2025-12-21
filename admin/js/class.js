@@ -45,6 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	} else addSchemaButtons();
 
+	//API public toggle
+	document.querySelector('.apipublic')?.addEventListener('click', function(e) {
+		const publicize = this.classList.contains('private');
+		post('/ajax.php', {req: 'publicize', class: classid, public: publicize}, result => {
+			if (!result) return;
+			if (publicize) {
+				this.classList.remove('private');
+				this.title = 'API Public';
+			} else {
+				this.classList.add('private');
+				this.title = 'API Private';
+			}
+		});
+	});
+
 	document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
 
 	//Action buttons

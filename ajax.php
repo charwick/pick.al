@@ -35,6 +35,10 @@ switch ($req) {
 		else http_response_code(403);
 		break;
 	
+	case 'publicize':
+		echo $sql->edit_class($_POST['class'], null, null, null, null, null, $_POST['public']=='true');
+		break;
+	
 	case 'newquestion':
 		echo $sql->new_question($_POST['class'], $_POST['text']);
 		break;
@@ -231,7 +235,10 @@ switch ($req) {
 			http_response_code(403);
 			exit();
 		}
-		echo json_encode($sql->get_classes(false, $user->id));
+		$classes = $sql->get_classes(false, $user->id);
+		foreach ($classes as $id => $class)
+			if (!$class->apipublic) unset($classes[$id]);
+		echo json_encode($classes);
 		break;
 }
 
