@@ -216,6 +216,23 @@ switch ($req) {
 		if (!is_numeric($result)) http_response_code(500);
 		echo $result;
 		break;
+	
+	case 'updateoption':
+		if (!in_array($_POST['opt'], ['publicapi'])) { //whitelist
+			echo '0'; break;
+		}
+		$val = $_POST['val']=='false' ? null : $_POST['val'];
+		echo $sql->user_add_option($_POST['opt'], $val);
+		break;
+	
+	case 'api':
+		$user = $sql->get_user_by('id', (int)$_GET['user']);
+		if (!$user || !($user->options->publicapi ?? false)) {
+			http_response_code(403);
+			exit();
+		}
+		echo json_encode($sql->get_classes(false, $user->id));
+		break;
 }
 
 // sleep(1); //Simulate slow network

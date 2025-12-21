@@ -27,16 +27,17 @@ class chooser_query extends mysqli {
 	// CLASSES
 	//=========
 
-	function get_classes(bool $active=false): array {
+	function get_classes(bool $active=false, ?int $user=null): array {
 		$aw = $active ? ' AND activeuntil >= NOW()' : '';
 
-		$q = "SELECT classes.*, COUNT(students.class) AS students
+		$q = "SELECT classes.*, COUNT(DISTINCT students.id) AS students, COUNT(DISTINCT questions.id) AS questions
 			FROM classes
 			LEFT JOIN students ON students.class=classes.id
-			WHERE classes.user".($this->userid ? "=?" : " IS NULL")." {$aw}
-			GROUP BY id
+			LEFT JOIN questions ON questions.class=classes.id
+			WHERE classes.user".($user || $this->userid ? "=?" : " IS NULL")." {$aw}
+			GROUP BY classes.id
 			ORDER BY year DESC, semester DESC, activeuntil DESC";
-		$result = $this->execute_query($q, $this->userid ? [$this->userid] : []);
+		$result = $this->execute_query($q, $user || $this->userid ? [$user ?? $this->userid] : []);
 		
 		$classes = [];
 		while ($class = $result->fetch_object()) {

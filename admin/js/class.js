@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const schemaOpts = [];
 		for (const s of allschemae) schemaOpts.push([s.id, s.name, s.compatible]);
 		schemaOpts.push(null);
-		schemaOpts.push(['__addnew__','Add new schema']);
+		schemaOpts.push(['__addnew__','Add New']);
 
 		classedit.addElement(title, {placeholder: 'Class Name'});
 		classedit.addElement(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer']});

@@ -94,6 +94,7 @@ class makeInput {
 			inps.push(inp);
 		}
 		inps[0].focus();
+		inps[0].setSelectionRange(0,0);
 		if (this.editfunc instanceof Function) this.editfunc(inps);
 	}
 

@@ -72,6 +72,11 @@ if (isset($_GET['code']) && !$user->orcid) {
 			<?php if ($user->orcid) echo "<a href='https://orcid.org/{$user->orcid}'>{$user->orcid}</a>" . ' <span class="actions"><a class="cancel" href="#" title="Disconnect"></a></span>'; ?>
 			<a class="button" href="<?= $orcid->auth_url('https://pick.al/admin/user.php'); ?>">Connect</a>
 		</p>
+
+		<?php $pubapi = $user->options->publicapi ?? false; ?>
+		<p><span class="new-feature">Public API: </span> <input type="checkbox" id="apibox" <?php if ($pubapi) echo 'checked="checked"'; ?> />
+		<small id="apilink">Your API data can be queried at <a href="/api/user/<?= $user->id; ?>">pick.al/api/user/<?= $user->id; ?></a>.</small>
+		<small><a href="#" id="apiexplain">What's this?</a></small></p>
 	</main>
 	<form id="deleteform" action="" method="post"><input type="hidden" name="delete" value="true" /></form>
 	<?php footer(); ?>

@@ -10,6 +10,8 @@ body {
 	flex-direction: column;
 }
 main { flex: 1; }
+a { color: #36A; }
+a:hover { color: #69F; }
 
 h1 {
 	margin: 0.25em 0;
@@ -26,6 +28,10 @@ section ~ section h2 { margin-top: 1.5em; }
 	border-radius: 3px;
 	margin-left: 0.75em;
 	vertical-align: middle;
+}
+p span.new-feature::after {
+	float: left;
+	margin: 4px 1em 0 0;
 }
 #questions h2 + p {
 	margin-top: -0.8em;
@@ -883,7 +889,7 @@ main .gravatar {
 	border-radius: 0 0 5px 5px;
 }
 
-#password::after {
+#password::after, .admin-user p > small {
 	content: "Last changed " attr(data-date);
 	display: block;
 	font-size: small;

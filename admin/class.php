@@ -146,7 +146,6 @@ if (isset($_POST['name'])) {
 						</tr>
 					</thead>
 					<tbody><?php
-						 $row=0;
 						foreach ($roster as $student) {
 							$excused = $student->excuseduntil && strtotime($student->excuseduntil)+24*3600 > time();
 							echo "<tr data-id='{$student->id}'".($excused ? " data-excused='{$student->excuseduntil}'" : '').">"; //Be inclusive of the day
@@ -161,7 +160,6 @@ if (isset($_POST['name'])) {
 									if ($student->score!==null) echo round($student->score,2)."/{$den}";
 								echo "</td>";
 							echo "</tr>";
-							$row = !$row;
 						}
 					?></tbody>
 					<tfoot>

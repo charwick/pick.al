@@ -31,6 +31,7 @@ The picker (to be used by the instructor in class, either on a phone or computer
 ### Other
 
 * Register and log in with OrcID
+* Public JSON API for external integration (disabled by default)
 
 Bug reports and feature requests can be filed in the [issues tab](https://github.com/charwick/pick.al/issues) here on Github.
 

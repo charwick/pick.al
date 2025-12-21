@@ -72,6 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	//API switch
+	const apibox = document.getElementById('apibox');
+	document.getElementById('apilink').style.display = apibox.checked ? 'block' : 'none';
+	apibox.addEventListener('change', (e) => {
+		const oldval = !e.target.checked;
+		post('/ajax.php', {req: 'updateoption', opt: 'publicapi', val: e.target.checked}, response => {
+			if (!response) {
+				e.target.checked = oldval;
+				return;
+			}
+			document.getElementById('apilink').style.display = e.target.checked ? 'block' : 'none';
+		});
+	});
+	document.getElementById('apiexplain').addEventListener('click', (e) => {
+		e.preventDefault();
+		modal({tag: 'div', children: '<h2>What is the Pick.al API?</h2>'
+			+'<p>The Pick.al API is a public JSON representation of the information for your classes that you can use to connect to other web applications. For example your personal website could display an up-to-date list of classes taught, pulled live from Pick.al.</p>'
+			+'<p>It includes metadata about your classes and the number of students, but NO information identifying either you or students.</p>'
+			+'<p>When enabled, classes are included by default, but may be excluded individually in the class settings.</p>'
+		});
+	});
+
 	//Delete user
 	document.querySelector('h1 .delete').addEventListener('click', function(e) {
 		e.preventDefault();

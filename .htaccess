@@ -17,3 +17,6 @@ RewriteRule ^admin/schema/([0-9]+)$ admin/schema.php?schema=$1 [L,QSA]
 
 # /admin/user -> admin/user.php
 RewriteRule ^admin/user$ admin/user.php [L,QSA]
+
+# /api/user/n -> api.php?user=n
+RewriteRule ^api/user/([0-9]+)$ ajax.php?req=api&user=$1 [L,QSA]
