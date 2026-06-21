@@ -42,7 +42,7 @@ foreach ($sql->get_classes() as $class) {
 		<h1>
 			Manage Classes
 			<div id="searchcontain">
-				<input type="text" placeholder="Search Students..." id="search" autocomplete="off" aria-autocomplete="list" />
+				<input type="search" placeholder="Search Students..." id="search" autocomplete="off" aria-autocomplete="list" />
 				<div id="autocomplete"></div>
 			</div>
 		</h1>
