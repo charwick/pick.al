@@ -57,6 +57,6 @@ function embed_asset(string $asset): void {
 	$ext = explode('.', $asset)[1];
 	$path = $assets[$asset][0];
 	$version = $assets[$asset][1];
-	if ($ext=='js') echo "<script type='text/javascript' src='{$path}/{$asset}?version={$version}'></script>";
-	elseif ($ext=='css') echo "<link rel='stylesheet' type='text/css' href='{$path}/{$asset}?version={$version}' media='all'>";
+	if ($ext=='js') echo "<script src='{$path}/{$asset}?version={$version}'></script>";
+	elseif ($ext=='css') echo "<link rel='stylesheet' href='{$path}/{$asset}?version={$version}' media='all'>";
 }

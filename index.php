@@ -24,7 +24,7 @@ if ($classid) {
 	<?php if ($classid) {
 		$roster = $sql->get_roster($classid); ?>
 		<title><?= "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
-		<script type="text/javascript">
+		<script>
 			var classid = <?= $classid; ?>,
 				roster = <?= json_encode($roster); ?>,
 				demo = <?= $user ? 'false' : 'true'; ?>;
@@ -35,7 +35,7 @@ if ($classid) {
 	} else { ?>
 		<title>Available Classes | Pick.al</title>
 		<?php if ($user) { //Remember username on login page ?>
-			<script type="text/javascript">localStorage.username = "<?= $user->username; ?>";</script>
+			<script>localStorage.username = "<?= $user->username; ?>";</script>
 		<?php }
 	}
 	
