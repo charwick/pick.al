@@ -25,8 +25,7 @@ if ($classid) {
 		$roster = $sql->get_roster($classid); ?>
 		<title><?= "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
 		<script>
-			var classid = <?= $classid; ?>,
-				roster = <?= json_encode($roster); ?>,
+			var roster = <?= json_encode($roster); ?>,
 				demo = <?= $user ? 'false' : 'true'; ?>;
 			<?= $class->schema->output_js(true); ?>
 		</script>

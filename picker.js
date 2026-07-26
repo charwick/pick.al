@@ -3,7 +3,8 @@ var hist = [], //Reverse coded: current student = index[0]
 	histIndex = null,
 	currentAnim = false,
 	currentQ = null,
-	activeVis = true;
+	activeVis = true,
+	classid = window.location.pathname.includes('class') ? parseInt(window.location.pathname.split('/').at(-1)) : null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {

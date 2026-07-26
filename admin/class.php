@@ -35,8 +35,7 @@ if (isset($_POST['name'])) {
 <html lang="en-US">
 <head>
 	<title><?= $classid ? "Editing {$class->name} (".ucfirst($class->semester)." {$class->year})" : "New Class"; ?> | Pick.al</title>
-	<script type="text/javascript">
-		var classid = <?= $classid ?: 'null'; ?>;
+	<script>
 		<?php if ($classid) {
 			$schemae = [$class->schema->name => $class->schema];
 			
@@ -62,7 +61,7 @@ if (isset($_POST['name'])) {
 	embed_asset('class.js');
 	if ($classid) echo $class->schema->output_css(true, false);
 	else {
-		echo '<style type="text/css" class="schema-css">';
+		echo '<style class="schema-css">';
 		foreach ($schemae as $schema) echo $schema->output_css(false, false);
 		echo '</style>';
 	}

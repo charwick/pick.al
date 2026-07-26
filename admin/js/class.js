@@ -1,5 +1,6 @@
 "use strict";
-var recentTable;
+var recentTable,
+	classid = window.location.pathname.includes('/new') ? null : parseInt(window.location.pathname.split('/').at(-1));
 document.addEventListener('DOMContentLoaded', () => {
 
 	//Make class info editable
