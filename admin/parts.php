@@ -32,10 +32,11 @@ function headermeta($admin=false): void {
 	if ($admin) embed_asset('admin.css');
 	?><meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	
+	<link rel="manifest" href="/manifest.webmanifest">
 	<link rel="icon" type="image/png" sizes="32x32" href="/icon/icon-32.png">
-	<link rel="shortcut icon" sizes="196x196" href="/icon/icon-196.png">
-	<link rel="apple-touch-icon" href="/icon/icon-196.png">
-	<meta name="msapplication-TileImage" content="/icon/icon-196.png">
+	<link rel="shortcut icon" sizes="192x192" href="/icon/icon-192.png">
+	<link rel="apple-touch-icon" href="/icon/icon-192.png">
+	<meta name="msapplication-TileImage" content="/icon/icon-192.png">
 <?php }
 
 //Increment version to invalidate cache

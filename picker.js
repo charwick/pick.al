@@ -610,18 +610,18 @@ function isExcused(student) {
 // UTILITY
 //=========
 
-function fetchif(cond, url, data, then) {
+async function fetchif(cond, url, data, then) {
 	if (!cond) return then(-1);
 	const formData = new FormData();
 	for (const key in data) formData.append(key, data[key]);
-	fetch(url, {method: 'POST', body: formData})
-		.then(response => {
-			if (response.status === 401) {
-				window.location.href = '/login/login.php?action=logout';
-				return;
-			}
-			if (!response.ok) throw {status: response.status};
-			return response.json();
-		}).then(then)
-		.catch(console.error);
+	try {
+		const response = await fetch(url, {method: 'POST', body: formData});
+		if (response.status === 401) {
+			window.location.href = '/login/login.php?action=logout';
+			return;
+		}
+		if (!response.ok) throw new Error('Network error: '+response.status);
+		await then(response.json);
+
+	} catch(err) { console.error(err) };
 }
