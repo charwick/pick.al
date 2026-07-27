@@ -15,6 +15,7 @@ body.inactive { background: #555; }
 	box-sizing: border-box;
 	position: relative;
 }
+#pick, .noclasses, #bottom-anchor h2, .button, li.head, #shortcuts, #rosterclose { user-select: none; }
 
 h1 {
 	font-weight: normal;

@@ -13,6 +13,8 @@ main { flex: 1; }
 a { color: #36A; }
 a:hover { color: #69F; }
 
+h1:not(#name), h2, #userbar, thead, tfoot, #questions small, footer, .mtx, .button, .addnew { user-select: none; }
+
 h1 {
 	margin: 0.25em 0;
 	line-height: 1.5;
