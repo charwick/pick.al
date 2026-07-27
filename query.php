@@ -586,7 +586,7 @@ class Schema {
 			$css .= "[data-schemaval=\"{$item['value']}\"]::after { content: '{$item['text']}' }\r\n";
 			if ($hover) $css .= "[data-schemaval=\"{$item['value']}\"]:hover { background-color: #{$item['hovercolor']}; }\r\n";
 		}
-		return $standalone ? "<style type='text/css' class='schema-css'>{$css}</style>" : $css;
+		return $standalone ? "<style class='schema-css'>{$css}</style>" : $css;
 	}
 
 	function output_js(bool $standalone=true): string {

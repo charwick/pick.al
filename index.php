@@ -21,41 +21,22 @@ if ($classid) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<?php if ($classid) {
-		$roster = $sql->get_roster($classid); ?>
-		<title><?= "{$class->name} ".ucwords($class->semester)." {$class->year}"; ?> | Pick.al</title>
-		<script>
-			var roster = <?= json_encode($roster); ?>,
-				demo = <?= $user ? 'false' : 'true'; ?>;
-			<?= $class->schema->output_js(true); ?>
-		</script>
-		<?php 
-		echo $class->schema->output_css();
-	} else { ?>
-		<title>Available Classes | Pick.al</title>
-		<?php if ($user) { //Remember username on login page ?>
-			<script>localStorage.username = "<?= $user->username; ?>";</script>
-		<?php }
-	}
-	
-	include('admin/parts.php');
+	<title><?php if (!$classid) echo 'Available Classes | '; ?>Pick.al</title>
+
+	<?php include('admin/parts.php');
 	embed_asset('picker.css');
 	embed_asset('picker.js');
 	headermeta(); ?>
 </head>
 
-<body class="<?php
-	if (!$user) echo 'demo';
-	elseif ($classid && !$class->active) echo 'inactive';
-?>">
-	<?php if ($classid) {
-		$qs = $sql->get_questions($classid, true, 'ASC'); ?>
-		<div id="bodywrap"><!-- //Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
+<body>
+	<?php if ($classid) { ?>
+		<div id="bodywrap"><!-- Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
 			<div id="logo">Pick.al</div>
-			<h1 id="classname"><?= $class->name; ?></h1>
+			<h1 id="classname"></h1>
 			<a href="/" title="Back" id="backbutton">←</a>
-			<p class="subtitle"><?= ucwords($class->semester)." {$class->year}"; ?></p>
+			<p class="subtitle"></p>
 			<a href="#" title="Roster" id="rosterlist">Roster</a>
 
 			<div class="actions">
@@ -64,9 +45,7 @@ if ($classid) {
 				<a href="#" class="forward disabled">Forward</a>
 			</div>
 
-			<div id="sinfo">
-				<?php if (!$roster) echo '<p class="noclasses" style="margin-top:4em">No students</p>'; ?>
-			</div>
+			<div id="sinfo"></div>
 
 			<div id="question">
 				<div class="actions">
@@ -77,27 +56,21 @@ if ($classid) {
 				</div>
 				<div id="qtext"></div>
 			</div>
-			<?php if ($qs) echo '<a href="#" id="q-queue"></a>'; ?>
+			<a href="#" id="q-queue"></a>
 
 			<div id="roster">
 				<div id="topbar">
-					<a href="/admin/class/<?= $classid; ?>" id="rosteredit" class="button">Manage</a>
+					<a href="/admin/" id="rosteredit" class="button">Manage</a>
 					<a href="#" id="rosterclose">×</a>
 				</div>
 				<ul>
-					<?php if ($qs) { ?>
-						<li class="head">Questions</li>
-						<?php foreach ($qs as $q) echo "<li data-q='{$q->id}'>{$q->text}</li>";
-					} ?>
 					<li class="head">Students</li>
-					<?php foreach ($roster as $student) echo "<li data-id='{$student->id}'>{$student->fname} {$student->lname}</li>"; ?>
 				</ul>
 			</div>
 		</div>
 
 		<div id="bottom-anchor">
-			<?php if ($roster) echo '<button id="pick">Choose Student</button>';
-			else echo '<a href="/admin/class/'.$classid.'" id="pick" class="button">Add Students</a>'; ?>			
+			<button id="pick">Choose Student</button>
 		</div>
 
 	<?php } else { ?>
@@ -105,35 +78,16 @@ if ($classid) {
 
 		<h1 id="logo">Pick.al</h1>
 		
-		<div id="bottom-anchor">
-			<?php $active = []; $inactive = [];
-			foreach ($sql->get_classes() as $class) if ($class->active) $active[] = $class; else $inactive[] = $class;
-			if (!$active) echo '<div class="classlist active noclasses'.($inactive ? ' switchable' : '').'">No active classes <a href="/admin/class/new" class="button" id="pick">New Class</a></div>';
-			else { ?>
-				<h2 class="active<?php if ($inactive) echo ' switchable'; ?>">Active Classes <span>/ <?= $user ? $user->username : 'Demo User'; ?></span></h2>
-				<ul class="classlist active">
-					<?php foreach ($active as $class)
-						echo "<li><a href='/class/{$class->id}".($user ? '' : '?try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
-				</ul>
-			<?php }
-			if ($inactive) { ?>
-				<h2 class="switchable inactive">Inactive Classes <span>/ <?= $user ? $user->username : 'Demo User'; ?></span></h2>
-				<ul class="classlist inactive">
-					<?php foreach ($inactive as $class)
-						echo "<li><a href='/class/{$class->id}".($user ? '' : '?try')."'>{$class->name} <span>".ucwords($class->semester)." {$class->year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{$class->students} Students</span></a></li>"; ?>
-				</ul>
-			<?php } ?>
-		</div>
+		<div id="bottom-anchor"></div>
 	<?php } ?>
 	<dialog id="shortcuts">
 		<a class="close" href="#">&times;</a>
 		<h2>Keyboard Shortcuts</h2>
 		<ul>
-			<?php $maxkey = $classid ? count($class->schema->items) : 5; ?>
 			<li>Choose student <span><kbd>space</kbd></span></li>
 			<li>Previous chosen student <span><kbd>&larr;</kbd></span></li>
 			<li>Next chosen student <span><kbd>&rarr;</kbd></span></li>
-			<li>Evaluate student <span><kbd>1</kbd>-<kbd><?= $maxkey; ?></kbd></span></li>
+			<li>Evaluate student <span><kbd>1</kbd>-<kbd id="maxkey">5</kbd></span></li>
 			<li>Clear evaluation <span><kbd>0</kbd></span></li>
 			<li>Snooze student until tomorrow <span><kbd>Z</kbd></span></li>
 			<li>Open/close roster <span><kbd>R</kbd></span></li>

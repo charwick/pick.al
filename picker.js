@@ -4,14 +4,132 @@ var hist = [], //Reverse coded: current student = index[0]
 	currentAnim = false,
 	currentQ = null,
 	activeVis = true,
-	classid = window.location.pathname.includes('class') ? parseInt(window.location.pathname.split('/').at(-1)) : null;
+	roster = [],
+	schema = [],
+	questions = [],
+	demo = false,
+	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null;
+
+async function loadInitialData() {
+	try {
+		// Disable roster actions until data loads
+		const pickBtn = document.getElementById('pick');
+		if (pickBtn) pickBtn.disabled = true;
+
+		//Picker page
+		if (classid) {
+			const res = await fetch('/ajax.php?'+(new URLSearchParams({req: 'classdata', class: classid}).toString()), {method: 'get'});
+			if (!res.ok) throw new Error('Network error: '+res.status);
+			const j = await res.json();
+
+			document.getElementById('classname').innerHTML = j.name;
+			const semester = j.semester.charAt(0).toUpperCase() + j.semester.slice(1) + ' ' + j.year;
+			document.title = j.name + ' | ' + semester + ' | Pick.al';
+			document.querySelector('.subtitle').textContent = semester;
+			document.getElementById('rosteredit').href = '/admin/class/'+classid;
+
+			schema = j.schema.items;
+			document.getElementById('maxkey').textContent = schema.length;
+
+			if (j.demo) {
+				demo = true;
+				document.body.classList.add('demo');
+			} else if (!j.active) document.body.classList.add('inactive');
+			
+			const el = document.createElement('div');
+			el.innerHTML = j.schemaCss;
+			document.head.appendChild(el.firstElementChild);
+			
+			questions = j.questions;
+			if (questions && questions.length) {
+				document.querySelector('#q-queue').style.display = 'block';
+				const qhead = document.createElement('li'),
+					shead = document.querySelector('#roster li.head');
+				qhead.classList.add('head');
+				qhead.textContent = 'Questions';
+				document.querySelector('#roster ul').prepend(qhead);
+				for (const q of questions) {
+					const li = document.createElement('li');
+					li.dataset.q = q.id;
+					li.textContent = q.text;
+					if (q.archived) li.classList.add('archived');
+					document.querySelector('#roster ul').insertBefore(li, shead);
+				}
+			}
+
+			roster = j.roster;
+			if (roster.length) {
+				pickBtn.disabled = false;
+				for (const s of roster) {
+					let li = document.createElement('li');
+					li.dataset.id = s.id;
+					li.innerHTML = s.fname + ' ' + s.lname;
+
+					// Normalize excuseduntil into Date objects
+					if (s.excuseduntil != null) {
+						const exc = new Date(s.excuseduntil);
+						s.excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
+						if (isExcused(s))  li.classList.add('excused');
+					}
+
+					document.querySelector('#roster ul').append(li);
+				}
+			} else {
+				document.getElementById('sinfo').innerHTML = '<p class="noclasses" style="margin-top:4em">No students</p>';
+				document.getElementById('bottom-anchor').innerHTML = '<a href="/admin/class/'+classid+'" class="button" id="pick">Add Students</a>';
+			}
+
+		//Index page
+		} else {
+			const res = await fetch('/ajax.php?'+(new URLSearchParams({req: 'classlist'}).toString()), {method: 'get'});
+			if (!res.ok) throw new Error('Network error: '+res.status);
+			const j = await res.json();
+
+			if (j.username) localStorage.username = j.username; // Remember username on login page
+			for (const el of document.querySelectorAll('.username')) el.textContent = j.username ?? 'Demo User';
+
+			const clist = document.getElementById('bottom-anchor');
+			function classList(classes, title) {
+				const h2 = document.createElement('h2'),
+					ul = document.createElement('ul');
+				h2.classList.add(title.toLowerCase());
+				if (title=='Inactive' || j.inactive.length) h2.classList.add('switchable');
+				ul.classList.add('classlist', title.toLowerCase());
+				h2.innerHTML = title+' Classes <span>/ '+(j.username ?? 'Demo User')+'</span>';
+				for (const c of classes) {
+					const li = document.createElement('li');
+					li.innerHTML = `<a href='/class/${c.id}${!j.username ? '?try' : ''}'>${c.name} <span>${c.semester.charAt(0).toUpperCase() + c.semester.slice(1)} ${c.year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;${c.students} Students</span></a>`;
+					ul.append(li);
+				}
+
+				return [h2, ul];
+			}
+
+			if (!j.active.length)
+				clist.innerHTML = '<div class="classlist active noclasses'+(j.inactive.length ? ' switchable' : '')+'">No active classes <a href="/admin/class/new" class="button" id="pick">New Class</a></div>';
+			else clist.append(...classList(j.active, 'Active'));
+			if (j.inactive.length) clist.append(...classList(j.inactive, 'Inactive'));
+
+			//Active/inactive class list switcher
+			for (const i of clist.querySelectorAll('.switchable')) i.addEventListener('click', function(e) {
+				activeVis = !activeVis;
+				for (const j of clist.querySelectorAll('.active')) j.style.display = activeVis ? 'block' : 'none';
+				for (const j of clist.querySelectorAll('.inactive')) j.style.display = activeVis ? 'none' : 'block';
+			});
+		}
+	} catch (err) {
+		console.error('Failed to load class data', err);
+		// Leave UI disabled; user can still open shell but actions will fail until API implemented.
+		const warn = document.createElement('div');
+		warn.className = 'offline-warning';
+		warn.textContent = 'Unable to load class data from server.';
+		document.getElementById('bodywrap')?.prepend(warn);
+	}
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-	if ('roster' in window) for (const s of roster) if (s.excuseduntil != null) {
-		const exc = new Date(s.excuseduntil);
-		s.excuseduntil = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1);
-		if (isExcused(s)) document.querySelector(`li[data-id="${s.id}"]`).classList.add('excused');
-	}
+	loadInitialData(); //Kick off data load (non-blocking)
+	
 	document.querySelector('#bodywrap > .actions')?.addEventListener('click', function(e) {
 		e.preventDefault();
 		if (e.target.classList.contains('back')) buttonFunc('back')(e);
@@ -52,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Keyboard Navigation
 	document.addEventListener('keydown', function(e) {
-		const roster = document.getElementById('roster');
+		const rosterEl = document.getElementById('roster');
 		if (e.key == '?') {
 			const d = document.getElementById('shortcuts');
 			if (d.open) d.close();
@@ -61,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!window.classid) window.location.href = '/admin';
 			else window.location.href = '/admin/class/'+classid;
 		} else if (e.key == 'Escape') {
-			if (roster?.classList.contains('open')) roster.classList.remove('open');
+			if (rosterEl?.classList.contains('open')) rosterEl.classList.remove('open');
 			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
 		}
 
@@ -78,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else if (e.key == '0' && histIndex != null) hist[histIndex].element.querySelector('button.picked')?.click();
 		else if (e.key == 'z') document.querySelector('.snooze').click();
 		else if (e.key == 'r') {
-			if (roster.classList.contains('open')) roster.classList.remove('open');
-			else roster.classList.add('open');
+			if (rosterEl.classList.contains('open')) rosterEl.classList.remove('open');
+			else rosterEl.classList.add('open');
 		} else if (e.key == 'q') {
 			if (currentQ) {
 				const nextQ = document.querySelector(`#roster li[data-q="${currentQ}"]`).nextElementSibling;
@@ -92,8 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				setQbuttons();
 			} else firstQuestion();
-		} else if (roster.classList.contains('open')) {
-			const selected = roster.querySelector('.selected');
+		} else if (rosterEl.classList.contains('open')) {
+			const selected = rosterEl.querySelector('.selected');
 			if (e.key=='ArrowUp') {
 				if (selected) {
 					let newselect = selected.previousElementSibling;
@@ -107,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					const rosterList = roster.querySelectorAll('li:not(.head)');
 					if (rosterList.length) {
 						rosterList[rosterList.length - 1].classList.add('selected');
-						roster.querySelector('ul').scrollTop = roster.scrollHeight;
+						rosterEl.querySelector('ul').scrollTop = rosterEl.scrollHeight;
 					}
 				}
 			} else if (e.key=='ArrowDown') {
@@ -123,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					const rosterList = roster.querySelectorAll('li:not(.head)');
 					if (rosterList.length) {
 						rosterList[0].classList.add('selected');
-						roster.querySelector('ul').scrollTop = 0;
+						rosterEl.querySelector('ul').scrollTop = 0;
 					}
 				}
 			} else if (e.key=='Enter' && selected)
@@ -135,13 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		this.closest('dialog').close();
 	})
-
-	//Active/inactive class list switcher
-	for (const i of document.querySelectorAll('.switchable')) i.addEventListener('click', function(e) {
-		activeVis = !activeVis;
-		for (const j of document.querySelectorAll('.active')) j.style.display = activeVis ? 'block' : 'none';
-		for (const j of document.querySelectorAll('.inactive')) j.style.display = activeVis ? 'none' : 'block';
-	});
 
 	//=============
 	// ROSTER LIST

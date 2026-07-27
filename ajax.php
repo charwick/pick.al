@@ -11,7 +11,7 @@ header("Last-Modified: {$now} GMT");
 $req = $_POST['req'] ?? $_GET['req'];
 
 //Error if we're not logged in
-if (!$sql->userid && !in_array($req, ['userexists', 'resetpwlink'])) {
+if (!$sql->userid && !in_array($req, ['userexists', 'resetpwlink', 'classdata', 'classlist'])) {
 	http_response_code(401);
 	exit();
 }
@@ -21,6 +21,35 @@ switch ($req) {
 	//=========
 	// CLASSES
 	//=========
+
+	case 'classdata':
+		$classid = isset($_GET['class']) ? (int)$_GET['class'] : 0;
+		if (!$classid) { http_response_code(400); exit(); }
+
+		$class = $sql->get_class($classid);
+		if (!$class || ($class->user && $class->user != $sql->userid)) { http_response_code(401); exit(); }
+
+		$class->roster = $sql->get_roster($classid);
+		$class->questions = $sql->get_questions($classid, true, 'ASC');
+		$class->schemaCss = $class->schema ? $class->schema->output_css() : '';
+		$class->demo = !$sql->userid;
+
+		echo json_encode($class);
+		break;
+	
+	case 'classlist':
+		$classes = $sql->get_classes();
+		$response = [
+			'active' => [],
+			'inactive' => [],
+			'username' => $sql->current_user()->username ?? null
+		];
+		foreach ($classes as $id => $class) {
+			if ($class->active) $response['active'][] = $class;
+			else $response['inactive'][] = $class;
+		}
+		echo json_encode($response);
+		break;
 
 	case 'updateclassinfo':
 		$response = $sql->edit_class($_POST['class'], $_POST['title'] ?? null, $_POST['semester'] ?? null, $_POST['year'] ?? null, $_POST['activeuntil'] ?? null, $_POST['schema'] ?? null);
