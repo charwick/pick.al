@@ -1,13 +1,5 @@
 <?php require_once('query.php');
 $sql = new chooser_query();
-header('Content-Type: application/json; charset=utf-8');
-
-//Disable caching
-$now = gmdate("D, d M Y H:i:s");
-header("Expires: Tue, 03 Jul 2001 06:00:00 GMT");
-header("Cache-Control: max-age=0, no-cache, must-revalidate, proxy-revalidate");
-header("Last-Modified: {$now} GMT");
-
 $req = $_POST['req'] ?? $_GET['req'];
 
 //Error if we're not logged in
@@ -34,7 +26,7 @@ switch ($req) {
 		$class->schemaCss = $class->schema ? $class->schema->output_css() : '';
 		$class->demo = !$sql->userid;
 
-		echo json_encode($class);
+		$json_response = json_encode($class);
 		break;
 	
 	case 'classlist':
@@ -48,40 +40,40 @@ switch ($req) {
 			if ($class->active) $response['active'][] = $class;
 			else $response['inactive'][] = $class;
 		}
-		echo json_encode($response);
+		$json_response = json_encode($response);
 		break;
 
 	case 'updateclassinfo':
 		$response = $sql->edit_class($_POST['class'], $_POST['title'] ?? null, $_POST['semester'] ?? null, $_POST['year'] ?? null, $_POST['activeuntil'] ?? null, $_POST['schema'] ?? null);
 		if ($response) {
 			$schema = $sql->get_schema($_POST['schema']);
-			echo json_encode([
+			$json_response = json_encode([
 				'weights' => $schema->items,
 				'css' => $schema->output_css(false, false),
 				'limits' => $schema->limits
 			]);
 		}
-		else http_response_code(403);
+		else { http_response_code(403); exit(); }
 		break;
 	
 	case 'publicize':
-		echo $sql->edit_class($_POST['class'], null, null, null, null, null, $_POST['public']=='true');
+		$json_response = $sql->edit_class($_POST['class'], null, null, null, null, null, $_POST['public']=='true');
 		break;
 	
 	case 'newquestion':
-		echo $sql->new_question($_POST['class'], $_POST['text']);
+		$json_response = $sql->new_question($_POST['class'], $_POST['text']);
 		break;
 	
 	case 'editquestion':
-		echo $sql->edit_question($_POST['id'], $_POST['text']);
+		$json_response = $sql->edit_question($_POST['id'], $_POST['text']);
 		break;
 	
 	case 'deletequestion':
-		echo $sql->delete_question($_POST['id']);
+		$json_response = $sql->delete_question($_POST['id']);
 		break;
 	
 	case 'archivequestion':
-		echo $sql->archive_question($_POST['id'], (bool)$_POST['archive']);
+		$json_response = $sql->archive_question($_POST['id'], (bool)$_POST['archive']);
 		break;
 	
 	//==========
@@ -90,22 +82,22 @@ switch ($req) {
 
 	case 'editstudent':
 		$response = $sql->edit_student($_POST['student'], $_POST['fname'], $_POST['lname'], $_POST['note']);
-		if ($response) echo $response;
-		else http_response_code(403);
+		if ($response) $json_response = $response;
+		else { http_response_code(403); exit(); }
 		break;
 	
 	case 'addstudent':
 		$id = $sql->add_student($_POST['classid'], $_POST['fname'], $_POST['lname'], $_POST['note']);
-		if ($id) echo $id;
-		else http_response_code(403);
+		if ($id) $json_response =  $id;
+		else { http_response_code(403); exit(); }
 		break;
 	
 	case 'deletestudent':
-		echo $sql->delete_student($_POST['id']);
+		$json_response = $sql->delete_student($_POST['id']);
 		break;
 	
 	case 'studentexcused':
-		echo $sql->student_excused($_POST['id'], $_POST['excused'] ?: null);
+		$json_response = $sql->student_excused($_POST['id'], $_POST['excused'] ?: null);
 		break;
 
 	case 'uploadroster':
@@ -133,11 +125,11 @@ switch ($req) {
 			}
 			$i++;
 		}
-		echo json_encode($added);
+		$json_response = json_encode($added);
 		break;
 	
 	case 'searchstudent':
-		echo json_encode($sql->student_search($_GET['phrase']));
+		$json_response = json_encode($sql->student_search($_GET['phrase']));
 		break;
 	
 	//========
@@ -145,27 +137,27 @@ switch ($req) {
 	//========
 
 	case 'events':
-		echo json_encode($sql->get_events($_GET['student']));
+		$json_response = json_encode($sql->get_events($_GET['student']));
 		break;
 	
 	case 'eventsbyquestion':
-		echo json_encode($sql->get_events_by_question($_GET['question']));
+		$json_response = json_encode($sql->get_events_by_question($_GET['question']));
 		break;
 
 	case 'writeevent':
 		$q = $_POST['q'] ?? null;
 		$q = ($q && is_numeric($q)) ? (int)$q : null;
-		echo $sql->new_event($_POST['rosterid'], $_POST['result'], $q);
+		$json_response = $sql->new_event($_POST['rosterid'], $_POST['result'], $q);
 		break;
 	
 	case 'updateevent':
 		$q = $_POST['q'] ?? null;
 		if ($q) $q = $q=='null' ? 0 : $q; //Pass 0 to clear, pass null to leave unchanged
-		echo $sql->edit_event($_POST['event'], $_POST['result'], $q);
+		$json_response = $sql->edit_event($_POST['event'], $_POST['result'], $q);
 		break;
 	
 	case 'deleteevent':
-		echo $sql->delete_event($_POST['event']);
+		$json_response = $sql->delete_event($_POST['event']);
 		break;
 	
 	//=========
@@ -173,7 +165,7 @@ switch ($req) {
 	//=========
 
 	case 'updateschema':
-		echo $sql->edit_schema($_POST['id'], $_POST['name']);
+		$json_response = $sql->edit_schema($_POST['id'], $_POST['name']);
 		break;
 	
 	case 'editschemaitems':
@@ -186,7 +178,7 @@ switch ($req) {
 			if ($new['id']) $newids[$new['id']] = $new;
 		}
 		foreach ($p['update'] as $up) $sql->edit_schema_item($up['id'], $up['color'], $up['text'], $up['value'] ?? null);
-		echo json_encode($newids);
+		$json_response = json_encode($newids);
 		break;
 	
 	//Compatibility by schema
@@ -206,12 +198,12 @@ switch ($req) {
 				$result[] = $scharr;
 			}
 		}
-		echo json_encode($result);
+		$json_response = json_encode($result);
 		break;
 
 	case 'getschemabuttons':
 		$schema = $sql->get_schema($_GET['schema']);
-		echo $schema->output_buttons(true);
+		$json_response = $schema->output_buttons(true);
 		break;
 
 	//========
@@ -222,40 +214,40 @@ switch ($req) {
 		$fields = [];
 		if (isset($_GET['username'])) $fields['username'] = ($sql->get_user_by('username', $_GET['username']) ? 1 : 0);
 		if (isset($_GET['email'])) $fields['email'] = ($sql->get_user_by('email', $_GET['email']) ? 1 : 0);
-		echo json_encode($fields);
+		$json_response = json_encode($fields);
 		break;
 	
 	case 'edituser':
 		if (!in_array($_POST['k'], ['email'])) $response = False;
 		else $response = $sql->edit_user($_POST['k'], $_POST['v']);
 
-		if ($response) echo json_encode($response);
-		if (!$response || !is_numeric($response)) http_response_code(403);
+		if ($response) $json_response = json_encode($response);
+		if (!$response || !is_numeric($response)) { http_response_code(403); exit(); }
 		break;
 	
 	case 'editpw':
-		echo json_encode($sql->edit_pw($_POST['current'], $_POST['new']));
+		$json_response = json_encode($sql->edit_pw($_POST['current'], $_POST['new']));
 		break;
 	
 	case 'deleteorcid':
 		if (!$sql->current_user()->password) return false; //Don't allow disconnection unless a password is set
 		$result = $sql->edit_user('orcid', null);
 		$sql->user_add_option('orcid_data', null);
-		echo json_encode($result);
+		$json_response = json_encode($result);
 		break;
 	
 	case 'resetpwlink':
 		$result = $sql->generate_reset_link($_GET['username']);
 		if (!is_numeric($result)) http_response_code(500);
-		echo $result;
+		$json_response = $result;
 		break;
 	
 	case 'updateoption':
 		if (!in_array($_POST['opt'], ['publicapi'])) { //whitelist
-			echo '0'; break;
+			$json_response = '0'; break;
 		}
 		$val = $_POST['val']=='false' ? null : $_POST['val'];
-		echo $sql->user_add_option($_POST['opt'], $val);
+		$json_response = $sql->user_add_option($_POST['opt'], $val);
 		break;
 	
 	case 'api':
@@ -267,9 +259,24 @@ switch ($req) {
 		$classes = $sql->get_classes(false, $user->id);
 		foreach ($classes as $id => $class)
 			if (!$class->apipublic) unset($classes[$id]);
-		echo json_encode($classes);
+		$json_response = json_encode($classes);
 		break;
 }
+
+//Send an ETag to safely cache
+header('Content-Type: application/json; charset=utf-8');
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+	$etag = '"'.md5($json_response).'"';
+	if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+        header("ETag: {$etag}");
+        http_response_code(304);
+        exit();
+    }
+	header("Cache-Control: no-cache, must-revalidate");
+    header("ETag: {$etag}");
+} else header("Cache-Control: no-store, no-cache, must-revalidate");
+
+echo $json_response;
 
 // sleep(1); //Simulate slow network
 // x=5/0; //Simulate PHP error
