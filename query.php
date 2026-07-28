@@ -574,7 +574,7 @@ class Schema {
 		$item = $this->items[$id];
 		$css = ["background-color: #{$item['color']}"];
 		if (isset(self::$icons[$item['text']]))
-			$css = [...$css, ...["text-indent: -9999px", "background-image: url(\"/icon/svg.php?icon=".self::$icons[$item['text']]."&color=FFF\")"]];
+			$css = [...$css, ...["text-indent: -9999px", "background-image: url(\"/icon/".self::$icons[$item['text']].".svg/FFF\")"]];
 		return implode('; ', $css);
 	}
 

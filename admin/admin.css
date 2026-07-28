@@ -125,7 +125,7 @@ h2 input {
 	content: '';
 	display: inline-block;
 	height: .875rem; width: .875rem;
-	background-image: url("../icon/svg.php?icon=download&color=777");
+	background-image: url("../icon/download.svg/777");
 	background-size: .875rem .875rem;
 	margin: 0 6px -2px 0;
 }
@@ -254,12 +254,12 @@ h2 input {
 }
 #collapse {
 	width: 2em; height: 5.4em;
-	background: url('/icon/svg.php?icon=caret-left-fill&color=777') center center no-repeat;
+	background: url('/icon/caret-left-fill.svg/777') center center no-repeat;
 	vertical-align: top;
 	cursor: pointer;
 	position: relative;
 }
-.hide-inactive #collapse { background-image: url('/icon/svg.php?icon=caret-right-fill&color=777'); }
+.hide-inactive #collapse { background-image: url('/icon/caret-right-fill.svg/777'); }
 #collapse:hover::after { content: 'Hide inactive classes' !important; }
 .hide-inactive #collapse:hover::after { content: 'Show inactive classes' !important; }
 
@@ -478,14 +478,14 @@ span.num::before { content: ' / '; }
 #qactions a:not(:last-child) { border-right: 1px solid rgb(0 0 0 / 10%); }
 #qactions .expand {
 	text-indent: -9999em;
-	background: url('/icon/svg.php?icon=chevron-up&color=777') center no-repeat;
+	background: url('/icon/chevron-up.svg/777') center no-repeat;
 	background-size: 1em 1em;
 }
 #qactions a.disabled {
 	opacity: 0.5;
 	cursor: default;
 }
-#questionlist.hiding + #qactions .expand { background-image: url('/icon/svg.php?icon=chevron-down&color=777'); }
+#questionlist.hiding + #qactions .expand { background-image: url('/icon/chevron-down.svg/777'); }
 
 /* ==============
    Action buttons
@@ -594,6 +594,7 @@ table.sortable th[data-sort="asc"]::after { content: '↑'; }
 .inactive .studentmodal > .actions a.archive:hover::after { content: 'Unarchive Question'; }
 
 #schemaitems .actions a { font-size: 1em; }
+#schemaitems .value input { width: 100%; }
 
 /* ======
    Modal
@@ -693,7 +694,7 @@ table#schemae .result-button {
 .events .q {
 	height: 1.18em; width: 1.18em;
 	display: inline-block;
-	background-image: url("../icon/svg.php?icon=question-circle-fill&color=777");
+	background-image: url("../icon/question-circle-fill/777");
 	background-size: 1.18em 1.18em;
 	vertical-align: middle;
 	cursor: pointer;
@@ -755,11 +756,11 @@ summary h2::after {
 	content: '';
 	display: inline-block;
 	height: 1rem; width: 1rem;
-	background-image: url("../icon/svg.php?icon=chevron-down&color=777");
+	background-image: url("../icon/chevron-down.svg/777");
 	background-size: 1rem 1rem;
 	margin: 0 6px -2px 0.5em;
 }
-details[open] summary h2::after { background-image: url("../icon/svg.php?icon=chevron-up&color=777"); }
+details[open] summary h2::after { background-image: url("../icon/chevron-up.svg/777"); }
 details li { margin: 0.4em 0; }
 #save { margin: 0 0 1em; }
 
@@ -850,7 +851,7 @@ details li { margin: 0.4em 0; }
 	width: 100px;
 	display: inline-block;
 	text-indent: -9999px;
-	background: url("../icon/svg.php?icon=logo&color=FFF") center 8px no-repeat;
+	background: url("../icon/logo.svg/FFF") center 8px no-repeat;
 	background-size: 75px;
 	opacity: 0.75;
 }

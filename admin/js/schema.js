@@ -214,7 +214,7 @@ function preview() {
 		css += `button[data-schemaval="${trv}"] { background: ${color}; }
 				button[data-schemaval="${trv}"]:hover { background-color: color(from ${color} srgb calc(r * 0.85) calc(g * 0.85) calc(b * 0.85)) !important; }`;
 		if (symbol in icons)
-			css += `button[data-schemaval="${trv}"] { text-indent: -9999em; background-image: url("/icon/svg.php?icon=${icons[symbol]}&color=FFF"); }`;
+			css += `button[data-schemaval="${trv}"] { text-indent: -9999em; background-image: url("/icon/${icons[symbol]}.svg/FFF"); }`;
 		document.getElementById('previewcss').textContent = css;
 	}
 }

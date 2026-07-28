@@ -56,20 +56,20 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	opacity: 0.1;
 	pointer-events: none;
 }
-.actions .back { background: url("icon/svg.php?icon=caret-left-fill&color=FFF") left/2.5em 2.5em no-repeat; }
+.actions .back { background: url("icon/caret-left-fill.svg/FFF") left/2.5em 2.5em no-repeat; }
 .actions .snooze {
 	position: relative;
-	background: url("icon/svg.php?icon=moon-fill&color=FFF") center/2em 2em no-repeat;
+	background: url("icon/moon-fill.svg/FFF") center/2em 2em no-repeat;
 }
-.actions .forward { background: url("icon/svg.php?icon=caret-right-fill&color=FFF") right/2.5em 2.5em no-repeat; }
-.actions .archive { background: url("icon/svg.php?icon=archive&color=FFF") right/2.5em 2.5em no-repeat; }
-.archived .actions .archive { background: url("icon/svg.php?icon=unarchive&color=FFF") right/2.5em 2.5em no-repeat; }
-.actions .clear { background: url("icon/svg.php?icon=x-lg&color=FFF") right/2.5em 2.5em no-repeat; }
+.actions .forward { background: url("icon/caret-right-fill.svg/FFF") right/2.5em 2.5em no-repeat; }
+.actions .archive { background: url("icon/archive.svg/FFF") right/2.5em 2.5em no-repeat; }
+.archived .actions .archive { background: url("icon/unarchive.svg/FFF") right/2.5em 2.5em no-repeat; }
+.actions .clear { background: url("icon/x-lg.svg/FFF") right/2.5em 2.5em no-repeat; }
 #q-queue {
 	display: none;
 	margin: 15em auto 0;
 	opacity: 0.1;
-	background: url("icon/svg.php?icon=question-circle-fill&color=FFF") right/2.5em 2.5em no-repeat;
+	background: url("icon/question-circle-fill.svg/FFF") right/2.5em 2.5em no-repeat;
 }
 #question.active + #q-queue { display: none !important; }
 .snooze[data-excused]::after {
@@ -211,7 +211,7 @@ ul.classlist.inactive, h2.inactive { display: none; }
 }
 
 #logo {
-	background: url("icon/svg.php?icon=logo&color=FFF") center no-repeat;
+	background: url("icon/logo.svg/FFF") center no-repeat;
 	text-indent: -9999px;
 	opacity: 0.8;
 	height: 1.5rem;
@@ -247,7 +247,7 @@ h1#logo { height: 1.5em; }
 	height: 2em; width: 2em;
 }
 #backbutton {
-	background: url("icon/svg.php?icon=arrow-left&color=FFF") center/2em 2em no-repeat;
+	background: url("icon/arrow-left.svg/FFF") center/2em 2em no-repeat;
 	left: 30px;
 	text-indent: -9999em;
 }
@@ -256,7 +256,7 @@ h1#logo { height: 1.5em; }
 /* Roster list */
 
 #rosterlist {
-	background: url("icon/svg.php?icon=list&color=FFF") center/2em 2em no-repeat;
+	background: url("icon/list.svg/FFF") center/2em 2em no-repeat;
 	right: 30px;
 	text-indent: -9999em;
 }
@@ -329,7 +329,7 @@ h1#logo { height: 1.5em; }
 #roster .excused { opacity: 0.5; }
 #roster .excused::after {
 	content: '';
-	background: url("icon/svg.php?icon=moon-fill&color=FFF") center/0.8em 0.8em no-repeat;
+	background: url("icon/moon-fill.svg/FFF") center/0.8em 0.8em no-repeat;
 	height: 0.8em; width: 0.8em;
 	float: right;
 	margin: 5px -15px 0 0;
