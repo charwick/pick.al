@@ -37,6 +37,9 @@ function headermeta($admin=false): void {
 	<link rel="shortcut icon" sizes="192x192" href="/icon/icon-192.png">
 	<link rel="apple-touch-icon" href="/icon/icon-192.png">
 	<meta name="msapplication-TileImage" content="/icon/icon-192.png">
+	<script>
+		if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
+	</script>
 <?php }
 
 //Increment version to invalidate cache

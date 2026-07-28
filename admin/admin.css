@@ -125,9 +125,10 @@ h2 input {
 	content: '';
 	display: inline-block;
 	height: .875rem; width: .875rem;
-	background-image: url("../icon/download.svg/777");
+	background-image: url("../icon/download.svg");
 	background-size: .875rem .875rem;
 	margin: 0 6px -2px 0;
+	opacity: 67%;
 }
 
 /* ======
@@ -694,7 +695,7 @@ table#schemae .result-button {
 .events .q {
 	height: 1.18em; width: 1.18em;
 	display: inline-block;
-	background-image: url("../icon/question-circle-fill/777");
+	background-image: url("../icon/question-circle-fill.svg/777");
 	background-size: 1.18em 1.18em;
 	vertical-align: middle;
 	cursor: pointer;

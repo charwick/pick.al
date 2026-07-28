@@ -8,14 +8,14 @@ if (!isset($sql)) {
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<title>404 Not Found | Student Chooser</title>
+	<title>404 Not Found | Pick.al</title>
 	
 	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	<?php embed_asset('admin.css'); ?>
 </head>
 
 <body>
-	<?php userbar($sql, '.', 'Picker'); ?>
-	<p>Sorry, there's nothing here. You can go back to the <a href=".">Picker</a> or the <a href="admin/">admin panel</a>.</p>
+	<?php userbar($sql, '/', 'Picker'); ?>
+	<p>Sorry, there's nothing here. You can go back to the <a href="/">Picker</a> or the <a href="/admin/">admin panel</a>.</p>
 </body>
 </html>

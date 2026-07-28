@@ -10,7 +10,7 @@ if (!$user && !isset($_GET['try'])) {
 }
 
 $classid = $_GET['class'] ?? null;
-if ($classid) {
+if ($classid && $classid !== 0) {
 	$class = $sql->get_class($classid);
 	if (!$class) {
 		require_once('404.php');
@@ -30,7 +30,7 @@ if ($classid) {
 </head>
 
 <body>
-	<?php if ($classid) { ?>
+	<?php if ($classid != null) { ?>
 		<div id="bodywrap"><!-- Necessary because Samsung Browser dosn't respect overflow:hidden on <body> -->
 
 			<div id="logo">Pick.al</div>
