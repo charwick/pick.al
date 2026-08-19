@@ -1,160 +1,158 @@
 "use strict";
 var deleted = [];
-document.addEventListener('DOMContentLoaded', () => {
 
-	//Make schema info editable
-	if (document.body.classList.contains('admin-edit') && !schema.global) {
-		const title = document.getElementById('name'),
-			titleedit = new makeInput(title.querySelector('.actions'));
-		titleedit.addElement(title, {placeholder: 'Schema Name'});
-		titleedit.data = inps => ({req: 'updateschema', id: schemaid, name: inps[0].value});
+//Make schema info editable
+if (document.body.classList.contains('admin-edit') && !schema.global) {
+	const title = document.getElementById('name'),
+		titleedit = new makeInput(title.querySelector('.actions'));
+	titleedit.addElement(title, {placeholder: 'Schema Name'});
+	titleedit.data = inps => ({req: 'updateschema', id: schemaid, name: inps[0].value});
 
-		//Delete button
-		title.addEventListener('click', function(e) {
-			e.preventDefault();
-			if (!e.target.classList.contains('delete')) return;
-			const delform = document.getElementById('deleteform');
-			if (!classes) {
-				if (confirm(`Are you sure you want to delete ${title.textContent.trim()}?`)) delform.submit();
-			} else {
-				const dmodal = modal(
-					{tag: 'h2', children: 'Delete '+title.textContent},
-					{tag: 'div', attrs: {class: 'loader'}}
-				);
-				fetch('/ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
-				.then(interThen).then((response) => {
-					let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
-					dmodal.querySelector('.loader').remove();
-					console.log(dmodal);
-					const modalbody = dmodal.querySelector('div');
-					if (!response.length) {
-						classes += ` There are no compatible schemae with which to replace it. Please create a compatible schema before deleting ${title.textContent.trim()}.`;
-						modalbody.append(markup({tag: 'p', children: classes}));
-					} else {
-						classes += ' Please choose a compatible schema with which to replace it.';
-						const ul = markup({tag: 'table', attrs: {id: 'schemareplace'}});
-						for (const sch of response) {
-							ul.append(markup({tag: 'tr', children: [
-								{tag: 'td', children: [{tag: 'input', attrs: {type: 'radio', name: 'schemareplace', id: 'schemareplace-'+sch.id, value: sch.id}}]},
-								{tag: 'td', children: [{tag: 'label', attrs: {for: 'schemareplace-'+sch.id}, children: sch.markup}]},
-								{tag: 'td', children: [sch.name]}
-							]}));
-						}
-						const cancelbtn = markup({tag: 'button', children: ['Cancel']}),
-							deletebtn = markup({tag: 'button', attrs: {disabled: 'disabled'}, children: ['Delete']});
-						ul.addEventListener('change', (e) => { deletebtn.disabled = false; });
-						cancelbtn.addEventListener('click', (e) => { dmodal.close(); });
-						deletebtn.addEventListener('click', (e) => {
-							delform.append(markup({tag: 'input', attrs: {type: 'hidden', name: 'replacement', value: ul.querySelector('input[name="schemareplace"]:checked').value}}));
-							delform.submit();
-						});
-
-						modalbody.append(
-							markup({tag: 'p', children: classes}), ul,
-							markup({tag: 'div', attrs: {class: 'buttons'}, children: [cancelbtn, deletebtn]})
-						);
-					}
-				}).catch(onerror);
-			}
-		});
-		if (document.body.classList.contains('duplicated')) titleedit.edit();
-	}
-
-	populate();
-
-	//Delete schema items
-	const tbody = document.querySelector('#schemaitems tbody');
-	tbody?.addEventListener('click', function(e) {
-		if (!e.target.classList.contains('delete')) return;
+	//Delete button
+	title.addEventListener('click', function(e) {
 		e.preventDefault();
-		const tr = e.target.closest('TR');
-		if ('id' in tr.dataset) deleted.push(tr.dataset.id);
-		tr.remove();
-		dirty();
-		document.querySelector('#schemaitems .addnew a').classList.remove('disabled');
-	});
-
-	//Update color text and enforce single grapheme
-	tbody?.addEventListener('input', function(e) {
-		if (e.target.name=='color')
-			e.target.parentNode.querySelector('.colortext').textContent = e.target.value;
-		else if (e.target.name=='text') {
-			const gphm = [...new Intl.Segmenter().segment(e.target.value)];
-			if (gphm.length > 1) e.target.value = gphm[0].segment;
-		}
-		dirty(e);
-	});
-
-	//Enter and esc to save and cancel
-	tbody?.addEventListener('keydown', function(e) {
-		const savebtn = document.getElementById('save');
-		if (e.key=='Enter') savebtn.click();
-		else if (e.key=='Escape' && !savebtn.disabled) {
-			this.innerHTML = '';
-			populate();
-			savebtn.disabled = true;
-			const addnew = document.querySelector('.addnew a');
-			if (document.querySelectorAll('tbody tr').length >= 5) addnew.classList.add('disabled');
-			else addnew.classList.remove('disabled');
-			deleted = [];
-		}
-	});
-
-	//Save item info
-	document.getElementById('save')?.addEventListener('click', function(e) {
-		if (!validate(tbody.querySelectorAll('input'))) return;
-		this.textContent = 'Saving...';
-		this.disabled = true;
-
-		const params = {'schema': schemaid, 'delete': deleted, 'new': [], 'update': []};
-		for (const tr of tbody.querySelectorAll('tr')) {
-			if (!tr.dataset.dirty) continue;
-			const trdata = {};
-			if ('id' in tr.dataset) trdata.id = tr.dataset.id;
-			for (const i of tr.querySelectorAll('input')) trdata[i.name] = i.value.replace('#','');
-			if ('id' in tr.dataset) params.update.push(trdata);
-			else params.new.push(trdata);
-		}
-		post('/ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
-			//Update window.schema and UI
-			this.textContent = 'Saved';
-			for (const d of deleted) {
-				const index = schema.items.findIndex(item => item.id == parseInt(d));
-				if (index !== -1) schema.items.splice(index, 1);
-			}
-			deleted = [];
-
-			for (const tr of tbody.querySelectorAll('tr')) {
-
-				//Add id to new rows 
-				if (!('id' in tr.dataset)) {
-					for (const r in response)
-						if (tr.querySelector('input[name=text]').value==response[r].text && tr.querySelector('input[name=value]').value==response[r].value && tr.querySelector('input[name=color]').value=='#'+response[r].color) {
-							tr.dataset.id = r;
-							response[r].value = parseFloat(response[r].value);
-							schema.items.push(response[r]);
-							break;
-						}
-				
-				} else if ('dirty' in tr.dataset) {
-					const index = schema.items.findIndex(item => item.id == tr.dataset.id);
-					if (index !== -1) {
-						const ival = tr.querySelector('input[name=value]');
-						schema.items[index].text = tr.querySelector('input[name=text]').value;
-						if (ival) schema.items[index].value = ival.value;
-						schema.items[index].color = tr.querySelector('input[name=color]').value.replace('#','');
+		if (!e.target.classList.contains('delete')) return;
+		const delform = document.getElementById('deleteform');
+		if (!classes) {
+			if (confirm(`Are you sure you want to delete ${title.textContent.trim()}?`)) delform.submit();
+		} else {
+			const dmodal = modal(
+				{tag: 'h2', children: 'Delete '+title.textContent},
+				{tag: 'div', attrs: {class: 'loader'}}
+			);
+			fetch('/ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
+			.then(interThen).then((response) => {
+				let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
+				dmodal.querySelector('.loader').remove();
+				console.log(dmodal);
+				const modalbody = dmodal.querySelector('div');
+				if (!response.length) {
+					classes += ` There are no compatible schemae with which to replace it. Please create a compatible schema before deleting ${title.textContent.trim()}.`;
+					modalbody.append(markup({tag: 'p', children: classes}));
+				} else {
+					classes += ' Please choose a compatible schema with which to replace it.';
+					const ul = markup({tag: 'table', attrs: {id: 'schemareplace'}});
+					for (const sch of response) {
+						ul.append(markup({tag: 'tr', children: [
+							{tag: 'td', children: [{tag: 'input', attrs: {type: 'radio', name: 'schemareplace', id: 'schemareplace-'+sch.id, value: sch.id}}]},
+							{tag: 'td', children: [{tag: 'label', attrs: {for: 'schemareplace-'+sch.id}, children: sch.markup}]},
+							{tag: 'td', children: [sch.name]}
+						]}));
 					}
-				}
-				delete tr.dataset.dirty;
-			}
-		});
-	});
+					const cancelbtn = markup({tag: 'button', children: ['Cancel']}),
+						deletebtn = markup({tag: 'button', attrs: {disabled: 'disabled'}, children: ['Delete']});
+					ul.addEventListener('change', (e) => { deletebtn.disabled = false; });
+					cancelbtn.addEventListener('click', (e) => { dmodal.close(); });
+					deletebtn.addEventListener('click', (e) => {
+						delform.append(markup({tag: 'input', attrs: {type: 'hidden', name: 'replacement', value: ul.querySelector('input[name="schemareplace"]:checked').value}}));
+						delform.submit();
+					});
 
-	//Confirm before closing if dirty
-	window.addEventListener('beforeunload', function(e) {
-		if (!document.getElementById('save')?.disabled)
-			e.preventDefault();
+					modalbody.append(
+						markup({tag: 'p', children: classes}), ul,
+						markup({tag: 'div', attrs: {class: 'buttons'}, children: [cancelbtn, deletebtn]})
+					);
+				}
+			}).catch(onerror);
+		}
 	});
+	if (document.body.classList.contains('duplicated')) titleedit.edit();
+}
+
+populate();
+
+//Delete schema items
+const tbody = document.querySelector('#schemaitems tbody');
+tbody?.addEventListener('click', function(e) {
+	if (!e.target.classList.contains('delete')) return;
+	e.preventDefault();
+	const tr = e.target.closest('TR');
+	if ('id' in tr.dataset) deleted.push(tr.dataset.id);
+	tr.remove();
+	dirty();
+	document.querySelector('#schemaitems .addnew a').classList.remove('disabled');
+});
+
+//Update color text and enforce single grapheme
+tbody?.addEventListener('input', function(e) {
+	if (e.target.name=='color')
+		e.target.parentNode.querySelector('.colortext').textContent = e.target.value;
+	else if (e.target.name=='text') {
+		const gphm = [...new Intl.Segmenter().segment(e.target.value)];
+		if (gphm.length > 1) e.target.value = gphm[0].segment;
+	}
+	dirty(e);
+});
+
+//Enter and esc to save and cancel
+tbody?.addEventListener('keydown', function(e) {
+	const savebtn = document.getElementById('save');
+	if (e.key=='Enter') savebtn.click();
+	else if (e.key=='Escape' && !savebtn.disabled) {
+		this.innerHTML = '';
+		populate();
+		savebtn.disabled = true;
+		const addnew = document.querySelector('.addnew a');
+		if (document.querySelectorAll('tbody tr').length >= 5) addnew.classList.add('disabled');
+		else addnew.classList.remove('disabled');
+		deleted = [];
+	}
+});
+
+//Save item info
+document.getElementById('save')?.addEventListener('click', function(e) {
+	if (!validate(tbody.querySelectorAll('input'))) return;
+	this.textContent = 'Saving...';
+	this.disabled = true;
+
+	const params = {'schema': schemaid, 'delete': deleted, 'new': [], 'update': []};
+	for (const tr of tbody.querySelectorAll('tr')) {
+		if (!tr.dataset.dirty) continue;
+		const trdata = {};
+		if ('id' in tr.dataset) trdata.id = tr.dataset.id;
+		for (const i of tr.querySelectorAll('input')) trdata[i.name] = i.value.replace('#','');
+		if ('id' in tr.dataset) params.update.push(trdata);
+		else params.new.push(trdata);
+	}
+	post('/ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
+		//Update window.schema and UI
+		this.textContent = 'Saved';
+		for (const d of deleted) {
+			const index = schema.items.findIndex(item => item.id == parseInt(d));
+			if (index !== -1) schema.items.splice(index, 1);
+		}
+		deleted = [];
+
+		for (const tr of tbody.querySelectorAll('tr')) {
+
+			//Add id to new rows 
+			if (!('id' in tr.dataset)) {
+				for (const r in response)
+					if (tr.querySelector('input[name=text]').value==response[r].text && tr.querySelector('input[name=value]').value==response[r].value && tr.querySelector('input[name=color]').value=='#'+response[r].color) {
+						tr.dataset.id = r;
+						response[r].value = parseFloat(response[r].value);
+						schema.items.push(response[r]);
+						break;
+					}
+			
+			} else if ('dirty' in tr.dataset) {
+				const index = schema.items.findIndex(item => item.id == tr.dataset.id);
+				if (index !== -1) {
+					const ival = tr.querySelector('input[name=value]');
+					schema.items[index].text = tr.querySelector('input[name=text]').value;
+					if (ival) schema.items[index].value = ival.value;
+					schema.items[index].color = tr.querySelector('input[name=color]').value.replace('#','');
+				}
+			}
+			delete tr.dataset.dirty;
+		}
+	});
+});
+
+//Confirm before closing if dirty
+window.addEventListener('beforeunload', function(e) {
+	if (!document.getElementById('save')?.disabled)
+		e.preventDefault();
 });
 
 //Populate and add schema items

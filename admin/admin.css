@@ -670,6 +670,7 @@ dialog h2, dialog h3 { margin-top: 0.5em; }
 	text-align: center;
 	line-height: 1.11em;
 }
+.result-button:hover { color: #FFF; }
 table#schemae .result-button {
 	flex: 1;
 	margin-right: 0;

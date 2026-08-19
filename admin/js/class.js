@@ -1,484 +1,170 @@
 "use strict";
 var recentTable,
 	classid = location.pathname.includes('/new') ? null : parseInt(location.pathname.split('/').at(-1));
-document.addEventListener('DOMContentLoaded', () => {
 
-	//Make class info editable
-	if (document.body.classList.contains('admin-edit')) {
-		const title = document.getElementById('name'),
-			classedit = new makeInput(title.querySelector('.actions'));
+//Make class info editable
+if (document.body.classList.contains('admin-edit')) {
+	const title = document.getElementById('name'),
+		classedit = new makeInput(title.querySelector('.actions'));
 
-		const schemaOpts = [];
-		for (const s of allschemae) schemaOpts.push([s.id, s.name, s.compatible]);
-		schemaOpts.push(null);
-		schemaOpts.push(['__addnew__','Add New']);
+	const schemaOpts = [];
+	for (const s of allschemae) schemaOpts.push([s.id, s.name, s.compatible]);
+	schemaOpts.push(null);
+	schemaOpts.push(['__addnew__','Add New']);
 
-		classedit.addElement(title, {placeholder: 'Class Name'});
-		classedit.addElement(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer']});
-		classedit.addElement(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year'});
-		classedit.addElement(document.getElementById('activeuntil'), {type: 'date'});
-		classedit.addElement(document.getElementById('selectgoeshere'), {type: 'select', opts: schemaOpts});
-		classedit.data = inputs => ({req: 'updateclassinfo', class: classid, title: inputs[0].value, semester: inputs[1].value, year: inputs[2].value, activeuntil: inputs[3].value, schema: inputs[4].value});
-		classedit.after = (response, vals) => {
-			//Update score scale if button schema changed
-			document.querySelector('.schema-css').textContent = response.css;
-			document.getElementById('selectgoeshere').textContent = '';
-			const oldmax = window.schemae[window.schema].limits[1];
-			window.schema = vals[4];
-			window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
-			for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
+	classedit.addElement(title, {placeholder: 'Class Name'});
+	classedit.addElement(document.getElementById('semester'), {type: 'select', opts: ['Spring', 'Fall', 'Winter', 'Summer']});
+	classedit.addElement(document.getElementById('year'), {type: 'number', min: 2023, max: 2100, placeholder: 'Year'});
+	classedit.addElement(document.getElementById('activeuntil'), {type: 'date'});
+	classedit.addElement(document.getElementById('selectgoeshere'), {type: 'select', opts: schemaOpts});
+	classedit.data = inputs => ({req: 'updateclassinfo', class: classid, title: inputs[0].value, semester: inputs[1].value, year: inputs[2].value, activeuntil: inputs[3].value, schema: inputs[4].value});
+	classedit.after = (response, vals) => {
+		//Update score scale if button schema changed
+		document.querySelector('.schema-css').textContent = response.css;
+		document.getElementById('selectgoeshere').textContent = '';
+		const oldmax = window.schemae[window.schema].limits[1];
+		window.schema = vals[4];
+		window.schemae[window.schema] = {id: window.schema, items: response.weights, limits: response.limits};
+		for (const td of document.querySelectorAll('#roster tbody td.score')) updateScore(td, {action: 'schema', oldmax: oldmax});
 
-			//Update active/inactive
-			document.getElementById('activeuntil').previousSibling.textContent = vals[3] >= (new Date()).toISOString().slice(0, 10) ? 'Active until ' : 'Inactive since ';
-		}
-		classedit.cancelfunc = () => {
-			addSchemaButtons();
-			document.getElementById('selectgoeshere').textContent = '';
-		}
-
-		//Delete button
-		title.addEventListener('click', function(e) {
-			e.preventDefault();
-			if (!e.target.classList.contains('delete')) return;
-			const delform = document.getElementById('deleteform');
-			if (confirm(`Are you sure you want to delete ${title.textContent.trim()} and all its students?`)) delform.submit();
-		});
-	
-	} else addSchemaButtons();
-
-	//API public toggle
-	document.querySelector('.apipublic')?.addEventListener('click', function(e) {
-		const publicize = this.classList.contains('private');
-		post('/ajax.php', {req: 'publicize', class: classid, public: publicize}, result => {
-			if (!result) return;
-			if (publicize) {
-				this.classList.remove('private');
-				this.title = 'API Public';
-			} else {
-				this.classList.add('private');
-				this.title = 'API Private';
-			}
-		});
-	});
-
-	document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
-
-	//Action buttons
-	const roster = document.querySelector('#roster tbody');
-	if (roster) {
-		makeSortable(document.getElementById('roster'), 'lname', 'desc');
-		for (const td of roster.querySelectorAll('.actions')) {
-			td.append(...actionButtons(['excuses']));
-			if ('excused' in td.parentNode.dataset)
-				td.querySelector('.excuses').title = "Excused through "+datetostr(td.parentNode.dataset.excused);
-		}
-	
-		//Student details modal
-		roster.addEventListener('click', (e) => {
-			studentmodal(e.target.closest('TR').dataset.id);
-		});
-
-		//CSV Upload
-		document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
-			e.preventDefault();
-			const content = markup({tag: 'div', children: [
-					{tag: 'p', children: 'Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.'},
-					{tag: 'p', children: '<label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv">'}
-				]}),
-				h2 = markup({tag: 'h2', children: ['Upload Students']}),
-				csvElement = content.querySelector('#csvfile'),
-				label = content.querySelector('label[for="csvfile"]');
-			label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
-			label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
-			label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
-			label.addEventListener('drop', uploadCSV);
-			csvElement.addEventListener('change', uploadCSV);
-			modal(h2, content);
-		});
+		//Update active/inactive
+		document.getElementById('activeuntil').previousSibling.textContent = vals[3] >= (new Date()).toISOString().slice(0, 10) ? 'Active until ' : 'Inactive since ';
 	}
-	
-	//Add new student
-	const addStudent = document.querySelector('#roster .addnew a');
-	if (addStudent) addStudent.addEventListener('click', function(e) {
+	classedit.cancelfunc = () => {
+		addSchemaButtons();
+		document.getElementById('selectgoeshere').textContent = '';
+	}
+
+	//Delete button
+	title.addEventListener('click', function(e) {
 		e.preventDefault();
-
-		const title = markup({tag: 'h2', children: ['New Student']}),
-			h2 = markup({tag: 'h2', children: [
-				{tag: 'input', attrs: {type: 'text', class: 'fname', placeholder: 'First Name', required: 'true'}}, ' ',
-				{tag: 'input', attrs: {type: 'text', class: 'lname', placeholder: 'Last Name', required: 'true'}},
-			]}),
-			note = markup({tag: 'input', attrs: {class: 'note', placeholder: 'Note', type: 'text'}}),
-			actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])}),
-			fname = h2.querySelector('.fname'),
-			lname = h2.querySelector('.lname');
-		
-		function studentSave() {
-			if (validate([fname, lname, note])) {
-				onerror = (response) => {
-					if (errorfn) errorfn(response, inputs);
-					else for (const inp of inputs) inp.classList.add('error');
-				};
-
-				post('/ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
-					if (!sid) onerror(sid);
-					else {
-						studentRow(sid, fname.value, lname.value, note.value);
-						const snum = document.getElementById('num_students'),
-							roster = document.getElementById('roster');
-						roster.sort(roster.sortby, roster.direction);
-						snum.textContent = parseInt(snum.textContent)+1; //Increment roster counter
-						document.querySelector('dialog').close();
-					}
-				});
-			}
-		}
-		
-		for (const inp of [fname, lname, note]) inp.addEventListener('keydown', e2 => {
-			if (e2.key == "Enter") {
-				e2.preventDefault();
-				studentSave();
-			}
-		});
-
-		actions.addEventListener('click', e => {
-			e.preventDefault();
-			if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
-			else if (e.target.classList.contains('save')) studentSave();
-		});
-
-		modal(title, actions, h2, note);
-		fname.focus();
-	});
-	
-	//Validate new class
-	document.querySelector('.admin-new #classinfo')?.addEventListener('submit', function (e) {
-		let pass = true;
-		for (const i of this.querySelectorAll('input')) {
-			i.classList.remove('error');
-			if (!i.value) {
-				i.classList.add('error');
-				pass = false;
-			}
-		}
-		if (!pass) e.preventDefault();
+		if (!e.target.classList.contains('delete')) return;
+		const delform = document.getElementById('deleteform');
+		if (confirm(`Are you sure you want to delete ${title.textContent.trim()} and all its students?`)) delform.submit();
 	});
 
-	const qlist = document.querySelector('#questionlist');
-	if (qlist) for (const q of qlist.querySelectorAll('li')) new Question(q);
+} else addSchemaButtons();
 
-	//Add new question
-	document.querySelector('#qactions .addnew')?.addEventListener('click', e => {
-		e.preventDefault();
-		const title = markup({tag: 'h2', children: ['New Question']}),
-			textarea = markup({tag: 'textarea', attrs: {placeholder: 'Question', required: 'true'}}),
-			actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])});
-
-		function questionSave() {
-			if (validate([textarea])) {
-				post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
-					new Question(data, textarea.value);
-					document.querySelector('dialog').close();
-				});
-			}
-		}
-
-		textarea.addEventListener('keydown', e2 => {
-			if (e2.key == "Enter") {
-				e2.preventDefault();
-				questionSave();
-			}
-		});
-		actions.addEventListener('click', e => {
-			e.preventDefault();
-			if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
-			else if (e.target.classList.contains('save')) questionSave();
-		});
-
-		modal(title, actions, textarea);
-		textarea.focus();
-	})
-
-	const qexpand = document.querySelector('#qactions .expand');
-	function toggleQuestions() {
-		if (!qexpand || qexpand.classList.contains('disabled')) return;
-		
-		if (localStorage['hide-inactive-qs'] == 'true') {
-			qlist.classList.remove('hiding');
-			qexpand.title = "Hide inactive questions";
+//API public toggle
+document.querySelector('.apipublic')?.addEventListener('click', function(e) {
+	const publicize = this.classList.contains('private');
+	post('/ajax.php', {req: 'publicize', class: classid, public: publicize}, result => {
+		if (!result) return;
+		if (publicize) {
+			this.classList.remove('private');
+			this.title = 'API Public';
 		} else {
-			qlist.classList.add('hiding');
-			qexpand.title = "Show inactive questions";
+			this.classList.add('private');
+			this.title = 'API Private';
 		}
-	}
-
-	//Show/hide inactive questions
-	toggleQuestions();
-	qexpand?.addEventListener('click', function(e) {
-		e.preventDefault();
-		localStorage['hide-inactive-qs'] = 'hide-inactive-qs' in localStorage && localStorage['hide-inactive-qs'] == 'true' ? 'false' : 'true';
-		toggleQuestions();
 	});
-
-	//Class recent events
-	let classEvents = document.getElementById('recentevents');
-	if (classEvents) {
-		recentTable = new EventsTable(events);
-		recentTable.footer = false;
-		recentTable.sortable = false;
-		classEvents.append(recentTable.markup());
-		if (!events.length) document.getElementById('recentevents').style.display = 'none';
-	}
-
-	//Highlight student from autocomplete
-	if (window.location.hash.includes('#student-')) {
-		const student = parseInt(window.location.hash.replace('#student-', ''));
-		document.querySelector(`#roster tr[data-id="${student}"]`)?.classList.add('new');
-	}
 });
 
-function addSchemaButtons() {
-	const target = document.getElementById('schemaselect'),
-		schema = target.querySelector('select')?.value ?? window.schema;
-	
-	function drawButtons(html) {
-		const cont = target.querySelector('.schemalist');
-		cont.textContent = '';
-		cont.innerHTML = html;
-	}
-	
-	if (schema=='__addnew__') {
-		const def = target.querySelector('#selectgoeshere')?.dataset.default
-		target.querySelector('select').value = def ?? 1;
-		drawButtons(schemabuttons[def ?? 1]);
-		return newSchema();
-	}
-	
-	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
-	else {
-		fetch('/ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
-		.then((response) => response.text()).then((response) => {
-			schemabuttons[schema] = response;
-			drawButtons(response);
-		});
-	}
-}
+document.querySelector('#schemaselect').addEventListener('change', addSchemaButtons);
 
-function makeSortable(table, defaultsort, defaultdesc) {
-	table.classList.add('sortable');
-
-	table.sort = function(sortby, desc) {
-		table.direction = desc;
-		table.sortby = sortby;
-
-		for (const th of table.querySelectorAll('th')) {
-			if (th.getAttribute('class')==sortby) th.dataset.sort = desc ? 'desc' : 'asc';
-			else delete th.dataset.sort;
-		}
-		const tbody = table.querySelector('tbody'),
-			rows = Array.from(tbody.querySelectorAll('tr')),
-			parseIf = val => parseInt(val)==val ? parseInt(val) : val;
-		rows.sort((a,b) => {
-			const acell = a.querySelector('.'+sortby),
-				bcell = b.querySelector('.'+sortby),
-				atext = 'sort' in acell.dataset ? parseIf(acell.dataset.sort) : acell.textContent,
-				btext = 'sort' in bcell.dataset ? parseIf(bcell.dataset.sort) : bcell.textContent;
-			if (typeof atext=='number' && typeof btext=='number') return (atext-btext) * (desc ? -1 : 1);
-			else if (!atext && btext) return (desc ? 1 : -1);
-			else if (atext && !btext) return (desc ? -1 : 1);
-			else return atext.localeCompare(btext) * (desc ? 1 : -1);
-		});
-		for (const row of rows) tbody.append(row);
+//Action buttons
+const roster = document.querySelector('#roster tbody');
+if (roster) {
+	makeSortable(document.getElementById('roster'), 'lname', 'desc');
+	for (const td of roster.querySelectorAll('.actions')) {
+		td.append(...actionButtons(['excuses']));
+		if ('excused' in td.parentNode.dataset)
+			td.querySelector('.excuses').title = "Excused through "+datetostr(td.parentNode.dataset.excused);
 	}
 
-	table.sort(defaultsort, defaultdesc);
+	//Student details modal
+	roster.addEventListener('click', (e) => {
+		studentmodal(e.target.closest('TR').dataset.id);
+	});
 
-	table.querySelector('thead').addEventListener('click', function(e) {
-		const sortby = e.target.getAttribute('class');
-		if (!sortby) return;
-		let desc = true;
-		if (sortby == table.sortby) desc = !table.direction;
-		table.sort(sortby, desc);
+	//CSV Upload
+	document.querySelector('.uploadcsv a').addEventListener('click', function(e) {
+		e.preventDefault();
+		const content = markup({tag: 'div', children: [
+				{tag: 'p', children: 'Upload a CSV file with columns labelled <code>fname</code>, <code>lname</code>, and (optionally) <code>note</code> in the header row.'},
+				{tag: 'p', children: '<label for="csvfile">Click here or drag a CSV file to upload</label><input type="file" id="csvfile" name="csvfile" accept="text/csv">'}
+			]}),
+			h2 = markup({tag: 'h2', children: ['Upload Students']}),
+			csvElement = content.querySelector('#csvfile'),
+			label = content.querySelector('label[for="csvfile"]');
+		label.addEventListener('dragenter', function(e) { this.classList.add('active'); });
+		label.addEventListener('dragover', function(e) { e.preventDefault(); }); //Necessary to prevent the tab opening the dragged file
+		label.addEventListener('dragleave', function(e) { this.classList.remove('active'); });
+		label.addEventListener('drop', uploadCSV);
+		csvElement.addEventListener('change', uploadCSV);
+		modal(h2, content);
 	});
 }
 
-//Student can be a student ID, or a td.score cell
-function updateScore(rostercell, opts) {
-	if (!(rostercell instanceof Element)) rostercell = document.querySelector(`#roster tr[data-id="${rostercell}"] .score`);
+//Add new student
+const addStudent = document.querySelector('#roster .addnew a');
+if (addStudent) addStudent.addEventListener('click', function(e) {
+	e.preventDefault();
 
-	const scoretext = rostercell.textContent;
-	let num, den;
+	const title = markup({tag: 'h2', children: ['New Student']}),
+		h2 = markup({tag: 'h2', children: [
+			{tag: 'input', attrs: {type: 'text', class: 'fname', placeholder: 'First Name', required: 'true'}}, ' ',
+			{tag: 'input', attrs: {type: 'text', class: 'lname', placeholder: 'Last Name', required: 'true'}},
+		]}),
+		note = markup({tag: 'input', attrs: {class: 'note', placeholder: 'Note', type: 'text'}}),
+		actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])}),
+		fname = h2.querySelector('.fname'),
+		lname = h2.querySelector('.lname');
 	
-	if (scoretext) {
-		const match = scoretext.match(/^(\-?\d+(\.\d+)?)\/(\d+(\.\d+)?)$/);
-		num = parseFloat(match[1]);
-		den = parseFloat(match[3]);
-	} else {
-		num = 0; den = 0;
-	}
-
-	if (opts.action=='delete') {
-		den -= schemae[schema].limits[1];
-		num -= parseFloat(opts.oldval);
-	} else if (opts.action=='new') {
-		den += schemae[schema].limits[1];
-		num += parseFloat(opts.newval);
-	} else if (opts.action=='update') num += parseFloat(opts.newval) - parseFloat(opts.oldval);
-	else if (opts.action=='schema') den *= schemae[schema].limits[1]/opts.oldmax;
-
-	rostercell.textContent = den ? (Math.round(num*100)/100)+'/'+den : '';
-	rostercell.dataset.sort = den ? Math.round(num/den*100) : -1;
-	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
-
-	//Update modal totals if necessary
-	const spannum = document.querySelector('dialog span.num');
-	if (spannum) spannum.textContent = den;
-}
-
-//===================================
-// Generate boilerplate HTML elements
-//===================================
-
-function infoElement(message, classname, tag) {
-	const info = markup({tag: tag || 'p', attrs: {class: 'info'}, children: [message]});
-	if (classname) info.classList.add(classname);
-	return info;
-}
-
-function modalError(smodal, error) {
-	console.log(error);
-	smodal.querySelector('.loader')?.remove();
-	const p = markup({tag: 'div', attrs: {class: 'error'}, children: 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.'})
-	smodal.append(p);
-}
-
-function studentRow(id, col1, col2, col3) {
-	const tr = markup({tag: 'tr', attrs: {class: 'new', 'data-id': id}, children: [
-		{tag: 'td', attrs: {class: 'fname'}, children: [col1]},
-		{tag: 'td', attrs: {class: 'lname'}, children: [col2]},
-		{tag: 'td', attrs: {class: 'note'}, children: [col3 ?? '']},
-		{tag: 'td', attrs: {class: 'score', 'data-sort': -1}},
-	]});
-	document.getElementById('roster').querySelector('tbody').append(tr);
-	setTimeout(() => { //Flash row
-		tr.style.transition = '1s background';
-		tr.classList.remove('new');
-		setTimeout(() => { tr.style.transition = null; }, 1000);
-	}, 250);
-	return tr;
-}
-
-function studentmodal(id, hlight) {
-	const tr = document.querySelector(`#roster tr[data-id="${id}"]`),
-		fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
-		lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
-		smodal = modal(
-			{tag: 'h2', children: [fname, ' ', lname, ' ']},
-			{tag: 'div', attrs: {class: 'loader'}}
-		);
-	
-	function render(events) {
-		const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
-			excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? [
-				{tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '},
-				{tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}
-			] : [{tag: 'span'}])}),
-			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
-			nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
-			table = new EventsTable(events);
-		smodal.querySelector('h2').append(nevents);
-		table.student = tr.dataset.id;
-		
-		const studentedit = new makeInput(actions);
-		studentedit.addElement(fname, {placeholder: 'First Name'});
-		studentedit.addElement(lname, {placeholder: 'Last name'});
-		studentedit.addElement(snote, {placeholder: 'Note', required: false});
-		studentedit.data = inputs => ({req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value});
-		
-		//Update roster with any changes
-		studentedit.after = (response, vals) => {
-			tr.querySelector('.fname').innerHTML = vals[0];
-			tr.querySelector('.lname').innerHTML = vals[1];
-			tr.querySelector('.note').innerHTML = vals[2];
-		}
-
-		const qspan = excused.querySelector('span:not(.mtx)');
-		function clearacts() {
-			if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
-		};
-		const excInput = new makeInput();
-		excInput.addElement(qspan, {type: 'date'});
-		excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
-		excInput.cancelfunc = clearacts;
-		excInput.editActions.push('delete');
-		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInput.after. */
-			const inp = qspan.querySelector('input');
-			inp.value = '';
-			inp.validate = false;
-			delete qspan.dataset.date;
-			excInput.save();
-			if (!inp.oldValue) excInput.after();
-		}
-
-		//Update roster
-		excInput.after = (response, vals) => {
-			const exc = new Date(qspan.dataset.date),
-				now = new Date(),
-				modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
-			if (modDate > now) {
-				tr.dataset.excused = qspan.dataset.date;
-				const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
-				let excbut = tr.querySelector('.lname .excuses');
-				if (!excbut) {
-					excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
-					tr.querySelector('.lname').append(excbut);
-				}
-				excbut.title = through;
-			} else {
-				qspan.textContent = '';
-				delete tr.dataset.excused;
-				tr.querySelector('.lname .excuses')?.remove();
+	function studentSave() {
+		if (validate([fname, lname, note])) {
+			onerror = (response) => {
+				if (errorfn) errorfn(response, inputs);
+				else for (const inp of inputs) inp.classList.add('error');
 			};
-			clearacts();
-		};
 
-		actions.addEventListener('click', function(e) {
-			e.preventDefault();
-
-			//Delete student
-			if (e.target.classList.contains('delete')) {
-				if (!confirm(`Are you sure you want to remove ${fname.textContent} ${lname.textContent} from the class roster?`)) return;
-				post('/ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
-					if (response != 1) console.error('There was an error deleting the student.');
-					else {
-						//Delete recent participation events
-						const evrows = document.querySelectorAll(`#recentevents tr[data-student="${tr.dataset.id}"]`);
-						for (const evrow of evrows) evrow.remove();
-
-						tr.remove(); //Delete roster row
-						const snum = document.getElementById('num_students');
-						snum.textContent = parseInt(snum.textContent)-1;
-						document.querySelector('dialog').remove();
-					}
-				});
-
-			//Set Excused Absences
-			} else if (e.target.classList.contains('excuses')) {
-				if (!excused.textContent) excused.prepend(markup({tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '}));
-				excInput.edit();
-			}
-		});
-		
-		smodal.querySelector('.loader').remove();
-		smodal.children[0].append(actions, snote, excused, table.markup());
-		if (hlight) smodal.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
-		smodal.student = tr.dataset.id;
+			post('/ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
+				if (!sid) onerror(sid);
+				else {
+					studentRow(sid, fname.value, lname.value, note.value);
+					const snum = document.getElementById('num_students'),
+						roster = document.getElementById('roster');
+					roster.sort(roster.sortby, roster.direction);
+					snum.textContent = parseInt(snum.textContent)+1; //Increment roster counter
+					document.querySelector('dialog').close();
+				}
+			});
+		}
 	}
+	
+	for (const inp of [fname, lname, note]) inp.addEventListener('keydown', e2 => {
+		if (e2.key == "Enter") {
+			e2.preventDefault();
+			studentSave();
+		}
+	});
 
-	if (tr.querySelector('.score').textContent)
-		fetch('/ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-		.then(interThen).then(render).catch(e => modalError(smodal, e));
-	else render([]);
-}
+	actions.addEventListener('click', e => {
+		e.preventDefault();
+		if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
+		else if (e.target.classList.contains('save')) studentSave();
+	});
+
+	modal(title, actions, h2, note);
+	fname.focus();
+});
+
+//Validate new class
+document.querySelector('.admin-new #classinfo')?.addEventListener('submit', function (e) {
+	let pass = true;
+	for (const i of this.querySelectorAll('input')) {
+		i.classList.remove('error');
+		if (!i.value) {
+			i.classList.add('error');
+			pass = false;
+		}
+	}
+	if (!pass) e.preventDefault();
+});
+
+//===========
+// QUESTIONS
+//===========
 
 class Question {
 	#text = '';
@@ -594,6 +280,66 @@ class Question {
 		});
 	}
 }
+
+const qlist = document.querySelector('#questionlist');
+if (qlist) for (const q of qlist.querySelectorAll('li')) new Question(q);
+
+//Add new question
+document.querySelector('#qactions .addnew')?.addEventListener('click', e => {
+	e.preventDefault();
+	const title = markup({tag: 'h2', children: ['New Question']}),
+		textarea = markup({tag: 'textarea', attrs: {placeholder: 'Question', required: 'true'}}),
+		actions = markup({tag: 'div', attrs: {class: 'actions expand'}, children: actionButtons(['save', 'cancel'])});
+
+	function questionSave() {
+		if (validate([textarea])) {
+			post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
+				new Question(data, textarea.value);
+				document.querySelector('dialog').close();
+			});
+		}
+	}
+
+	textarea.addEventListener('keydown', e2 => {
+		if (e2.key == "Enter") {
+			e2.preventDefault();
+			questionSave();
+		}
+	});
+	actions.addEventListener('click', e => {
+		e.preventDefault();
+		if (e.target.classList.contains('cancel')) document.querySelector('dialog').close();
+		else if (e.target.classList.contains('save')) questionSave();
+	});
+
+	modal(title, actions, textarea);
+	textarea.focus();
+})
+
+const qexpand = document.querySelector('#qactions .expand');
+function toggleQuestions() {
+	if (!qexpand || qexpand.classList.contains('disabled')) return;
+	
+	if (localStorage['hide-inactive-qs'] == 'true') {
+		qlist.classList.remove('hiding');
+		qexpand.title = "Hide inactive questions";
+	} else {
+		qlist.classList.add('hiding');
+		qexpand.title = "Show inactive questions";
+	}
+}
+
+//Show/hide inactive questions
+toggleQuestions();
+qexpand?.addEventListener('click', function(e) {
+	e.preventDefault();
+	localStorage['hide-inactive-qs'] = 'hide-inactive-qs' in localStorage && localStorage['hide-inactive-qs'] == 'true' ? 'false' : 'true';
+	toggleQuestions();
+});
+
+//==============
+// EVENTS TABLE
+//==============
 
 class EventsTable {
 	events = [];
@@ -807,6 +553,266 @@ class EventsTable {
 		}
 		resultsCell.append(numspan);
 	}
+}
+
+//Class recent events
+let classEvents = document.getElementById('recentevents');
+if (classEvents) {
+	recentTable = new EventsTable(events);
+	recentTable.footer = false;
+	recentTable.sortable = false;
+	classEvents.append(recentTable.markup());
+	if (!events.length) document.getElementById('recentevents').style.display = 'none';
+}
+
+//Highlight student from autocomplete
+if (window.location.hash.includes('#student-')) {
+	const student = parseInt(window.location.hash.replace('#student-', ''));
+	document.querySelector(`#roster tr[data-id="${student}"]`)?.classList.add('new');
+}
+
+function addSchemaButtons() {
+	const target = document.getElementById('schemaselect'),
+		schema = target.querySelector('select')?.value ?? window.schema;
+	
+	function drawButtons(html) {
+		const cont = target.querySelector('.schemalist');
+		cont.textContent = '';
+		cont.innerHTML = html;
+	}
+	
+	if (schema=='__addnew__') {
+		const def = target.querySelector('#selectgoeshere')?.dataset.default
+		target.querySelector('select').value = def ?? 1;
+		drawButtons(schemabuttons[def ?? 1]);
+		return newSchema();
+	}
+	
+	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
+	else {
+		fetch('/ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
+		.then((response) => response.text()).then((response) => {
+			schemabuttons[schema] = response;
+			drawButtons(response);
+		});
+	}
+}
+
+function makeSortable(table, defaultsort, defaultdesc) {
+	table.classList.add('sortable');
+
+	table.sort = function(sortby, desc) {
+		table.direction = desc;
+		table.sortby = sortby;
+
+		for (const th of table.querySelectorAll('th')) {
+			if (th.getAttribute('class')==sortby) th.dataset.sort = desc ? 'desc' : 'asc';
+			else delete th.dataset.sort;
+		}
+		const tbody = table.querySelector('tbody'),
+			rows = Array.from(tbody.querySelectorAll('tr')),
+			parseIf = val => parseInt(val)==val ? parseInt(val) : val;
+		rows.sort((a,b) => {
+			const acell = a.querySelector('.'+sortby),
+				bcell = b.querySelector('.'+sortby),
+				atext = 'sort' in acell.dataset ? parseIf(acell.dataset.sort) : acell.textContent,
+				btext = 'sort' in bcell.dataset ? parseIf(bcell.dataset.sort) : bcell.textContent;
+			if (typeof atext=='number' && typeof btext=='number') return (atext-btext) * (desc ? -1 : 1);
+			else if (!atext && btext) return (desc ? 1 : -1);
+			else if (atext && !btext) return (desc ? -1 : 1);
+			else return atext.localeCompare(btext) * (desc ? 1 : -1);
+		});
+		for (const row of rows) tbody.append(row);
+	}
+
+	table.sort(defaultsort, defaultdesc);
+
+	table.querySelector('thead').addEventListener('click', function(e) {
+		const sortby = e.target.getAttribute('class');
+		if (!sortby) return;
+		let desc = true;
+		if (sortby == table.sortby) desc = !table.direction;
+		table.sort(sortby, desc);
+	});
+}
+
+//Student can be a student ID, or a td.score cell
+function updateScore(rostercell, opts) {
+	if (!(rostercell instanceof Element)) rostercell = document.querySelector(`#roster tr[data-id="${rostercell}"] .score`);
+
+	const scoretext = rostercell.textContent;
+	let num, den;
+	
+	if (scoretext) {
+		const match = scoretext.match(/^(\-?\d+(\.\d+)?)\/(\d+(\.\d+)?)$/);
+		num = parseFloat(match[1]);
+		den = parseFloat(match[3]);
+	} else {
+		num = 0; den = 0;
+	}
+
+	if (opts.action=='delete') {
+		den -= schemae[schema].limits[1];
+		num -= parseFloat(opts.oldval);
+	} else if (opts.action=='new') {
+		den += schemae[schema].limits[1];
+		num += parseFloat(opts.newval);
+	} else if (opts.action=='update') num += parseFloat(opts.newval) - parseFloat(opts.oldval);
+	else if (opts.action=='schema') den *= schemae[schema].limits[1]/opts.oldmax;
+
+	rostercell.textContent = den ? (Math.round(num*100)/100)+'/'+den : '';
+	rostercell.dataset.sort = den ? Math.round(num/den*100) : -1;
+	document.getElementById('recentevents').style.display = document.querySelector('#recentevents tbody').children.length ? 'block' : 'none';
+
+	//Update modal totals if necessary
+	const spannum = document.querySelector('dialog span.num');
+	if (spannum) spannum.textContent = den;
+}
+
+//===================================
+// Generate boilerplate HTML elements
+//===================================
+
+function infoElement(message, classname, tag) {
+	const info = markup({tag: tag || 'p', attrs: {class: 'info'}, children: [message]});
+	if (classname) info.classList.add(classname);
+	return info;
+}
+
+function modalError(smodal, error) {
+	console.log(error);
+	smodal.querySelector('.loader')?.remove();
+	const p = markup({tag: 'div', attrs: {class: 'error'}, children: 'Server error. Please try again later, or <a href="https://github.com/charwick/pick.al/issues">file a bug report</a>.'})
+	smodal.append(p);
+}
+
+function studentRow(id, col1, col2, col3) {
+	const tr = markup({tag: 'tr', attrs: {class: 'new', 'data-id': id}, children: [
+		{tag: 'td', attrs: {class: 'fname'}, children: [col1]},
+		{tag: 'td', attrs: {class: 'lname'}, children: [col2]},
+		{tag: 'td', attrs: {class: 'note'}, children: [col3 ?? '']},
+		{tag: 'td', attrs: {class: 'score', 'data-sort': -1}},
+	]});
+	document.getElementById('roster').querySelector('tbody').append(tr);
+	setTimeout(() => { //Flash row
+		tr.style.transition = '1s background';
+		tr.classList.remove('new');
+		setTimeout(() => { tr.style.transition = null; }, 1000);
+	}, 250);
+	return tr;
+}
+
+function studentmodal(id, hlight) {
+	const tr = document.querySelector(`#roster tr[data-id="${id}"]`),
+		fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
+		lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
+		smodal = modal(
+			{tag: 'h2', children: [fname, ' ', lname, ' ']},
+			{tag: 'div', attrs: {class: 'loader'}}
+		);
+	
+	function render(events) {
+		const snote = markup({tag: 'p', attrs: {class: 'note'}, children: tr.querySelector('.note').innerHTML}),
+			excused = markup({tag: 'p', attrs: {class: 'excused'}, children: ('excused' in tr.dataset ? [
+				{tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '},
+				{tag: 'span', attrs: {'data-date': tr.dataset.excused}, children: [datetostr(tr.dataset.excused)]}
+			] : [{tag: 'span'}])}),
+			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'excuses', 'delete'])}),
+			nevents = markup({tag: 'span', attrs: {class: 'num'}, children: [events.length]}),
+			table = new EventsTable(events);
+		smodal.querySelector('h2').append(nevents);
+		table.student = tr.dataset.id;
+		
+		const studentedit = new makeInput(actions);
+		studentedit.addElement(fname, {placeholder: 'First Name'});
+		studentedit.addElement(lname, {placeholder: 'Last name'});
+		studentedit.addElement(snote, {placeholder: 'Note', required: false});
+		studentedit.data = inputs => ({req: 'editstudent', student: tr.dataset.id, fname: inputs[0].value, lname: inputs[1].value, note: inputs[2].value});
+		
+		//Update roster with any changes
+		studentedit.after = (response, vals) => {
+			tr.querySelector('.fname').innerHTML = vals[0];
+			tr.querySelector('.lname').innerHTML = vals[1]; //Tofix: Clears excused icon
+			tr.querySelector('.note').innerHTML = vals[2];
+		}
+
+		const qspan = excused.querySelector('span:not(.mtx)');
+		function clearacts() {
+			if (!('excused' in tr.dataset)) excused.querySelector('.mtx')?.remove(); //the Excused Until text
+		};
+		const excInput = new makeInput();
+		excInput.addElement(qspan, {type: 'date'});
+		excInput.data = inps => { return {req: 'studentexcused', id: tr.dataset.id, excused: inps[0].value}; };
+		excInput.cancelfunc = clearacts;
+		excInput.editActions.push('delete');
+		excInput.delete = () => { 							/* STILL HAVING PROBLEMS. See the }else{ block in excInput.after. */
+			const inp = qspan.querySelector('input');
+			inp.value = '';
+			inp.validate = false;
+			delete qspan.dataset.date;
+			excInput.save();
+			if (!inp.oldValue) excInput.after();
+		}
+
+		//Update roster
+		excInput.after = (response, vals) => {
+			const exc = new Date(qspan.dataset.date),
+				now = new Date(),
+				modDate = new Date(exc.getTime() + exc.getTimezoneOffset()*60000 + 24*3600*1000 - 1); //Be inclusive of the set day. Also timezone offset.
+			if (modDate > now) {
+				tr.dataset.excused = qspan.dataset.date;
+				const through = "Excused through "+modDate.toLocaleDateString('en-us', {month: 'short', day: 'numeric', year: 'numeric'});
+				let excbut = tr.querySelector('.lname .excuses');
+				if (!excbut) {
+					excbut = markup({tag: 'span', attrs: {class: 'excuses'}});
+					tr.querySelector('.lname').append(excbut);
+				}
+				excbut.title = through;
+			} else {
+				qspan.textContent = '';
+				delete tr.dataset.excused;
+				tr.querySelector('.lname .excuses')?.remove();
+			};
+			clearacts();
+		};
+
+		actions.addEventListener('click', function(e) {
+			e.preventDefault();
+
+			//Delete student
+			if (e.target.classList.contains('delete')) {
+				if (!confirm(`Are you sure you want to remove ${fname.textContent} ${lname.textContent} from the class roster?`)) return;
+				post('/ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
+					if (response != 1) console.error('There was an error deleting the student.');
+					else {
+						//Delete recent participation events
+						const evrows = document.querySelectorAll(`#recentevents tr[data-student="${tr.dataset.id}"]`);
+						for (const evrow of evrows) evrow.remove();
+
+						tr.remove(); //Delete roster row
+						const snum = document.getElementById('num_students');
+						snum.textContent = parseInt(snum.textContent)-1;
+						document.querySelector('dialog').remove();
+					}
+				});
+
+			//Set Excused Absences
+			} else if (e.target.classList.contains('excuses')) {
+				if (!excused.textContent) excused.prepend(markup({tag: 'span', attrs: {class: 'mtx'}, children: 'Excused through '}));
+				excInput.edit();
+			}
+		});
+		
+		smodal.querySelector('.loader').remove();
+		smodal.children[0].append(actions, snote, excused, table.markup());
+		if (hlight) smodal.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
+		smodal.student = tr.dataset.id;
+	}
+
+	if (tr.querySelector('.score').textContent)
+		fetch('/ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
+		.then(interThen).then(render).catch(e => modalError(smodal, e));
+	else render([]);
 }
 
 function uploadCSV(e) {

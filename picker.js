@@ -10,7 +10,7 @@ var hist = [], //Reverse coded: current student = index[0]
 	demo = false,
 	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null;
 
-async function loadInitialData() {
+(async () => {
 	try {
 		// Disable roster actions until data loads
 		const pickBtn = document.getElementById('pick');
@@ -125,237 +125,232 @@ async function loadInitialData() {
 		warn.textContent = 'Unable to load class data from server.';
 		document.getElementById('bodywrap')?.prepend(warn);
 	}
-}
+})(); //Kick off data load (non-blocking)
 
-document.addEventListener('DOMContentLoaded', () => {
-	loadInitialData(); //Kick off data load (non-blocking)
-	
-	document.querySelector('#bodywrap > .actions')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		if (e.target.classList.contains('back')) buttonFunc('back')(e);
-		else if (e.target.classList.contains('forward')) buttonFunc('forward')(e);
-		else if (e.target.classList.contains('snooze')) {
-			const now = new Date();
-			let excdate, fn;
-			if (!isExcused(hist[histIndex].info)) { //Set excused
-				excdate = now.toLocaleDateString('en-CA');
-				fn = function() {
-					now.setHours(23); now.setMinutes(59);
-					hist[histIndex].info.excuseduntil = now;
-					e.target.dataset.excused = 'Excused until tomorrow';
-					document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.add('excused');
+document.querySelector('#bodywrap > .actions')?.addEventListener('click', function(e) {
+	e.preventDefault();
+	if (e.target.classList.contains('back')) buttonFunc('back')(e);
+	else if (e.target.classList.contains('forward')) buttonFunc('forward')(e);
+	else if (e.target.classList.contains('snooze')) {
+		const now = new Date();
+		let excdate, fn;
+		if (!isExcused(hist[histIndex].info)) { //Set excused
+			excdate = now.toLocaleDateString('en-CA');
+			fn = function() {
+				now.setHours(23); now.setMinutes(59);
+				hist[histIndex].info.excuseduntil = now;
+				e.target.dataset.excused = 'Excused until tomorrow';
+				document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.add('excused');
+			}
+		} else { //Clear excused
+			excdate = '';
+			fn = function() {
+				hist[histIndex].info.excuseduntil = null;
+				delete e.target.dataset.excused
+				document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
+			}
+		}
+		fetchif(!demo, '/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
+	}
+});
+document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
+
+function firstQuestion(e) {
+	if (e) e.preventDefault();
+	const nextQ = document.querySelector('#roster li[data-q]');
+	currentQ = nextQ.dataset.q;
+	document.getElementById('question').classList.add('active');
+	document.getElementById('qtext').textContent = nextQ.textContent;
+	setQbuttons();
+}
+document.getElementById('q-queue')?.addEventListener('click', firstQuestion);
+
+//Keyboard Navigation
+document.addEventListener('keydown', function(e) {
+	const rosterEl = document.getElementById('roster');
+	if (e.key == '?') {
+		const d = document.getElementById('shortcuts');
+		if (d.open) d.close();
+		else d.show();
+	} else if (e.key == 'm') {
+		if (!window.classid) window.location.href = '/admin';
+		else window.location.href = '/admin/class/'+classid;
+	} else if (e.key == 'Escape') {
+		if (rosterEl?.classList.contains('open')) rosterEl.classList.remove('open');
+		if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
+	}
+
+	if (!window.classid) return; //Picker-specific keys after this
+
+	if (e.key == ' ') buttonFunc('choose')();
+	else if (e.key == 'ArrowLeft' && histIndex < hist.length-1) buttonFunc('back')();
+	else if (e.key == 'ArrowRight' && histIndex) buttonFunc('forward')();
+	else if (['1','2','3','4','5'].includes(e.key) && histIndex != null) {
+		const i = parseInt(e.key),
+			buttons = hist[histIndex].element.querySelectorAll('button');
+		if (buttons.length < i) return;
+		buttons[i-1].click();
+	} else if (e.key == '0' && histIndex != null) hist[histIndex].element.querySelector('button.picked')?.click();
+	else if (e.key == 'z') document.querySelector('.snooze').click();
+	else if (e.key == 'r') {
+		if (rosterEl.classList.contains('open')) rosterEl.classList.remove('open');
+		else rosterEl.classList.add('open');
+	} else if (e.key == 'q') {
+		if (currentQ) {
+			const nextQ = document.querySelector(`#roster li[data-q="${currentQ}"]`).nextElementSibling;
+			if ('q' in nextQ.dataset) {
+				currentQ = nextQ.dataset.q;
+				document.getElementById('qtext').textContent = nextQ.textContent;
+			} else {
+				currentQ = null;
+				document.getElementById('question').classList.remove('active');
+			}
+			setQbuttons();
+		} else firstQuestion();
+	} else if (rosterEl.classList.contains('open')) {
+		const selected = rosterEl.querySelector('.selected');
+		if (e.key=='ArrowUp') {
+			if (selected) {
+				let newselect = selected.previousElementSibling;
+				if (!newselect) return;
+				if (newselect.classList.contains('head')) newselect = newselect.previousElementSibling;
+				if (newselect) {
+					selected.classList.remove('selected');
+					newselect.classList.add('selected');
 				}
-			} else { //Clear excused
-				excdate = '';
-				fn = function() {
-					hist[histIndex].info.excuseduntil = null;
-					delete e.target.dataset.excused
-					document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
+			} else { // No selected item: select last li and scroll to bottom
+				const rosterList = roster.querySelectorAll('li:not(.head)');
+				if (rosterList.length) {
+					rosterList[rosterList.length - 1].classList.add('selected');
+					rosterEl.querySelector('ul').scrollTop = rosterEl.scrollHeight;
 				}
 			}
-			fetchif(!demo, '/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
-		}
-	});
-	document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
+		} else if (e.key=='ArrowDown') {
+			if (selected) {
+				let newselect = selected.nextElementSibling;
+				if (!newselect) return;
+				if (newselect.classList.contains('head')) newselect = newselect.nextElementSibling;
+				if (newselect) {
+					selected.classList.remove('selected');
+					newselect.classList.add('selected');
+				}
+			} else { // No selected item: select last li and scroll to bottom
+				const rosterList = roster.querySelectorAll('li:not(.head)');
+				if (rosterList.length) {
+					rosterList[0].classList.add('selected');
+					rosterEl.querySelector('ul').scrollTop = 0;
+				}
+			}
+		} else if (e.key=='Enter' && selected)
+			selected.click()
+	}
+});
 
-	function firstQuestion(e) {
-		if (e) e.preventDefault();
-		const nextQ = document.querySelector('#roster li[data-q]');
-		currentQ = nextQ.dataset.q;
+document.querySelector('dialog .close').addEventListener('click', function(e) {
+	e.preventDefault();
+	this.closest('dialog').close();
+})
+
+//=============
+// ROSTER LIST
+//=============
+
+//Open
+document.getElementById('rosterlist')?.addEventListener('click', function(e) {
+	e.preventDefault();
+	document.getElementById('roster').classList.add('open');
+});
+
+//Click
+document.getElementById('roster')?.addEventListener('click', function(e) {
+	if ('id' in e.target.dataset) {
+		const index = roster.findIndex(item => item.id==e.target.dataset.id);
+		new StudentEvent(roster[index]);
+		this.style.right = null;
+		this.classList.remove('open');
+	} else if ('q' in e.target.dataset) {
 		document.getElementById('question').classList.add('active');
-		document.getElementById('qtext').textContent = nextQ.textContent;
+		document.getElementById('qtext').textContent = e.target.textContent;
+		this.classList.remove('open');
+		currentQ = e.target.dataset.q;
 		setQbuttons();
 	}
-	document.getElementById('q-queue')?.addEventListener('click', firstQuestion);
+});
 
-	//Keyboard Navigation
-	document.addEventListener('keydown', function(e) {
-		const rosterEl = document.getElementById('roster');
-		if (e.key == '?') {
-			const d = document.getElementById('shortcuts');
-			if (d.open) d.close();
-			else d.show();
-		} else if (e.key == 'm') {
-			if (!window.classid) window.location.href = '/admin';
-			else window.location.href = '/admin/class/'+classid;
-		} else if (e.key == 'Escape') {
-			if (rosterEl?.classList.contains('open')) rosterEl.classList.remove('open');
-			if (document.getElementById('shortcuts').open) document.getElementById('shortcuts').close();
-		}
+//Select
+document.getElementById('roster')?.addEventListener('mouseover', function(e) {
+	if (!e.target.matches('li:not(.head)')) return;
+	for (const a of this.querySelectorAll('li')) a.classList.remove('selected');
+	e.target.classList.add('selected');
+});
 
-		if (!window.classid) return; //Picker-specific keys after this
+//Close
+document.getElementById('rosterclose')?.addEventListener('click', function(e) {
+	e.preventDefault();
+	document.getElementById('roster').classList.remove('open');
+});
 
-		if (e.key == ' ') buttonFunc('choose')();
-		else if (e.key == 'ArrowLeft' && histIndex < hist.length-1) buttonFunc('back')();
-		else if (e.key == 'ArrowRight' && histIndex) buttonFunc('forward')();
-		else if (['1','2','3','4','5'].includes(e.key) && histIndex != null) {
-			const i = parseInt(e.key),
-				buttons = hist[histIndex].element.querySelectorAll('button');
-			if (buttons.length < i) return;
-			buttons[i-1].click();
-		} else if (e.key == '0' && histIndex != null) hist[histIndex].element.querySelector('button.picked')?.click();
-		else if (e.key == 'z') document.querySelector('.snooze').click();
-		else if (e.key == 'r') {
-			if (rosterEl.classList.contains('open')) rosterEl.classList.remove('open');
-			else rosterEl.classList.add('open');
-		} else if (e.key == 'q') {
-			if (currentQ) {
-				const nextQ = document.querySelector(`#roster li[data-q="${currentQ}"]`).nextElementSibling;
-				if ('q' in nextQ.dataset) {
-					currentQ = nextQ.dataset.q;
-					document.getElementById('qtext').textContent = nextQ.textContent;
+//==================
+// QUEUED QUESTIONS
+//==================
+
+document.querySelector('#question .actions')?.addEventListener('click', e => {
+	e.preventDefault();
+	if (e.target.classList.contains('back') || e.target.classList.contains('forward')) {
+		const newq = document.querySelector(`#roster li[data-q="${e.target.dataset.q}"]`);
+		document.getElementById('qtext').textContent = newq.textContent;
+		currentQ = e.target.dataset.q;
+		setQbuttons();
+
+	} else if (e.target.classList.contains('clear')) {
+		document.getElementById('question').classList.remove('active');
+		currentQ = null;
+
+	} else if (e.target.classList.contains('archive')) {
+		const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
+		fetchif(!demo, '/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, response => {
+
+			//If we're unarchiving
+			if (archived) {
+				document.getElementById('question').classList.remove('archived');
+				const qs = document.querySelector('#roster li[data-q]');
+				let lihead;
+				if (!qs) {
+					lihead = document.createElement('li');
+					lihead.classList.add('head');
+					lihead.textContent='Questions';
+					document.querySelector('#roster ul').prepend(lihead);
+				} else lihead = document.querySelector('#roster li.head');
+				const li = document.createElement('li');
+				li.dataset.q = currentQ;
+				li.textContent = document.getElementById('qtext').textContent;
+				lihead.insertAdjacentElement('afterend', li);
+			} else {
+				document.querySelector(`#roster li[data-q="${currentQ}"]`).remove()
+				let newq = document.querySelector('#question .actions .forward').dataset.q;
+				if (!newq) newq = document.querySelector('#question .actions .back').dataset.q;
+				
+				//If we're on an existing result, show it's archived but don't remove
+				if (histIndex!==null && hist[histIndex].result !== null) {
+					document.getElementById('question').classList.add('archived');
+					if (!document.querySelector('#roster li[data-q]')) document.querySelector('#roster li.head')?.remove();
+				
+				//If we have more questions, swap to the next question
+				} else if (newq) {
+					document.getElementById('qtext').textContent = document.querySelector(`#roster li[data-q="${newq}"]`).textContent;
+					currentQ = newq;
+					setQbuttons();
+				
+				//If there are no more questions, hide the question box
 				} else {
-					currentQ = null;
 					document.getElementById('question').classList.remove('active');
+					currentQ = null;
+					document.querySelector('#roster li.head').remove();
+					document.querySelector('#q-queue').remove();
 				}
-				setQbuttons();
-			} else firstQuestion();
-		} else if (rosterEl.classList.contains('open')) {
-			const selected = rosterEl.querySelector('.selected');
-			if (e.key=='ArrowUp') {
-				if (selected) {
-					let newselect = selected.previousElementSibling;
-					if (!newselect) return;
-					if (newselect.classList.contains('head')) newselect = newselect.previousElementSibling;
-					if (newselect) {
-						selected.classList.remove('selected');
-						newselect.classList.add('selected');
-					}
-				} else { // No selected item: select last li and scroll to bottom
-					const rosterList = roster.querySelectorAll('li:not(.head)');
-					if (rosterList.length) {
-						rosterList[rosterList.length - 1].classList.add('selected');
-						rosterEl.querySelector('ul').scrollTop = rosterEl.scrollHeight;
-					}
-				}
-			} else if (e.key=='ArrowDown') {
-				if (selected) {
-					let newselect = selected.nextElementSibling;
-					if (!newselect) return;
-					if (newselect.classList.contains('head')) newselect = newselect.nextElementSibling;
-					if (newselect) {
-						selected.classList.remove('selected');
-						newselect.classList.add('selected');
-					}
-				} else { // No selected item: select last li and scroll to bottom
-					const rosterList = roster.querySelectorAll('li:not(.head)');
-					if (rosterList.length) {
-						rosterList[0].classList.add('selected');
-						rosterEl.querySelector('ul').scrollTop = 0;
-					}
-				}
-			} else if (e.key=='Enter' && selected)
-				selected.click()
-		}
-	});
-
-	document.querySelector('dialog .close').addEventListener('click', function(e) {
-		e.preventDefault();
-		this.closest('dialog').close();
-	})
-
-	//=============
-	// ROSTER LIST
-	//=============
-
-	//Open
-	document.getElementById('rosterlist')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		document.getElementById('roster').classList.add('open');
-	});
-
-	//Click
-	document.getElementById('roster')?.addEventListener('click', function(e) {
-		if ('id' in e.target.dataset) {
-			const index = roster.findIndex(item => item.id==e.target.dataset.id);
-			new StudentEvent(roster[index]);
-			this.style.right = null;
-			this.classList.remove('open');
-		} else if ('q' in e.target.dataset) {
-			document.getElementById('question').classList.add('active');
-			document.getElementById('qtext').textContent = e.target.textContent;
-			this.classList.remove('open');
-			currentQ = e.target.dataset.q;
-			setQbuttons();
-		}
-	});
-
-	//Select
-	document.getElementById('roster')?.addEventListener('mouseover', function(e) {
-		if (!e.target.matches('li:not(.head)')) return;
-		for (const a of this.querySelectorAll('li')) a.classList.remove('selected');
-		e.target.classList.add('selected');
-	});
-
-	//Close
-	document.getElementById('rosterclose')?.addEventListener('click', function(e) {
-		e.preventDefault();
-		document.getElementById('roster').classList.remove('open');
-	});
-
-	//==================
-	// QUEUED QUESTIONS
-	//==================
-
-	document.querySelector('#question .actions')?.addEventListener('click', e => {
-		e.preventDefault();
-		if (e.target.classList.contains('back') || e.target.classList.contains('forward')) {
-			const newq = document.querySelector(`#roster li[data-q="${e.target.dataset.q}"]`);
-			document.getElementById('qtext').textContent = newq.textContent;
-			currentQ = e.target.dataset.q;
-			setQbuttons();
-
-		} else if (e.target.classList.contains('clear')) {
-			document.getElementById('question').classList.remove('active');
-			currentQ = null;
-
-		} else if (e.target.classList.contains('archive')) {
-			const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
-			fetchif(!demo, '/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, response => {
-
-				//If we're unarchiving
-				if (archived) {
-					document.getElementById('question').classList.remove('archived');
-					const qs = document.querySelector('#roster li[data-q]');
-					let lihead;
-					if (!qs) {
-						lihead = document.createElement('li');
-						lihead.classList.add('head');
-						lihead.textContent='Questions';
-						document.querySelector('#roster ul').prepend(lihead);
-					} else lihead = document.querySelector('#roster li.head');
-					const li = document.createElement('li');
-					li.dataset.q = currentQ;
-					li.textContent = document.getElementById('qtext').textContent;
-					lihead.insertAdjacentElement('afterend', li);
-				} else {
-					document.querySelector(`#roster li[data-q="${currentQ}"]`).remove()
-					let newq = document.querySelector('#question .actions .forward').dataset.q;
-					if (!newq) newq = document.querySelector('#question .actions .back').dataset.q;
-					
-					//If we're on an existing result, show it's archived but don't remove
-					if (histIndex!==null && hist[histIndex].result !== null) {
-						document.getElementById('question').classList.add('archived');
-						if (!document.querySelector('#roster li[data-q]')) document.querySelector('#roster li.head')?.remove();
-					
-					//If we have more questions, swap to the next question
-					} else if (newq) {
-						document.getElementById('qtext').textContent = document.querySelector(`#roster li[data-q="${newq}"]`).textContent;
-						currentQ = newq;
-						setQbuttons();
-					
-					//If there are no more questions, hide the question box
-					} else {
-						document.getElementById('question').classList.remove('active');
-						currentQ = null;
-						document.querySelector('#roster li.head').remove();
-						document.querySelector('#q-queue').remove();
-					}
-				}
-			});
-		}
-	});
-	
+			}
+		});
+	}
 });
 
 class StudentEvent {

@@ -7,110 +7,108 @@ var inputs = {
 	email: {type: 'email', placeholder: 'Email Address', autocomplete: 'email'},
 }, radios, inpContainer;
 
-document.addEventListener('DOMContentLoaded', () => {
-	radios = document.querySelectorAll('input[name="action"]');
-	inpContainer = document.getElementById('entries');
-	
-	for (const radio of radios) radio.addEventListener('change', switchInputs);
-	if ('username' in localStorage) document.getElementById('tab_login').checked = true;
-	switchInputs(false);
-	if ('username' in localStorage) document.querySelector('input[name="username"]').value = localStorage.username;
-	
-	document.querySelector('form').addEventListener('submit', function(e) {
-		if (document.body.classList.contains('resetpw')) return;
-		let pass = true;
-		const tab = whichTab();
-		e.preventDefault();
-		for (const box of document.querySelectorAll('.info')) box.remove(); //Clear errors
-		
-		for (const i of inpContainer.querySelectorAll('input')) {
-			i.classList.remove('error');
-			if (tab=='register' && i.name=='username' && ['@','&','?'].some(char=>i.value.includes(char))) {
-				i.classList.add('error');
-				infoElement('Username cannot contain @, &, or ?.', 'error');
-				pass = false;
-			}
-		}
-		
-		//Validate password, if applicable
-		if (tab=='register' || document.body.classList.contains('choosepw')) {
-			const uname = inpContainer.querySelector('input[name="username"]'),
-				pw = inpContainer.querySelector('input[name="password"]'),
-				pwconfirm = inpContainer.querySelector('input[name="confirm_password"]');
-			if (pw.value != pwconfirm.value) {
-				pass = false;
-				infoElement('The passwords do not match.', 'error');
-				pw.classList.add('error');
-				pwconfirm.classList.add('error');
-			} else if (pw.value.length < 5) {
-				pass = false;
-				infoElement('Password must be at least 5 characters.', 'error');
-				pw.classList.add('error');
-			} else if (pw.value.toLowerCase().includes(uname.value.toLowerCase())) {
-				pass = false;
-				infoElement('Password cannot contain the username.', 'error');
-				pw.classList.add('error');
-			}
-		}
-		if (!pass) return;
-		
-		//Check for existing email and/or username
-		if (document.body.classList.contains('choosepw')) document.querySelector('form').submit();
-		else {
-			const un = inpContainer.querySelector('input[name="username"]');
-			let data = [(un.value.includes('@') ? 'email' : 'username')+'='+un.value]
-			if (tab == 'register') data.push('email='+inpContainer.querySelector('input[name="email"]').value);
-			fetch('/ajax.php?req=userexists&'+data.join('&'), {method: 'get'})
-			.then((response) => response.json()).then((result) => {
-				let pass = true;
-				
-				if (tab=='register') {
-					for (const [inp, matches] of Object.entries(result)) if (matches) {
-						pass = false;
-						const input = inpContainer.querySelector(`input[name="${inp}"]`);
-						input.classList.add('error');
-						infoElement(`The ${inp} '${input.value}' is already taken. Please choose another.`, 'error');
-					}
-				
-				} else if (tab=='login') {
-					if (!Object.entries(result)[0][1]) {
-						pass = false;
-						infoElement(`The ${Object.entries(result)[0][0]} '${un.value}' does not exist.`, 'error');
-					}
-				}
-				
-				if (pass) document.querySelector('form').submit();
-			}).catch((response) => { for (const inp of inpContainer.querySelectorAll('input')) inp.classList.add('error'); });
-		}
-	});
+radios = document.querySelectorAll('input[name="action"]');
+inpContainer = document.getElementById('entries');
 
-	let rpwform = document.querySelector('.resetpw form');
-	if (rpwform) {
-		rpwform.submitted = false;
-		rpwform.addEventListener('submit', function(e) {
-			e.preventDefault();
-			if (rpwform.submitted) return; //Don't allow to hit more than once
-			rpwform.submitted = true;
-			fetch('/ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
-			.then((response) => {
-				if (response.status != 200) {
-					infoElement('There was an error sending the reset email. Please try again later.', 'error')
-					return;
-				}
-				infoElement('Check your email for the reset link. It will be valid for 24 hours.');
-			}).catch((response) => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); });
-		});
+for (const radio of radios) radio.addEventListener('change', switchInputs);
+if ('username' in localStorage) document.getElementById('tab_login').checked = true;
+switchInputs(false);
+if ('username' in localStorage) document.querySelector('input[name="username"]').value = localStorage.username;
+
+document.querySelector('form').addEventListener('submit', function(e) {
+	if (document.body.classList.contains('resetpw')) return;
+	let pass = true;
+	const tab = whichTab();
+	e.preventDefault();
+	for (const box of document.querySelectorAll('.info')) box.remove(); //Clear errors
+	
+	for (const i of inpContainer.querySelectorAll('input')) {
+		i.classList.remove('error');
+		if (tab=='register' && i.name=='username' && ['@','&','?'].some(char=>i.value.includes(char))) {
+			i.classList.add('error');
+			infoElement('Username cannot contain @, &, or ?.', 'error');
+			pass = false;
+		}
 	}
+	
+	//Validate password, if applicable
+	if (tab=='register' || document.body.classList.contains('choosepw')) {
+		const uname = inpContainer.querySelector('input[name="username"]'),
+			pw = inpContainer.querySelector('input[name="password"]'),
+			pwconfirm = inpContainer.querySelector('input[name="confirm_password"]');
+		if (pw.value != pwconfirm.value) {
+			pass = false;
+			infoElement('The passwords do not match.', 'error');
+			pw.classList.add('error');
+			pwconfirm.classList.add('error');
+		} else if (pw.value.length < 5) {
+			pass = false;
+			infoElement('Password must be at least 5 characters.', 'error');
+			pw.classList.add('error');
+		} else if (pw.value.toLowerCase().includes(uname.value.toLowerCase())) {
+			pass = false;
+			infoElement('Password cannot contain the username.', 'error');
+			pw.classList.add('error');
+		}
+	}
+	if (!pass) return;
+	
+	//Check for existing email and/or username
+	if (document.body.classList.contains('choosepw')) document.querySelector('form').submit();
+	else {
+		const un = inpContainer.querySelector('input[name="username"]');
+		let data = [(un.value.includes('@') ? 'email' : 'username')+'='+un.value]
+		if (tab == 'register') data.push('email='+inpContainer.querySelector('input[name="email"]').value);
+		fetch('/ajax.php?req=userexists&'+data.join('&'), {method: 'get'})
+		.then((response) => response.json()).then((result) => {
+			let pass = true;
+			
+			if (tab=='register') {
+				for (const [inp, matches] of Object.entries(result)) if (matches) {
+					pass = false;
+					const input = inpContainer.querySelector(`input[name="${inp}"]`);
+					input.classList.add('error');
+					infoElement(`The ${inp} '${input.value}' is already taken. Please choose another.`, 'error');
+				}
+			
+			} else if (tab=='login') {
+				if (!Object.entries(result)[0][1]) {
+					pass = false;
+					infoElement(`The ${Object.entries(result)[0][0]} '${un.value}' does not exist.`, 'error');
+				}
+			}
+			
+			if (pass) document.querySelector('form').submit();
+		}).catch((response) => { for (const inp of inpContainer.querySelectorAll('input')) inp.classList.add('error'); });
+	}
+});
 
-	const dialog = document.getElementsByTagName('dialog')[0];
-	document.getElementById('terms')?.addEventListener('click', (e) => {
+let rpwform = document.querySelector('.resetpw form');
+if (rpwform) {
+	rpwform.submitted = false;
+	rpwform.addEventListener('submit', function(e) {
 		e.preventDefault();
-		dialog.showModal();
+		if (rpwform.submitted) return; //Don't allow to hit more than once
+		rpwform.submitted = true;
+		fetch('/ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
+		.then((response) => {
+			if (response.status != 200) {
+				infoElement('There was an error sending the reset email. Please try again later.', 'error')
+				return;
+			}
+			infoElement('Check your email for the reset link. It will be valid for 24 hours.');
+		}).catch((response) => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); });
 	});
-	//Click the backdrop to close (requires a div wrapper)
-	dialog.addEventListener('click', (e) => {
-		if (e.target.nodeName === 'DIALOG') dialog.close();
-	});
+}
+
+const dialog = document.getElementsByTagName('dialog')[0];
+document.getElementById('terms')?.addEventListener('click', (e) => {
+	e.preventDefault();
+	dialog.showModal();
+});
+//Click the backdrop to close (requires a div wrapper)
+dialog.addEventListener('click', (e) => {
+	if (e.target.nodeName === 'DIALOG') dialog.close();
 });
 
 function whichTab() {
