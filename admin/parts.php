@@ -13,7 +13,7 @@
 				<img src="https://www.gravatar.com/avatar/<?= md5(strtolower(trim($user->email))); ?>?s=40&d=mp" class="gravatar" />
 				<?= $user->username; ?>
 			</a>
-			<a href="/login/login.php?action=logout">Log out</a>
+			<a href="/" id="logout">Log out</a>
 		</div>
 	</div>
 <?php }

@@ -159,6 +159,13 @@ class makeInput {
 	}
 }
 
+document.getElementById('logout')?.addEventListener('click', e => {
+	e.preventDefault();
+	post('/ajax.php', {req: 'logout'}, response => {
+		if (response) window.location.href = '/';
+	});
+});
+
 function actionButtons(list) {
 	if (!list) return [];
 	const buttons = {

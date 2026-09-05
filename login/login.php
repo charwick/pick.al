@@ -21,14 +21,6 @@ function validate() {
 	} elseif (str_contains($_POST['username'], '@')) return 'Username cannot contain \'@\'.';
 }
 
-if (isset($_GET['action']) && $_GET['action']=='logout') {
-	require_once('../query.php');
-	$sql = new chooser_query();
-	session_destroy();
-	header("Location: ../"); //This script is called directly and not included
-	exit;
-}
-
 if (isset($_SESSION['message'])) {
 	$message = $_SESSION['message'];
 	unset($_SESSION['message']);

@@ -225,6 +225,11 @@ switch ($req) {
 		if (!$response || !is_numeric($response)) { http_response_code(403); exit(); }
 		break;
 	
+	case 'logout':
+		session_destroy();
+		$json_response = '1';
+		break;
+	
 	case 'editpw':
 		$json_response = json_encode($sql->edit_pw($_POST['current'], $_POST['new']));
 		break;
