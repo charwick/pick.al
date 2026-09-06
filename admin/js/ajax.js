@@ -162,7 +162,7 @@ class makeInput {
 document.getElementById('logout')?.addEventListener('click', e => {
 	e.preventDefault();
 	post('/ajax.php', {req: 'logout'}, response => {
-		if (response) window.location.href = '/';
+		if (response) window.location.href = '/login/';
 	});
 });
 

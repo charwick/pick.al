@@ -65,9 +65,11 @@ oid.addEventListener('click', function(e) {
 	}
 	if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
 
-	sendInfo(null, {req: 'deleteorcid'}, null, function() {
-		oid.querySelector('a').remove();
-		oid.querySelector('.actions').remove();
+	post('/ajax.php', {req: 'deleteorcid'}, response => {
+		if (response==1) {
+			oid.querySelector('a').remove();
+			oid.querySelector('.actions').remove();
+		} else alert('There was an error disconnecting your OrcID. Please try again later.');
 	});
 });
 

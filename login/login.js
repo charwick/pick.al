@@ -11,9 +11,15 @@ radios = document.querySelectorAll('input[name="action"]');
 inpContainer = document.getElementById('entries');
 
 for (const radio of radios) radio.addEventListener('change', switchInputs);
-if ('username' in localStorage) document.getElementById('tab_login').checked = true;
+if ('username' in localStorage) {
+	let loginTab = document.getElementById('tab_login');
+	if (loginTab) loginTab.checked = true;
+}
 switchInputs(false);
-if ('username' in localStorage) document.querySelector('input[name="username"]').value = localStorage.username;
+if ('username' in localStorage) {
+	let unInput = document.querySelector('input[name="username"]');
+	if (!unInput.value) unInput.value = localStorage.username;
+}
 
 document.querySelector('form').addEventListener('submit', function(e) {
 	if (document.body.classList.contains('resetpw')) return;
@@ -97,6 +103,7 @@ if (rpwform) {
 				return;
 			}
 			infoElement('Check your email for the reset link. It will be valid for 24 hours.');
+			document.querySelector('input[type="submit"]').disabled = true;
 		}).catch((response) => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); });
 	});
 }

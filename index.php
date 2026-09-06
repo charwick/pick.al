@@ -4,8 +4,7 @@ $user = $sql->current_user();
 
 //Redirect to root and show login
 if (!$user && !isset($_GET['try'])) {
-	if ($_SERVER['REQUEST_URI'] !== '/' && $_SERVER['REQUEST_URI'] !== '/index.php') header('Location: /');
-	else require_once('login/login.php');
+	header('Location: /login/');
 	exit;
 }
 

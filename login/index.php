@@ -1,6 +1,13 @@
-<?php $message = null;
+<?php require_once('../query.php');
+$sql = new chooser_query();
+if ($sql->current_user()) {
+	header("Location: /");
+	exit;
+}
+
+$message = null;
 $defaulttab = 'register';
-require_once((str_contains(getcwd(), 'login') ? '../' : '').'orcid.php'); //Because it's relative to the including script, and not this file
+require_once('../orcid.php'); //Because it's relative to the including script, and not this file
 $bodyclass = '';
 $orcid = new orcid_api();
 
@@ -24,12 +31,9 @@ function validate() {
 if (isset($_SESSION['message'])) {
 	$message = $_SESSION['message'];
 	unset($_SESSION['message']);
-}
-
-elseif (!isset($sql)) exit; //Only run from the front page
 
 //Request a password reset
-elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
+} elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 	$bodyclass = 'resetpw';
 
 //Prompt the user for a new password
@@ -56,7 +60,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 			$result = $sql->new_user($_POST['username'], $_POST['email'], $_POST['password']);
 			if ($result) {
 				$_SESSION['user'] = $result;
-				header("Location: admin/");
+				header("Location: /admin/");
 				exit;
 			} else $message = 'There was an error registering.';
 		}
@@ -70,7 +74,7 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 			session_regenerate_id(true);
 			$_SESSION['user'] = $user->id;
 			$_SESSION['ua'] = ua();
-			header("Location: .");
+			header("Location: /");
 		} else {
 			$message = "The password was incorrect.";
 			$defaulttab = 'login';
@@ -85,8 +89,10 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 		$result = $sql->new_user($_POST['username'], $_POST['email'], '', $_SESSION['orcid']);
 		if ($result) {
 			unset($_SESSION['orcid']);
+			session_regenerate_id(true);
 			$_SESSION['user'] = $result;
-			header("Location: admin/");
+			$_SESSION['ua'] = ua();
+			header("Location: /admin/");
 			exit;
 		} else $message = 'There was an error registering.';
 	}
@@ -105,9 +111,11 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 
 		//Login
 		if ($user) {
+			session_regenerate_id(true);
 			$_SESSION['user'] = $user->id;
+			$_SESSION['ua'] = ua();
 			$sql->user_add_option('orcid_data', $orcid_data);
-			header("Location: .");
+			header("Location: /");
 			exit;
 		
 		//Register
@@ -123,11 +131,12 @@ elseif (isset($_GET['action']) && $_GET['action']=='resetpw') {
 				$username = $unoriginal.$uninc;
 				$uninc++;
 			}
+			$_SESSION['ua'] = ua();
 			$_SESSION['orcid'] = $response->orcid; //Don't do a hidden input so the user can't change the OrcID
 		}
 	}
 }
-require_once('admin/parts.php'); ?>
+require_once('../admin/parts.php'); ?>
 
 <!DOCTYPE html>
 <html lang="en-US">
@@ -158,13 +167,13 @@ require_once('admin/parts.php'); ?>
 				<?php } ?>
 			</div>
 
-			<form action="/" method="post">
+			<form action="." method="post">
 				<?php if ($bodyclass=='orcid_register') { ?>
 					<div id="formbody">
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries">
-							<li><input name="username" type="text" placeholder="Username" value="<?= $username; ?>" autocomplete="username"></li>
-							<li><input name="email" type="email" placeholder="Email Address" value="<?= $email; ?>" autocomplete="email"></li>
+							<li><input name="username" type="text" placeholder="Username" value="<?= $username; ?>" required="" autocomplete="username"></li>
+							<li><input name="email" type="email" placeholder="Email Address" value="<?= $email; ?>" required="" autocomplete="email"></li>
 							<li id="orcid">
 								OrcId: <?= $_SESSION['orcid']; ?>
 								<span class="actions"><a href="/" class="cancel" title="Remove OrcID"></a></span>
@@ -207,13 +216,13 @@ require_once('admin/parts.php'); ?>
 						<?php if ($message) echo "<p class='info error'>{$message}</p>"; ?>
 						<ul id="entries"><!--Filled by JS--></ul>
 						
-						<a href="/?action=resetpw" id="resetlink">Forgot password?</a>
+						<a href="/login/?action=resetpw" id="resetlink">Forgot password?</a>
 						<a href="#" id="terms">Terms & Conditions</a>
 						<input type="submit" value="Register" />
 					</div>
 
 					<div id="actionbuttons">
-						<a href="<?= $orcid->auth_url('https://pick.al'); ?>" class="button" id="orcid">Log in or register with OrcID</a>
+						<a href="<?= $orcid->auth_url('https://pick.al/login'); ?>" class="button" id="orcid">Log in or register with OrcID</a>
 						<a href="/?try" class="button" id="try">Try a Demo</a>
 					</div>
 				<?php } ?>

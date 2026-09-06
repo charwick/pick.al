@@ -19,7 +19,8 @@ class chooser_query extends mysqli {
 		$sessions = new PickalSessions($this);
 		session_set_save_handler($sessions);
 		session_start();
-		if (($_SESSION['ua'] ?? null) != ua()) session_unset();
+		if (!isset($_SESSION['ua'])) $_SESSION['ua'] = ua();
+		elseif ($_SESSION['ua'] !== ua()) session_unset();
 		$this->userid = $_SESSION['user'] ?? null;
 	}
 	
@@ -485,7 +486,7 @@ class chooser_query extends mysqli {
 			$key = '';
 			for ($i = 0; $i<16; $i++) $key .= $characters[rand(0, strlen($characters)-1)];
 			$this->user_add_option('pwreset', ['key'=>$key, 'expires'=>time()+3600*24], $user->id);
-			$link = "https://pick.al?action=pwreset&user={$user->id}&key={$key}";
+			$link = "https://pick.al/login?action=pwreset&user={$user->id}&key={$key}";
 
 			$emailtext = "<p>A password reset has been requested for your Pick.al account. If this was not you, delete this email and do nothing.</p>"
 				."<p>If this was you, you can click <a href=\"{$link}\">this link</a> to reset your password or paste the following link into your browser.</p>"
