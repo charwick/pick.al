@@ -96,6 +96,7 @@ if (rpwform) {
 		e.preventDefault();
 		if (rpwform.submitted) return; //Don't allow to hit more than once
 		rpwform.submitted = true;
+		document.querySelector('input[type="submit"]').disabled = true;
 		fetch('/ajax.php?req=resetpwlink&username='+rpwform.querySelector('input[name="username"]').value, {method: 'get'})
 		.then((response) => {
 			if (response.status != 200) {
@@ -103,7 +104,6 @@ if (rpwform) {
 				return;
 			}
 			infoElement('Check your email for the reset link. It will be valid for 24 hours.');
-			document.querySelector('input[type="submit"]').disabled = true;
 		}).catch((response) => { infoElement('There was an error sending the reset email. Please try again later.', 'error'); });
 	});
 }

@@ -10,6 +10,34 @@ var hist = [], //Reverse coded: current student = index[0]
 	demo = false,
 	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null;
 
+const remote = {
+	async read(req, params = {}) {
+		const query = new URLSearchParams({req, ...params}),
+			response = await fetch('/ajax.php?'+query.toString(), {method: 'get'});
+		if (!response.ok) throw new Error('Network error: '+response.status);
+		return {
+			data: await response.json(),
+			source: 'network',
+			revision: response.headers.get('ETag')
+		};
+	},
+
+	async write(url, data, condition = true, then) {
+		if (!condition) return then(-1);
+
+		const formData = new FormData();
+		for (const key in data) formData.append(key, data[key]);
+		const response = await fetch(url, {method: 'POST', body: formData});
+		if (response.status === 401) {
+			window.location.href = '/login/';
+			throw new Error('User was logged out');
+		}
+		if (!response.ok) throw new Error('Network error: '+response.status);
+		const result = await response.json();
+		return then ? then(result) : result;
+	}
+};
+
 (async () => {
 	try {
 		// Disable roster actions until data loads
@@ -18,29 +46,27 @@ var hist = [], //Reverse coded: current student = index[0]
 
 		//Picker page
 		if (classid) {
-			const res = await fetch('/ajax.php?'+(new URLSearchParams({req: 'classdata', class: classid}).toString()), {method: 'get'});
-			if (!res.ok) throw new Error('Network error: '+res.status);
-			const j = await res.json();
+			const {data} = await remote.read('classdata', {class: classid});
 
-			document.getElementById('classname').innerHTML = j.name;
-			const semester = j.semester.charAt(0).toUpperCase() + j.semester.slice(1) + ' ' + j.year;
-			document.title = j.name + ' | ' + semester + ' | Pick.al';
+			document.getElementById('classname').innerHTML = data.name;
+			const semester = data.semester.charAt(0).toUpperCase() + data.semester.slice(1) + ' ' + data.year;
+			document.title = data.name + ' | ' + semester + ' | Pick.al';
 			document.querySelector('.subtitle').textContent = semester;
 			document.getElementById('rosteredit').href = '/admin/class/'+classid;
 
-			schema = j.schema.items;
+			schema = data.schema.items;
 			document.getElementById('maxkey').textContent = schema.length;
 
-			if (j.demo) {
+			if (data.demo) {
 				demo = true;
 				document.body.classList.add('demo');
-			} else if (!j.active) document.body.classList.add('inactive');
+			} else if (!data.active) document.body.classList.add('inactive');
 			
 			const el = document.createElement('div');
-			el.innerHTML = j.schemaCss;
+			el.innerHTML = data.schemaCss;
 			document.head.appendChild(el.firstElementChild);
 			
-			questions = j.questions;
+			questions = data.questions;
 			if (questions && questions.length) {
 				document.querySelector('#q-queue').style.display = 'block';
 				const qhead = document.createElement('li'),
@@ -57,7 +83,7 @@ var hist = [], //Reverse coded: current student = index[0]
 				}
 			}
 
-			roster = j.roster;
+			roster = data.roster;
 			if (roster.length) {
 				pickBtn.disabled = false;
 				for (const s of roster) {
@@ -81,34 +107,32 @@ var hist = [], //Reverse coded: current student = index[0]
 
 		//Index page
 		} else {
-			const res = await fetch('/ajax.php?'+(new URLSearchParams({req: 'classlist'}).toString()), {method: 'get'});
-			if (!res.ok) throw new Error('Network error: '+res.status);
-			const j = await res.json();
+			const {data} = await remote.read('classlist');
 
-			if (j.username) localStorage.username = j.username; // Remember username on login page
-			for (const el of document.querySelectorAll('.username')) el.textContent = j.username ?? 'Demo User';
+			if (data.username) localStorage.username = data.username; // Remember username on login page
+			for (const el of document.querySelectorAll('.username')) el.textContent = data.username ?? 'Demo User';
 
 			const clist = document.getElementById('bottom-anchor');
 			function classList(classes, title) {
 				const h2 = document.createElement('h2'),
 					ul = document.createElement('ul');
 				h2.classList.add(title.toLowerCase());
-				if (title=='Inactive' || j.inactive.length) h2.classList.add('switchable');
+				if (title=='Inactive' || data.inactive.length) h2.classList.add('switchable');
 				ul.classList.add('classlist', title.toLowerCase());
-				h2.innerHTML = title+' Classes <span>/ '+(j.username ?? 'Demo User')+'</span>';
+				h2.innerHTML = title+' Classes <span>/ '+(data.username ?? 'Demo User')+'</span>';
 				for (const c of classes) {
 					const li = document.createElement('li');
-					li.innerHTML = `<a href='/class/${c.id}${!j.username ? '?try' : ''}'>${c.name} <span>${c.semester.charAt(0).toUpperCase() + c.semester.slice(1)} ${c.year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;${c.students} Students</span></a>`;
+					li.innerHTML = `<a href='/class/${c.id}${!data.username ? '?try' : ''}'>${c.name} <span>${c.semester.charAt(0).toUpperCase() + c.semester.slice(1)} ${c.year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;${c.students} Students</span></a>`;
 					ul.append(li);
 				}
 
 				return [h2, ul];
 			}
 
-			if (!j.active.length)
-				clist.innerHTML = '<div class="classlist active noclasses'+(j.inactive.length ? ' switchable' : '')+'">No active classes <a href="/admin/class/new" class="button" id="pick">New Class</a></div>';
-			else clist.append(...classList(j.active, 'Active'));
-			if (j.inactive.length) clist.append(...classList(j.inactive, 'Inactive'));
+			if (!data.active.length)
+				clist.innerHTML = '<div class="classlist active noclasses'+(data.inactive.length ? ' switchable' : '')+'">No active classes <a href="/admin/class/new" class="button" id="pick">New Class</a></div>';
+			else clist.append(...classList(data.active, 'Active'));
+			if (data.inactive.length) clist.append(...classList(data.inactive, 'Inactive'));
 
 			//Active/inactive class list switcher
 			for (const i of clist.querySelectorAll('.switchable')) i.addEventListener('click', function(e) {
@@ -150,7 +174,7 @@ document.querySelector('#bodywrap > .actions')?.addEventListener('click', functi
 				document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
 			}
 		}
-		fetchif(!demo, '/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
+		remote.write('/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, !demo, fn);
 	}
 });
 document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -308,7 +332,7 @@ document.querySelector('#question .actions')?.addEventListener('click', e => {
 
 	} else if (e.target.classList.contains('archive')) {
 		const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
-		fetchif(!demo, '/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, response => {
+		remote.write('/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, !demo, response => {
 
 			//If we're unarchiving
 			if (archived) {
@@ -438,7 +462,7 @@ class StudentEvent {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				fetchif(!demo, '/ajax.php', {req: 'deleteevent', event: this.event}, id => {
+				remote.write('/ajax.php', {req: 'deleteevent', event: this.event}, !demo, id => {
 					this.info.score -= this.result;
 					this.info.denominator--;
 					this.event = null;
@@ -453,7 +477,7 @@ class StudentEvent {
 				this.qid = currentQ;
 				this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-				fetchif(!demo, '/ajax.php', {req: 'updateevent', event: this.event, result: result, q: currentQ}, id => {
+				remote.write('/ajax.php', {req: 'updateevent', event: this.event, result: result, q: currentQ}, !demo, id => {
 					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
@@ -466,7 +490,7 @@ class StudentEvent {
 			this.qid = currentQ;
 			this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-			fetchif(!demo, '/ajax.php',{req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, id => {
+			remote.write('/ajax.php',{req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, !demo, id => {
 				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');
@@ -599,24 +623,4 @@ function studentSelect(list) {
 function isExcused(student) {
 	const now = new Date();
 	return student.excuseduntil?.getTime() > now.getTime();
-}
-
-//=========
-// UTILITY
-//=========
-
-async function fetchif(cond, url, data, then) {
-	if (!cond) return then(-1);
-	const formData = new FormData();
-	for (const key in data) formData.append(key, data[key]);
-	try {
-		const response = await fetch(url, {method: 'POST', body: formData});
-		if (response.status === 401) {
-			window.location.href = '/login/login.php?action=logout';
-			return;
-		}
-		if (!response.ok) throw new Error('Network error: '+response.status);
-		await then(response.json);
-
-	} catch(err) { console.error(err) };
 }

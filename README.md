@@ -37,4 +37,5 @@ Bug reports and feature requests can be filed in the [issues tab](https://github
 
 ## Planned features
 
+* PWA with offline functionality and sync
 * E2E encryption
