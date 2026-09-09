@@ -9,7 +9,7 @@ if (document.body.classList.contains('admin-edit') && !schema.global) {
 	titleedit.data = inps => ({req: 'updateschema', id: schemaid, name: inps[0].value});
 
 	//Delete button
-	title.addEventListener('click', function(e) {
+	title.addEventListener('click', async function(e) {
 		e.preventDefault();
 		if (!e.target.classList.contains('delete')) return;
 		const delform = document.getElementById('deleteform');
@@ -20,40 +20,38 @@ if (document.body.classList.contains('admin-edit') && !schema.global) {
 				{tag: 'h2', children: 'Delete '+title.textContent},
 				{tag: 'div', attrs: {class: 'loader'}}
 			);
-			fetch('/ajax.php?'+(new URLSearchParams({req: 'compatibleschemae', schema: schemaid}).toString()), {method: 'get'})
-			.then(interThen).then((response) => {
-				let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
-				dmodal.querySelector('.loader').remove();
-				console.log(dmodal);
-				const modalbody = dmodal.querySelector('div');
-				if (!response.length) {
-					classes += ` There are no compatible schemae with which to replace it. Please create a compatible schema before deleting ${title.textContent.trim()}.`;
-					modalbody.append(markup({tag: 'p', children: classes}));
-				} else {
-					classes += ' Please choose a compatible schema with which to replace it.';
-					const ul = markup({tag: 'table', attrs: {id: 'schemareplace'}});
-					for (const sch of response) {
-						ul.append(markup({tag: 'tr', children: [
-							{tag: 'td', children: [{tag: 'input', attrs: {type: 'radio', name: 'schemareplace', id: 'schemareplace-'+sch.id, value: sch.id}}]},
-							{tag: 'td', children: [{tag: 'label', attrs: {for: 'schemareplace-'+sch.id}, children: sch.markup}]},
-							{tag: 'td', children: [sch.name]}
-						]}));
-					}
-					const cancelbtn = markup({tag: 'button', children: ['Cancel']}),
-						deletebtn = markup({tag: 'button', attrs: {disabled: 'disabled'}, children: ['Delete']});
-					ul.addEventListener('change', (e) => { deletebtn.disabled = false; });
-					cancelbtn.addEventListener('click', (e) => { dmodal.close(); });
-					deletebtn.addEventListener('click', (e) => {
-						delform.append(markup({tag: 'input', attrs: {type: 'hidden', name: 'replacement', value: ul.querySelector('input[name="schemareplace"]:checked').value}}));
-						delform.submit();
-					});
-
-					modalbody.append(
-						markup({tag: 'p', children: classes}), ul,
-						markup({tag: 'div', attrs: {class: 'buttons'}, children: [cancelbtn, deletebtn]})
-					);
+			const {data} = await remote.read('compatibleschemae', {schema: schemaid});
+			let classes = document.getElementById('classmeta').innerHTML.replace('Schema used', 'This schema is used');
+			dmodal.querySelector('.loader').remove();
+			console.log(dmodal);
+			const modalbody = dmodal.querySelector('div');
+			if (!data.length) {
+				classes += ` There are no compatible schemae with which to replace it. Please create a compatible schema before deleting ${title.textContent.trim()}.`;
+				modalbody.append(markup({tag: 'p', children: classes}));
+			} else {
+				classes += ' Please choose a compatible schema with which to replace it.';
+				const ul = markup({tag: 'table', attrs: {id: 'schemareplace'}});
+				for (const sch of data) {
+					ul.append(markup({tag: 'tr', children: [
+						{tag: 'td', children: [{tag: 'input', attrs: {type: 'radio', name: 'schemareplace', id: 'schemareplace-'+sch.id, value: sch.id}}]},
+						{tag: 'td', children: [{tag: 'label', attrs: {for: 'schemareplace-'+sch.id}, children: sch.markup}]},
+						{tag: 'td', children: [sch.name]}
+					]}));
 				}
-			}).catch(onerror);
+				const cancelbtn = markup({tag: 'button', children: ['Cancel']}),
+					deletebtn = markup({tag: 'button', attrs: {disabled: 'disabled'}, children: ['Delete']});
+				ul.addEventListener('change', (e) => { deletebtn.disabled = false; });
+				cancelbtn.addEventListener('click', (e) => { dmodal.close(); });
+				deletebtn.addEventListener('click', (e) => {
+					delform.append(markup({tag: 'input', attrs: {type: 'hidden', name: 'replacement', value: ul.querySelector('input[name="schemareplace"]:checked').value}}));
+					delform.submit();
+				});
+
+				modalbody.append(
+					markup({tag: 'p', children: classes}), ul,
+					markup({tag: 'div', attrs: {class: 'buttons'}, children: [cancelbtn, deletebtn]})
+				);
+			}
 		}
 	});
 	if (document.body.classList.contains('duplicated')) titleedit.edit();
@@ -114,7 +112,7 @@ document.getElementById('save')?.addEventListener('click', function(e) {
 		if ('id' in tr.dataset) params.update.push(trdata);
 		else params.new.push(trdata);
 	}
-	post('/ajax.php', {req: 'editschemaitems', params: JSON.stringify(params)}, response => {
+	remote.write({req: 'editschemaitems', params: JSON.stringify(params)}, response => {
 		//Update window.schema and UI
 		this.textContent = 'Saved';
 		for (const d of deleted) {

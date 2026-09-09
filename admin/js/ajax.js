@@ -14,6 +14,35 @@ function markup(element) {
 	return el;
 }
 
+var remote = {
+	async read(req, params = {}, json=true) {
+		const query = new URLSearchParams({req, ...params}),
+			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
+		return {
+			data: await this.interThen(response, json),
+			source: 'network',
+			revision: response.headers.get('ETag')
+		};
+	},
+
+	async write(data, then, json=true) {
+		const formData = new FormData();
+		for (const key in data) formData.append(key, data[key]);
+		const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
+			result = await this.interThen(response, json);
+		return then ? then(result) : result;
+	},
+
+	async interThen(response, json=true) {
+		if (response.status === 401) {
+			logout();
+			return;
+		}
+		if (!response.ok) throw new Error('Network error: '+response.status);
+		return await (json ? response.json() : response.text());
+	}
+};
+
 class makeInput {
 	elements = [];
 	data = null; //A function that takes the inputs, and returns data to send to the server
@@ -94,7 +123,11 @@ class makeInput {
 			inps.push(inp);
 		}
 		inps[0].focus();
-		inps[0].setSelectionRange(0,0);
+		if (inps[0].type == 'email') { //HTML spec doesn't allow selection range on email inputs, so temporarily change it to text
+			inps[0].type='text';
+			inps[0].setSelectionRange(0,0);
+			inps[0].type='email';
+		} else inps[0].setSelectionRange(0,0);
 		if (this.editfunc instanceof Function) this.editfunc(inps);
 	}
 
@@ -122,10 +155,10 @@ class makeInput {
 				if (this.error instanceof Function) this.error(response, inps);
 				else for (const inp of inps) inp.classList.add('error');
 			};
-	
-			post('/ajax.php', this.data(inps), response => {
-				if (!response) hasError(response);
-				else {
+			
+			try {
+				remote.write(this.data(inps), response => {
+					if (!response) return hasError(response); //if the server returns a falsy value, treat it as an error
 					const vals = [];
 					for (const inp of inps) {
 						vals.push(inp.value);
@@ -133,9 +166,8 @@ class makeInput {
 					}
 					this.solidify();
 					if (this.after instanceof Function) this.after(response, vals);
-				}
-			}, hasError);
-			
+				});
+			} catch (err) { hasError(err);}
 		} else this.solidify();
 	};
 
@@ -159,11 +191,14 @@ class makeInput {
 	}
 }
 
-document.getElementById('logout')?.addEventListener('click', e => {
-	e.preventDefault();
-	post('/ajax.php', {req: 'logout'}, response => {
+function logout() {
+	remote.write({req: 'logout'}, response => {
 		if (response) window.location.href = '/login/';
 	});
+}
+document.getElementById('logout')?.addEventListener('click', e => {
+	e.preventDefault();
+	logout();
 });
 
 function actionButtons(list) {
@@ -254,21 +289,4 @@ function newSchema(e) {
 			nsmodal.querySelector('form').submit();
 	});
 	nsmodal.querySelector('input').focus();
-}
-
-function interThen(response) {
-	if (response.status === 401) {
-		window.location.href = '/login/login.php?action=logout';
-		return;
-	}
-	if (!response.ok) throw {status: response.status};
-	return response.json();
-}
-
-function post(url, data, then, error) {
-	const formData = new FormData();
-	for (const key in data) formData.append(key, data[key]);
-	fetch(url, {method: 'POST', body: formData})
-		.then(interThen).then(then)
-		.catch(error || console.error);
 }

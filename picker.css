@@ -341,10 +341,10 @@ h1#logo { height: 1.5em; }
 	color: #CCC;
 	background: #222;
 	border-radius: 10px;
-	font-size: 1.4em;
+	font-size: 1.2em;
 	line-height: 1.5;
 	max-width: 800px;
- 	margin: 11em auto 0;
+ 	margin: 13em auto 0;
  	box-sizing: border-box;
 	display: none;
 	position: relative;
@@ -352,7 +352,7 @@ h1#logo { height: 1.5em; }
 #question.active { display: block; }
 #question .actions {
 	margin: 0.5em auto 1.5em;
-	font-size: 0.5em;
+	font-size: 0.6em;
 }
 
 /* Keyboard help */

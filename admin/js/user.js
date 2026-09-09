@@ -65,7 +65,7 @@ oid.addEventListener('click', function(e) {
 	}
 	if (!confirm('Are you sure you want to disconnect your OrcID?')) return;
 
-	post('/ajax.php', {req: 'deleteorcid'}, response => {
+	remote.write({req: 'deleteorcid'}, response => {
 		if (response==1) {
 			oid.querySelector('a').remove();
 			oid.querySelector('.actions').remove();
@@ -78,7 +78,7 @@ const apibox = document.getElementById('apibox');
 document.getElementById('apilink').style.display = apibox.checked ? 'block' : 'none';
 apibox.addEventListener('change', (e) => {
 	const oldval = !e.target.checked;
-	post('/ajax.php', {req: 'updateoption', opt: 'publicapi', val: e.target.checked}, response => {
+	remote.write({req: 'updateoption', opt: 'publicapi', val: e.target.checked}, response => {
 		if (!response) {
 			e.target.checked = oldval;
 			return;

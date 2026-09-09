@@ -3,7 +3,7 @@ $sql = new chooser_query();
 $req = $_POST['req'] ?? $_GET['req'];
 
 //Error if we're not logged in
-if (!$sql->userid && !in_array($req, ['userexists', 'resetpwlink', 'classdata', 'classlist'])) {
+if (!$sql->userid && !in_array($req, ['currentuser', 'userexists', 'resetpwlink', 'classdata', 'classlist', 'logout'])) {
 	http_response_code(401);
 	exit();
 }

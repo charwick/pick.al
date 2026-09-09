@@ -13,28 +13,33 @@ var hist = [], //Reverse coded: current student = index[0]
 const remote = {
 	async read(req, params = {}) {
 		const query = new URLSearchParams({req, ...params}),
-			response = await fetch('/ajax.php?'+query.toString(), {method: 'get'});
-		if (!response.ok) throw new Error('Network error: '+response.status);
+			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
 		return {
-			data: await response.json(),
+			data: await this.interThen(response),
 			source: 'network',
 			revision: response.headers.get('ETag')
 		};
 	},
 
-	async write(url, data, condition = true, then) {
+	async write(data, condition = true, then) {
 		if (!condition) return then(-1);
 
 		const formData = new FormData();
 		for (const key in data) formData.append(key, data[key]);
-		const response = await fetch(url, {method: 'POST', body: formData});
+		const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
+			result = await this.interThen(response);
+		return then ? then(result) : result;
+	},
+
+	async interThen(response) {
 		if (response.status === 401) {
-			window.location.href = '/login/';
-			throw new Error('User was logged out');
+			remote.write({req: 'logout'}, response => {
+				if (response) window.location.href = '/login/';
+			});
+			return;
 		}
 		if (!response.ok) throw new Error('Network error: '+response.status);
-		const result = await response.json();
-		return then ? then(result) : result;
+		return await response.json();
 	}
 };
 
@@ -174,7 +179,7 @@ document.querySelector('#bodywrap > .actions')?.addEventListener('click', functi
 				document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
 			}
 		}
-		remote.write('/ajax.php', {req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, !demo, fn);
+		remote.write({req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, !demo, fn);
 	}
 });
 document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -332,7 +337,7 @@ document.querySelector('#question .actions')?.addEventListener('click', e => {
 
 	} else if (e.target.classList.contains('archive')) {
 		const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
-		remote.write('/ajax.php', {req: 'archivequestion', archive: archived, id: currentQ}, !demo, response => {
+		remote.write({req: 'archivequestion', archive: archived, id: currentQ}, !demo, response => {
 
 			//If we're unarchiving
 			if (archived) {
@@ -462,7 +467,7 @@ class StudentEvent {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				remote.write('/ajax.php', {req: 'deleteevent', event: this.event}, !demo, id => {
+				remote.write({req: 'deleteevent', event: this.event}, !demo, id => {
 					this.info.score -= this.result;
 					this.info.denominator--;
 					this.event = null;
@@ -477,7 +482,7 @@ class StudentEvent {
 				this.qid = currentQ;
 				this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-				remote.write('/ajax.php', {req: 'updateevent', event: this.event, result: result, q: currentQ}, !demo, id => {
+				remote.write({req: 'updateevent', event: this.event, result: result, q: currentQ}, !demo, id => {
 					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
@@ -490,7 +495,7 @@ class StudentEvent {
 			this.qid = currentQ;
 			this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-			remote.write('/ajax.php',{req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, !demo, id => {
+			remote.write({req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, !demo, id => {
 				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');

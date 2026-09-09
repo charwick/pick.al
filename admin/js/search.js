@@ -18,12 +18,10 @@ search.addEventListener('input', function(e) {
 		return;
 	}
 
-	timeouts.push(setTimeout(() => {
-		fetch('../ajax.php?'+(new URLSearchParams({req: 'searchstudent', phrase: val}).toString()), {method: 'get'})
-		.then(interThen).then(response => {
-			cache[val] = response;
-			drawList(response);
-		}).catch(console.error);
+	timeouts.push(setTimeout(async () => {
+		const {data} = await remote.read('searchstudent', {phrase: val});
+		cache[val] = data;
+		drawList(data);
 	}, 250));
 });
 

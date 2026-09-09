@@ -48,7 +48,7 @@ if (document.body.classList.contains('admin-edit')) {
 //API public toggle
 document.querySelector('.apipublic')?.addEventListener('click', function(e) {
 	const publicize = this.classList.contains('private');
-	post('/ajax.php', {req: 'publicize', class: classid, public: publicize}, result => {
+	remote.write({req: 'publicize', class: classid, public: publicize}, result => {
 		if (!result) return;
 		if (publicize) {
 			this.classList.remove('private');
@@ -118,7 +118,7 @@ if (addStudent) addStudent.addEventListener('click', function(e) {
 				else for (const inp of inputs) inp.classList.add('error');
 			};
 
-			post('/ajax.php', {req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
+			remote.write({req: 'addstudent', classid: classid, fname: fname.value, lname: lname.value, note: note.value}, sid => {
 				if (!sid) onerror(sid);
 				else {
 					studentRow(sid, fname.value, lname.value, note.value);
@@ -227,7 +227,7 @@ class Question {
 		for (const li of lis) ul.appendChild(li);
 	}
 
-	openModal(hlight) {
+	async openModal(hlight) {
 		const h3 = markup({tag: 'h3', children: this.text}),
 			actions = markup({tag: 'div', attrs: {class: 'actions'}, children: actionButtons(['edit', 'archive', 'delete'])}),
 			qedit = new makeInput(actions);
@@ -245,27 +245,16 @@ class Question {
 		this.modal.dataset.id = this.id;
 		if (!this.active) this.modal.classList.add('inactive');
 
-		const params = new URLSearchParams({req: 'eventsbyquestion', question: this.id}).toString();
-		fetch('/ajax.php?'+params, {method: 'GET'})
-		.then(interThen).then(data => {
-			const container = this.modal.querySelector('.studentmodal'),
-				table = new EventsTable(data);
-			container.querySelector('.loader').remove();
-			container.append(table.markup());
-
-			if (hlight) container.querySelector(`tr[data-id="${hlight}"]`)?.classList.add('new');
-		}).catch(e => modalError(this.modal, e));
-		
 		actions.addEventListener('click', e2 => {
 			e2.preventDefault();
 								
 			//Archive or unarchive question
 			if (e2.target.classList.contains('archive'))
-				post('/ajax.php', {req: 'archivequestion', id: this.id, archive: +!this.active}, data => { if (data==1) this.active = !this.active; });
+				remote.write({req: 'archivequestion', id: this.id, archive: +!this.active}, data => { if (data==1) this.active = !this.active; });
 			
 			//Delete question
 			else if (e2.target.classList.contains('delete') && confirm('Are you sure you want to delete this question rather than archiving it?')) {
-				post('/ajax.php', {req: 'deletequestion', id: this.id}, data => {
+				remote.write({req: 'deletequestion', id: this.id}, data => {
 					if (data == "1") {
 						for (const event of this.eventButtons) {
 							delete event.closest('tr').dataset.question;
@@ -278,6 +267,18 @@ class Question {
 				});
 			}
 		});
+
+		try {
+			const {data} = await remote.read('eventsbyquestion', {question: this.id}),
+				container = this.modal.querySelector('.studentmodal'),
+				table = new EventsTable(data);
+			container.querySelector('.loader').remove();
+			container.append(table.markup());
+
+			if (hlight) container.querySelector(`tr[data-id="${hlight}"]`)?.classList.add('new');
+		} catch (e) {
+			modalError(this.modal, e);
+		}
 	}
 }
 
@@ -293,7 +294,7 @@ document.querySelector('#qactions .addnew')?.addEventListener('click', e => {
 
 	function questionSave() {
 		if (validate([textarea])) {
-			post('/ajax.php', {req: 'newquestion', class: classid, text: textarea.value}, data => {
+			remote.write({req: 'newquestion', class: classid, text: textarea.value}, data => {
 				new Question(data, textarea.value);
 				document.querySelector('dialog').close();
 			});
@@ -394,7 +395,7 @@ class EventsTable {
 			//Delete event
 			else if (e.target.classList.contains('delete')) {
 				if (confirm('Are you sure you want to delete this event?')) {
-					post('/ajax.php', {req: 'deleteevent', event: evrow.dataset.id}, response => {
+					remote.write({req: 'deleteevent', event: evrow.dataset.id}, response => {
 						const result = evrow.querySelector('td[data-val]').dataset.val,
 							evrows = document.querySelectorAll(`.events tr[data-id="${evrow.dataset.id}"]`), //Remove it from the recents list too if applicable
 							q = evrow.dataset.question ?? evrow.closest('dialog')?.dataset.id;
@@ -511,7 +512,7 @@ class EventsTable {
 				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
 				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
 	
-				post('/ajax.php', params, response => {
+				remote.write(params, response => {
 					for (const b of resultsCell.querySelectorAll('.result-button')) {
 						if (b.dataset.schemaval == result) b.classList.remove('unselected');
 						else b.remove();
@@ -571,7 +572,7 @@ if (window.location.hash.includes('#student-')) {
 	document.querySelector(`#roster tr[data-id="${student}"]`)?.classList.add('new');
 }
 
-function addSchemaButtons() {
+async function addSchemaButtons() {
 	const target = document.getElementById('schemaselect'),
 		schema = target.querySelector('select')?.value ?? window.schema;
 	
@@ -590,11 +591,9 @@ function addSchemaButtons() {
 	
 	if (schema in schemabuttons) drawButtons(schemabuttons[schema]);
 	else {
-		fetch('/ajax.php?req=getschemabuttons&schema='+schema, {method: 'get'})
-		.then((response) => response.text()).then((response) => {
-			schemabuttons[schema] = response;
-			drawButtons(response);
-		});
+		const {data} = await remote.read('getschemabuttons', {schema: schema}, false);
+		schemabuttons[schema] = data;
+		drawButtons(data);
 	}
 }
 
@@ -702,7 +701,7 @@ function studentRow(id, col1, col2, col3) {
 	return tr;
 }
 
-function studentmodal(id, hlight) {
+async function studentmodal(id, hlight) {
 	const tr = document.querySelector(`#roster tr[data-id="${id}"]`),
 		fname = markup({tag: 'span', attrs: {class: 'fname'}, children: [tr.querySelector('.fname').textContent]}),
 		lname = markup({tag: 'span', attrs: {class: 'lname'}, children: [tr.querySelector('.lname').textContent]}),
@@ -782,7 +781,7 @@ function studentmodal(id, hlight) {
 			//Delete student
 			if (e.target.classList.contains('delete')) {
 				if (!confirm(`Are you sure you want to remove ${fname.textContent} ${lname.textContent} from the class roster?`)) return;
-				post('/ajax.php', {req: 'deletestudent', id: tr.dataset.id}, response => {
+				remote.write({req: 'deletestudent', id: tr.dataset.id}, response => {
 					if (response != 1) console.error('There was an error deleting the student.');
 					else {
 						//Delete recent participation events
@@ -810,8 +809,12 @@ function studentmodal(id, hlight) {
 	}
 
 	if (tr.querySelector('.score').textContent)
-		fetch('/ajax.php?req=events&student='+tr.dataset.id, {method: 'get'})
-		.then(interThen).then(render).catch(e => modalError(smodal, e));
+		try {
+			const {data} = await remote.read('events', {student: tr.dataset.id});
+			render(data);
+		} catch (e) {
+			modalError(smodal, e);
+		}
 	else render([]);
 }
 
@@ -824,22 +827,25 @@ function uploadCSV(e) {
 	document.querySelector('.info')?.remove();
 	
 	reader.onload = function(e) {
-		post("/ajax.php", {req: 'uploadroster', csv: e.target.result, class: ''+classid}, response => {
-			if (!response) {
-				const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
+		remote.write({req: 'uploadroster', csv: e.target.result, class: ''+classid}, response => {
+			try {
+				if (!response) {
+					const error = infoElement("No valid students found. Make sure the headers are correct.", 'error');
+					csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
+				} else {
+					const info = infoElement(`Uploaded ${response.length} students`),
+						roster = document.getElementById('roster');
+					document.querySelector('#students h2').after(info);
+					for (const row of response) studentRow(row['id'], row['fname'], row['lname'], row['note']);
+					document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
+					document.getElementsByTagName('dialog')[0].remove();
+					roster.sort(roster.sortby, roster.direction);
+				}
+			} catch (e) {
+				const error = infoElement('There was an error uploading this CSV.', 'error');
+				console.log(e);
 				csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
-			} else {
-				const info = infoElement(`Uploaded ${response.length} students`),
-					roster = document.getElementById('roster');
-				document.querySelector('#students h2').after(info);
-				for (const row of response) studentRow(row['id'], row['fname'], row['lname'], row['note']);
-				document.getElementById('num_students').textContent = parseInt(document.getElementById('num_students').textContent) + response.length;
-				document.getElementsByTagName('dialog')[0].remove();
-				roster.sort(roster.sortby, roster.direction);
 			}
-		}, response => {
-			const error = infoElement('There was an error uploading this CSV.', 'error');
-			csvElement.parentNode.insertBefore(error, csvElement.parentNode.querySelector('label'));
 		});
 	};
 	let file = files[0] instanceof File ? files[0] : files[0].getAsFile(); //Dragging gives us a DataTransferItem object instead of a file
