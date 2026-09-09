@@ -43,6 +43,11 @@ const remote = {
 	}
 };
 
+function updateNetworkState() { document.body.classList.toggle('offline', !navigator.onLine); }
+updateNetworkState();
+window.addEventListener('online', updateNetworkState);
+window.addEventListener('offline', updateNetworkState);
+
 (async () => {
 	try {
 		// Disable roster actions until data loads

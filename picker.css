@@ -170,7 +170,7 @@ ul.classlist {
 
 ul.classlist a:not(#pick) {
 	display: block;
-	font-size: 1.8em;
+	font-size: 1.67em;
 	color: #CCC;
 	text-decoration: none;
 	padding: 0.7em 0;
@@ -185,7 +185,7 @@ ul.classlist a:not(#pick):hover {
 ul.classlist li:last-child a:not(#pick) { border-bottom: 1px solid rgb(255 255 255 / 20%); }
 ul.classlist a span {
 	display: block;
-	font-size: 0.555em;
+	font-size: 0.588em;
 	margin-top: 0.25em;
 	color: #999;
 }
@@ -403,6 +403,25 @@ dialog h2 {
 	text-align: center;
 	margin: 0 0 1.5em;
 }
+
+#offline {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	color: #D88;
+	text-transform: uppercase;
+	font-size: .75em;
+	cursor: pointer;
+	display: none;
+}
+#offline::before {
+	content: '';
+	display: inline-block;
+	background: url("icon/wifi-off.svg/D88") center/100% 100%;
+	height: 1.2em; width: 1.2em;
+	margin-right: 0.3em;
+}
+body.offline #offline { display: block; }
 
 /* Small phones */
 

@@ -95,5 +95,6 @@ if ($classid && $classid !== 0) {
 			<li>Show keyboard shortcuts <span><kbd>?</kbd></span></li>
 		</ul>
 	</dialog>
+	<div id="offline">Offline</div>
 </body>
 </html>
