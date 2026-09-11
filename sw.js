@@ -18,7 +18,8 @@ for (const i of [
 	'chevron-down.svg/777',			'pencil-fill.svg',				'check-lg.svg',
 	'check-lg.svg/FFF',				'trash3-fill.svg',				'moon-fill.svg',
 	'copy.svg',						'archive.svg',					'unarchive.svg',
-	'eye-slash.svg',				'eye.svg',						'orcid.svg'
+	'eye-slash.svg',				'eye.svg',						'orcid.svg',
+	'wifi-off.svg/D88'
 ]) STATIC_ASSETS.push('/icon/'+i);
 
 //Download static assets
@@ -26,47 +27,30 @@ self.addEventListener('install', event => {
 	event.waitUntil(
 		caches.open(CACHE_NAME)
 			.then(cache => cache.addAll(STATIC_ASSETS))
-			.catch(err => {
-				console.error("Service worker install failed:", err);
-				throw err;
-			})
+			.then(() => self.skipWaiting())
 	);
-	self.skipWaiting(); //Don't wait for tabs to close
 });
 
 //Delete all caches except those matching CACHE_NAME
 self.addEventListener('activate', event => {
 	event.waitUntil(
 		caches.keys().then(keys => Promise.all(
-			keys.filter(key => key !== CACHE_NAME)
-					.map(key => caches.delete(key))
-		))
+			keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+		)).then(() => self.clients.claim())
 	);
-	self.clients.claim(); //Don't wait for reload
 });
 
+//Network first, fall back to cached version
 self.addEventListener('fetch', event => {
 	if (event.request.method !== 'GET') return; //Ignore POSTs
 	const requestURL = new URL(event.request.url);
-	if (requestURL.origin !== self.location.origin) return; //Ignore third-party requests
+	if (requestURL.origin !== self.location.origin) return;
 
-	// Static assets matching URL (including / and /icons/*): serve from cache
-	if (STATIC_ASSETS.includes(requestURL.pathname)) {
-		event.respondWith(
-			caches.match(requestURL.pathname)
-			// .then(response => response || fetch(event.request))
-		);
-		return;
-
-	// /class/:id routes: serve the '/class/0' asset from cache
-	} else if (requestURL.pathname.startsWith('/class/')) {
-		event.respondWith(
-			caches.match('/class/0')
-			// .then(response => response || fetch(event.request))
-		);
-		return;
+	if (event.request.mode === 'navigate' && requestURL.pathname === '/') {
+		event.respondWith(fetch(event.request).catch(() => caches.match('/')));
+	} else if (event.request.mode === 'navigate' && requestURL.pathname.startsWith('/class/')) {
+		event.respondWith(fetch(event.request).catch(() => caches.match('/class/0')));
+	} else if (STATIC_ASSETS.includes(requestURL.pathname)) {
+		event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
 	}
-
-	// Everything else: fetch from network without caching
-	event.respondWith(fetch(event.request));
 });
