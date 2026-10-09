@@ -10,40 +10,159 @@ var hist = [], //Reverse coded: current student = index[0]
 	demo = false,
 	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null;
 
-const remote = {
+//AJAX and IndexedDB interface
+class Data {
+	DB_VERSION = 1;
+	STORE_NAME = 'snapshots';
+	namespace = null;
+
+	constructor() {
+		if (new URLSearchParams(location.search).has('try'))
+			this.namespace = 'demo'; //Disable writes
+	}
+
+	//User-facing function to get data from the server or cache
+	async get(req, params = {}) {
+		const identifier = params.class ?? 'all';
+		let result;
+		try {
+			result = await this.read(req, params);
+		
+		//If network fails, try to get a cached version
+		} catch (error) {
+			if (error.authentication) throw error;
+			if (!this.namespace) {
+				if (localStorage.userId) this.namespace = `user:${localStorage.userId}`;
+				else throw error;
+			}
+			let cached;
+			try {
+				cached = await this.getSnapshot(req, identifier);
+			} catch (storageError) {
+				console.error('Unable to read picker snapshot', storageError);
+				throw error;
+			}
+			if (!cached) throw error;
+			document.body.classList.add('stale');
+			document.getElementById('offline').textContent = 'Using saved data';
+			return {data: cached.data, source: 'cache', revision: cached.revision, savedAt: cached.savedAt};
+		}
+
+		const {data, revision} = result,
+			userId = data.userId ?? localStorage.userId;
+		if (userId && this.namespace != 'demo') {
+			this.namespace = `user:${userId}`;
+			localStorage.userId = userId;
+		}
+		try {
+			await this.put(req, identifier, data, revision);
+		} catch (storageError) {
+			console.error('Unable to save picker snapshot', storageError);
+		}
+		document.body.classList.remove('stale');
+		updateNetworkState();
+		return {data, source: 'network', revision};
+	}
+
+	//Go to the server for data
 	async read(req, params = {}) {
 		const query = new URLSearchParams({req, ...params}),
 			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
 		return {
 			data: await this.interThen(response),
-			source: 'network',
 			revision: response.headers.get('ETag')
 		};
-	},
+	}
 
-	async write(data, condition = true, then) {
-		if (!condition) return then(-1);
+	//Write data to server
+	async write(data, then) {
+		if (this.namespace=='demo') return then(-1);
+		try {
+			const formData = new FormData();
+			for (const key in data) formData.append(key, data[key]);
+			const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
+				result = await this.interThen(response);
 
-		const formData = new FormData();
-		for (const key in data) formData.append(key, data[key]);
-		const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
-			result = await this.interThen(response);
-		return then ? then(result) : result;
-	},
+			return then ? then(result) : result;
+		} catch (error) {
+			if (error.authentication) throw error;
+		}
+	}
 
 	async interThen(response) {
 		if (response.status === 401) {
 			remote.write({req: 'logout'}, response => {
 				if (response) window.location.href = '/login/';
 			});
-			return;
+			throw Object.assign(new Error('Authentication required'), { authentication: true });
 		}
 		if (!response.ok) throw new Error('Network error: '+response.status);
 		return await response.json();
 	}
-};
 
-function updateNetworkState() { document.body.classList.toggle('offline', !navigator.onLine); }
+	open() {
+		return new Promise((resolve, reject) => {
+			const request = indexedDB.open('pickal', this.DB_VERSION);
+			request.onupgradeneeded = () => {
+				if (!request.result.objectStoreNames.contains(this.STORE_NAME))
+					request.result.createObjectStore(this.STORE_NAME, {keyPath: 'id'});
+			};
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+	}
+
+	key(type, identifier) {
+		return `${this.namespace}:${type}:${identifier}`;
+	}
+
+	normalize(data) {
+		const snapshot = structuredClone(data); //Bad practice to mutate the response object?
+		for (const student of snapshot.roster ?? []) {
+			if (student.excuseduntil != null && !(student.excuseduntil instanceof Date))
+				student.excuseduntil = new Date(student.excuseduntil);
+		}
+		return snapshot;
+	}
+
+	async put(type, identifier, data, revision) {
+		const db = await this.open();
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction(this.STORE_NAME, 'readwrite');
+			transaction.objectStore(this.STORE_NAME).put({
+				id: this.key(type, identifier),
+				namespace: this.namespace,
+				type,
+				identifier,
+				data: this.normalize(data),
+				revision,
+				savedAt: new Date().toISOString()
+			});
+			transaction.oncomplete = () => resolve();
+			transaction.onerror = () => reject(transaction.error);
+		});
+	}
+
+	async getSnapshot(type, identifier) {
+		const db = await this.open();
+		return new Promise((resolve, reject) => {
+			const request = db.transaction(this.STORE_NAME).objectStore(this.STORE_NAME).get(this.key(type, identifier));
+			request.onsuccess = () => {
+				const snapshot = request.result ?? null;
+				if (snapshot) snapshot.data = this.normalize(snapshot.data);
+				resolve(snapshot);
+			};
+			request.onerror = () => reject(request.error);
+		});
+	}
+};
+var remote = new Data();
+
+function updateNetworkState() {
+	document.body.classList.toggle('offline', !navigator.onLine);
+	const status = document.getElementById('offline');
+	if (status && !document.body.classList.contains('stale')) status.textContent = navigator.onLine ? '' : 'Offline';
+}
 updateNetworkState();
 window.addEventListener('online', updateNetworkState);
 window.addEventListener('offline', updateNetworkState);
@@ -56,7 +175,7 @@ window.addEventListener('offline', updateNetworkState);
 
 		//Picker page
 		if (classid) {
-			const {data} = await remote.read('classdata', {class: classid});
+			const {data} = await remote.get('classdata', {class: classid});
 
 			document.getElementById('classname').innerHTML = data.name;
 			const semester = data.semester.charAt(0).toUpperCase() + data.semester.slice(1) + ' ' + data.year;
@@ -117,7 +236,7 @@ window.addEventListener('offline', updateNetworkState);
 
 		//Index page
 		} else {
-			const {data} = await remote.read('classlist');
+			const {data} = await remote.get('classlist');
 
 			if (data.username) localStorage.username = data.username; // Remember username on login page
 			for (const el of document.querySelectorAll('.username')) el.textContent = data.username ?? 'Demo User';
@@ -184,7 +303,7 @@ document.querySelector('#bodywrap > .actions')?.addEventListener('click', functi
 				document.querySelector(`#roster [data-id="${hist[histIndex].info.id}"]`).classList.remove('excused');
 			}
 		}
-		remote.write({req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, !demo, fn);
+		remote.write({req: 'studentexcused', id: hist[histIndex].info.id, excused: excdate}, fn);
 	}
 });
 document.getElementById('pick')?.addEventListener('click', buttonFunc('choose'));
@@ -342,7 +461,7 @@ document.querySelector('#question .actions')?.addEventListener('click', e => {
 
 	} else if (e.target.classList.contains('archive')) {
 		const archived = document.getElementById('question').classList.contains('archived') ? 1 : 0;
-		remote.write({req: 'archivequestion', archive: archived, id: currentQ}, !demo, response => {
+		remote.write({req: 'archivequestion', archive: archived, id: currentQ}, response => {
 
 			//If we're unarchiving
 			if (archived) {
@@ -472,7 +591,7 @@ class StudentEvent {
 		if (this.event) {
 			//Undo button press
 			if (result==this.result) {
-				remote.write({req: 'deleteevent', event: this.event}, !demo, id => {
+				remote.write({req: 'deleteevent', event: this.event}, id => {
 					this.info.score -= this.result;
 					this.info.denominator--;
 					this.event = null;
@@ -487,7 +606,7 @@ class StudentEvent {
 				this.qid = currentQ;
 				this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-				remote.write({req: 'updateevent', event: this.event, result: result, q: currentQ}, !demo, id => {
+				remote.write({req: 'updateevent', event: this.event, result: result, q: currentQ}, id => {
 					for (const btn2 of this.#actions) btn2.disabled = false;
 					btn.classList.add('picked');
 					this.info.score += result - this.result;
@@ -500,7 +619,7 @@ class StudentEvent {
 			this.qid = currentQ;
 			this.qtext = currentQ ? document.getElementById('qtext').textContent : null;
 
-			remote.write({req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, !demo, id => {
+			remote.write({req: 'writeevent', rosterid: this.info.id, result: result, q: currentQ}, id => {
 				for (const btn2 of this.#actions) btn2.disabled = false;
 				btn.classList.add('picked');
 				btn.parentNode.parentNode.classList.add('picked');

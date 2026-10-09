@@ -34,7 +34,8 @@ switch ($req) {
 		$response = [
 			'active' => [],
 			'inactive' => [],
-			'username' => $sql->current_user()->username ?? null
+			'username' => $sql->current_user()->username ?? null,
+			'userId' => $sql->userid
 		];
 		foreach ($classes as $id => $class) {
 			if ($class->active) $response['active'][] = $class;

@@ -34,7 +34,7 @@ if ($classid && $classid !== 0) {
 
 			<div id="logo">Pick.al</div>
 			<h1 id="classname"></h1>
-			<a href="/" title="Back" id="backbutton">←</a>
+			<a href="/<?php if (isset($_GET['try'])) echo "?try"; ?>" title="Back" id="backbutton">←</a>
 			<p class="subtitle"></p>
 			<a href="#" title="Roster" id="rosterlist">Roster</a>
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pickal-v1';
+const CACHE_NAME = 'pickal-v2';
 const STATIC_ASSETS = [
 	'/',
 	'/class/0',
@@ -51,6 +51,6 @@ self.addEventListener('fetch', event => {
 	} else if (event.request.mode === 'navigate' && requestURL.pathname.startsWith('/class/')) {
 		event.respondWith(fetch(event.request).catch(() => caches.match('/class/0')));
 	} else if (STATIC_ASSETS.includes(requestURL.pathname)) {
-		event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
+		event.respondWith(caches.match(event.request, {ignoreSearch: true}).then(cached => cached || fetch(event.request)));
 	}
 });

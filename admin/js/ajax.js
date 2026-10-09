@@ -192,6 +192,7 @@ class makeInput {
 }
 
 function logout() {
+	localStorage.removeItem('userId');
 	remote.write({req: 'logout'}, response => {
 		if (response) window.location.href = '/login/';
 	});
