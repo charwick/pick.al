@@ -3,7 +3,7 @@ $sql = new chooser_query();
 $req = $_POST['req'] ?? $_GET['req'];
 
 //Error if we're not logged in
-if (!$sql->userid && !in_array($req, ['currentuser', 'userexists', 'resetpwlink', 'classdata', 'classlist', 'logout'])) {
+if (!$sql->userid && !in_array($req, ['userexists', 'resetpwlink', 'classdata', 'classlist', 'logout', 'reauthenticate'])) {
 	http_response_code(401);
 	exit();
 }
@@ -210,6 +210,14 @@ switch ($req) {
 	//========
 	// USERS
 	//========
+
+	case 'reauthenticate':
+		$user = $sql->authenticate_user('', $_POST['password'] ?? '', (int)($_POST['userId'] ?? 0));
+		$json_response = json_encode([
+			'success' => (bool)$user,
+			'userId' => $user ? (int)$user->id : null
+		]);
+		break;
 	
 	case 'userexists':
 		$fields = [];

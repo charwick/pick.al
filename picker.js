@@ -15,6 +15,7 @@ class Data {
 	DB_VERSION = 1;
 	STORE_NAME = 'snapshots';
 	namespace = null;
+	reauthPromise = null;
 
 	constructor() {
 		if (new URLSearchParams(location.search).has('try'))
@@ -68,6 +69,11 @@ class Data {
 	async read(req, params = {}) {
 		const query = new URLSearchParams({req, ...params}),
 			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
+		
+		if (response.status === 401) {
+			await this.reauthenticate();
+			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
+		}
 		return {
 			data: await this.interThen(response),
 			revision: response.headers.get('ETag')
@@ -80,8 +86,12 @@ class Data {
 		try {
 			const formData = new FormData();
 			for (const key in data) formData.append(key, data[key]);
-			const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
-				result = await this.interThen(response);
+			let response = await fetch('/ajax.php', {method: 'POST', body: formData});
+			if (response.status === 401) {
+				await this.reauthenticate();
+				response = await fetch('/ajax.php', {method: 'POST', body: formData});
+			}
+			const result = await this.interThen(response);
 
 			return then ? then(result) : result;
 		} catch (error) {
@@ -89,13 +99,50 @@ class Data {
 		}
 	}
 
+	reauthenticate() {
+		if (this.reauthPromise) return this.reauthPromise;
+		const dialog = document.getElementById('reauth'),
+			form = document.getElementById('reauth-form'),
+			password = document.getElementById('reauth-password'),
+			error = document.getElementById('reauth-error');
+
+		this.reauthPromise = new Promise(resolve => {
+			dialog.oncancel = event => event.preventDefault();
+			form.onsubmit = async event => {
+				event.preventDefault();
+				const submit = form.querySelector('button[type="submit"]');
+				submit.disabled = true;
+				error.hidden = true;
+				try {
+					const result = await this.write({req: 'reauthenticate', password: password.value, userId: dialog.dataset.userId});
+					if (!result.success) {
+						error.textContent = 'The password was incorrect.';
+						error.hidden = false;
+						password.value = '';
+						password.focus();
+						return;
+					}
+					if (Number(result.userId) !== Number(dialog.dataset.userId)) {
+						window.location.href = '/';
+						return;
+					}
+					dialog.close();
+					password.value = '';
+					resolve();
+				} catch (requestError) {
+					error.textContent = requestError.message || 'Unable to verify password. Try again.';
+					error.hidden = false;
+				} finally {
+					submit.disabled = false;
+				}
+			};
+			dialog.showModal();
+			password.focus();
+		}).finally(() => { this.reauthPromise = null; });
+		return this.reauthPromise;
+	}
+
 	async interThen(response) {
-		if (response.status === 401) {
-			remote.write({req: 'logout'}, response => {
-				if (response) window.location.href = '/login/';
-			});
-			throw Object.assign(new Error('Authentication required'), { authentication: true });
-		}
 		if (!response.ok) throw new Error('Network error: '+response.status);
 		return await response.json();
 	}

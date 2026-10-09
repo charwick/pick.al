@@ -417,6 +417,19 @@ class chooser_query extends mysqli {
 		return $user;
 	}
 
+	function authenticate_user(string $identifier, string $password, ?int $expectedId=null) {
+		$user = $expectedId
+			? $this->get_user_by('id', $expectedId)
+			: $this->get_user_by(str_contains($identifier, '@') ? 'email' : 'username', $identifier);
+		if (!$user || !$user->password || !password_verify($password, $user->password)) return false;
+
+		session_regenerate_id(true);
+		$_SESSION['user'] = $user->id;
+		$_SESSION['ua'] = ua();
+		$this->userid = (int)$user->id;
+		return $user;
+	}
+
 	function current_user() {
 		static $user = false;
 		if ($user) return $user;

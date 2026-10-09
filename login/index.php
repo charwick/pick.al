@@ -66,14 +66,8 @@ if (isset($_SESSION['message'])) {
 		}
 		
 	} elseif ($_POST['action']=='login') {
-		if (!$_POST['password'] || !$_POST['username']) $message = 'All fields are required.';
-		$loginby = str_contains($_POST['username'], '@') ? 'email' : 'username';
-		
-		$user = $sql->get_user_by($loginby, $_POST['username']);
-		if (password_verify($_POST['password'], $user->password)) {
-			session_regenerate_id(true);
-			$_SESSION['user'] = $user->id;
-			$_SESSION['ua'] = ua();
+		if (empty($_POST['password']) || empty($_POST['username'])) $message = 'All fields are required.';
+		elseif ($sql->authenticate_user($_POST['username'], $_POST['password'])) {
 			header("Location: /");
 		} else {
 			$message = "The password was incorrect.";

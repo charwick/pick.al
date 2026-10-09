@@ -158,8 +158,8 @@ button.picked:disabled, .picked button.picked { opacity: 1; }
 	display: inline-block;
 	box-sizing: border-box;
 }
-#pick:hover { background: #292;}
-#pick:active { background: #181; }
+#pick:hover, #reauth button:hover { background: #292;}
+#pick:active, #reauth button:active { background: #181; }
 
 ul.classlist {
 	margin: 0; padding: 0;
@@ -403,6 +403,29 @@ dialog h2 {
 	text-align: center;
 	margin: 0 0 1.5em;
 }
+#reauth { width: min(22em, calc(100vw - 4em)); }
+#reauth form { display: grid; gap: 0.75em; }
+#reauth h2 { margin-bottom: 0; }
+#reauth p { margin: 0; }
+#reauth input {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 0.65em;
+	border: 1px solid rgb(255 255 255 / 0.3);
+	border-radius: 4px;
+	background: #222;
+	color: #FFF;
+	font: inherit;
+}
+#reauth button {
+	padding: 1em;
+	border-radius: 0 0 10px 10px;
+	background: #3A3;
+	font: inherit;
+	margin: 0 -2em -1.5em;
+}
+#reauth button:disabled { opacity: 0.5; }
+#reauth-error { color: #F99; }
 
 #offline {
 	position: absolute;
