@@ -210,7 +210,7 @@ document.addEventListener('keydown', function(e) {
 					newselect.classList.add('selected');
 				}
 			} else { // No selected item: select last li and scroll to bottom
-				const rosterList = roster.querySelectorAll('li:not(.head)');
+				const rosterList = rosterEl.querySelectorAll('li:not(.head)');
 				if (rosterList.length) {
 					rosterList[rosterList.length - 1].classList.add('selected');
 					rosterEl.querySelector('ul').scrollTop = rosterEl.scrollHeight;
@@ -226,7 +226,7 @@ document.addEventListener('keydown', function(e) {
 					newselect.classList.add('selected');
 				}
 			} else { // No selected item: select last li and scroll to bottom
-				const rosterList = roster.querySelectorAll('li:not(.head)');
+				const rosterList = rosterEl.querySelectorAll('li:not(.head)');
 				if (rosterList.length) {
 					rosterList[0].classList.add('selected');
 					rosterEl.querySelector('ul').scrollTop = 0;
