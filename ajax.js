@@ -67,8 +67,8 @@ class Data {
 
 	//Go to the server for data
 	async read(req, params = {}) {
-		const query = new URLSearchParams({req, ...params}),
-			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
+		const query = new URLSearchParams({req, ...params});
+		let response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
 		
 		if (response.status === 401) {
 			await this.reauthenticate();
@@ -120,6 +120,7 @@ class Data {
 						error.hidden = false;
 						password.value = '';
 						password.focus();
+						password.classList.add('error');
 						return;
 					}
 					if (Number(result.userId) !== Number(dialog.dataset.userId)) {

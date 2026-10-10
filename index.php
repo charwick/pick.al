@@ -23,9 +23,6 @@ if ($classid && $classid !== 0) {
 	<title><?php if (!$classid) echo 'Available Classes | '; ?>Pick.al</title>
 
 	<?php include('admin/parts.php');
-	embed_asset('picker.css');
-	embed_asset('ajax.js');
-	embed_asset('picker.js');
 	headermeta(); ?>
 </head>
 
@@ -96,17 +93,7 @@ if ($classid && $classid !== 0) {
 			<li>Show keyboard shortcuts <span><kbd>?</kbd></span></li>
 		</ul>
 	</dialog>
-	<?php if ($user) { ?>
-		<dialog id="reauth" data-user-id="<?= (int)$user->id; ?>">
-			<form id="reauth-form">
-				<h2>Session expired</h2>
-				<p>Log back in as <strong><?= htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8'); ?></strong></p>
-				<input id="reauth-password" name="password" type="password" autocomplete="current-password" required autofocus placeholder="Password">
-				<p id="reauth-error" role="alert" hidden></p>
-				<button type="submit">Continue</button>
-			</form>
-		</dialog>
-	<?php } ?>
+	<?php if ($user) { reauth_dialog(); } ?>
 	<div id="offline">Offline</div>
 </body>
 </html>

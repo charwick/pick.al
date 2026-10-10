@@ -59,12 +59,8 @@ if (isset($_GET['duplicate']) && $_GET['duplicate']) {
 				icons = ".json_encode($schema::$icons).";"; ?>
 		</script>
 	<?php }
-
-	embed_asset('ajax.js');
-	embed_asset('common.js');
-	embed_asset('schema.js');
-	headermeta(true); ?>
-
+	
+	headermeta(true, ['schema.js']); ?>
 </head>
 
 <body class="admin-edit admin-schema<?php if (isset($_GET['duplicated']) && $_GET['duplicated']) echo ' duplicated'; ?>">

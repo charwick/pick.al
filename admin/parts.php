@@ -26,11 +26,20 @@ function footer(): void {
 			<span><a href="https://github.com/charwick/pick.al/issues">Report a bug / Suggest a feature</a></span>
 		<?php } ?>
 	</footer>
+	<?php if ($user) reauth_dialog(); ?>
 <?php }
 
-function headermeta($admin=false): void {
-	if ($admin) embed_asset('admin.css');
-	?><meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
+function headermeta($admin=false, $assets=[]): void {
+	embed_asset('ajax.js');
+	if ($admin) {
+		embed_asset('admin.css');
+		embed_asset('common.js');
+	} else {
+		embed_asset('picker.css');
+		embed_asset('picker.js');
+	}
+	foreach ($assets as $asset) embed_asset($asset); ?>
+	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1" />
 	
 	<link rel="manifest" href="/manifest.webmanifest">
 	<link rel="icon" type="image/png" sizes="32x32" href="/icon/icon-32.png">
@@ -40,6 +49,19 @@ function headermeta($admin=false): void {
 	<script>
 		if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 	</script>
+<?php }
+
+function reauth_dialog(): void {
+	global $user; ?>
+	<dialog id="reauth" data-user-id="<?= (int)$user->id; ?>">
+		<form id="reauth-form">
+			<h2>Session expired</h2>
+			<p>Log back in as <strong><?= htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+			<input id="reauth-password" name="password" type="password" autocomplete="current-password" required autofocus placeholder="Password">
+			<p id="reauth-error" role="alert" hidden></p>
+			<button type="submit">Continue</button>
+		</form>
+	</dialog>
 <?php }
 
 //Increment version to invalidate cache

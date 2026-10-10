@@ -720,6 +720,17 @@ dialog .error {
 	color: #900;
 }
 
+#reauth form { padding: 2em; }
+#reauth-password {
+	display: block;
+	margin-bottom: 0.75em;
+	font-size: 1.5em;
+}
+#reauth-error {
+	color: #A22;
+	font-size: 0.8em;
+}
+
 /* ========
    Schemae
    ======== */

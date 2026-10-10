@@ -57,17 +57,13 @@ if (isset($_POST['name'])) {
 			foreach ($schemae as $schema) echo "'{$schema->id}': ".json_encode($schema).",";
 		echo "}, schemabuttons = ".($classid ? json_encode([$class->schema->id => $class->schema->output_buttons(true)]) : '{}').';'; ?>
 	</script>
-	<?php embed_asset('ajax.js');
-	embed_asset('common.js');
-	embed_asset('class.js');
+	<?php headermeta(true, ['class.js']);
 	if ($classid) echo $class->schema->output_css(true, false);
 	else {
 		echo '<style class="schema-css">';
 		foreach ($schemae as $schema) echo $schema->output_css(false, false);
 		echo '</style>';
-	}
-
-	headermeta(true); ?>
+	} ?>
 </head>
 
 <body class="admin-<?= $classid ? 'edit' : 'new'; ?>">
