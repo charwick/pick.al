@@ -61,6 +61,7 @@ if (isset($_GET['duplicate']) && $_GET['duplicate']) {
 	<?php }
 
 	embed_asset('ajax.js');
+	embed_asset('common.js');
 	embed_asset('schema.js');
 	headermeta(true); ?>
 

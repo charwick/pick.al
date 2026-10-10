@@ -1,47 +1,5 @@
 "use strict";
-function markup(element) {
-	let el;
-	if (element instanceof HTMLElement) el = element;
-	else if (['string', 'number'].includes(typeof element)) el = document.createTextNode(element);
-	else {
-		el = document.createElement(element.tag);
-		if ('attrs' in element) for (const a in element.attrs) el.setAttribute(a, element.attrs[a]);
-		if ('children' in element) {
-			if (typeof element.children == 'string') el.innerHTML = element.children;
-			else for (const c of element.children) if (c !== null) el.append(markup(c));
-		}
-	}
-	return el;
-}
-
-var remote = {
-	async read(req, params = {}, json=true) {
-		const query = new URLSearchParams({req, ...params}),
-			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
-		return {
-			data: await this.interThen(response, json),
-			source: 'network',
-			revision: response.headers.get('ETag')
-		};
-	},
-
-	async write(data, then, json=true) {
-		const formData = new FormData();
-		for (const key in data) formData.append(key, data[key]);
-		const response = await fetch('/ajax.php', {method: 'POST', body: formData}),
-			result = await this.interThen(response, json);
-		return then ? then(result) : result;
-	},
-
-	async interThen(response, json=true) {
-		if (response.status === 401) {
-			logout();
-			return;
-		}
-		if (!response.ok) throw new Error('Network error: '+response.status);
-		return await (json ? response.json() : response.text());
-	}
-};
+var remote = new Data(false);
 
 class makeInput {
 	elements = [];

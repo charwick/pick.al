@@ -58,6 +58,7 @@ if (isset($_POST['name'])) {
 		echo "}, schemabuttons = ".($classid ? json_encode([$class->schema->id => $class->schema->output_buttons(true)]) : '{}').';'; ?>
 	</script>
 	<?php embed_asset('ajax.js');
+	embed_asset('common.js');
 	embed_asset('class.js');
 	if ($classid) echo $class->schema->output_css(true, false);
 	else {

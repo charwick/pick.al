@@ -44,6 +44,7 @@ if (isset($_GET['code']) && !$user->orcid) {
 <head>
 	<title>User profile: <?= $user->username; ?> | Pick.al</title>
 	<?php embed_asset('ajax.js');
+	embed_asset('common.js');
 	embed_asset('user.js');
 	headermeta(true); ?>
 </head>

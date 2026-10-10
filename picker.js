@@ -8,202 +8,8 @@ var hist = [], //Reverse coded: current student = index[0]
 	schema = [],
 	questions = [],
 	demo = false,
-	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null;
-
-//AJAX and IndexedDB interface
-class Data {
-	DB_VERSION = 1;
-	STORE_NAME = 'snapshots';
-	namespace = null;
-	reauthPromise = null;
-
-	constructor() {
-		if (new URLSearchParams(location.search).has('try'))
-			this.namespace = 'demo'; //Disable writes
-	}
-
-	//User-facing function to get data from the server or cache
-	async get(req, params = {}) {
-		const identifier = params.class ?? 'all';
-		let result;
-		try {
-			result = await this.read(req, params);
-		
-		//If network fails, try to get a cached version
-		} catch (error) {
-			if (error.authentication) throw error;
-			if (!this.namespace) {
-				if (localStorage.userId) this.namespace = `user:${localStorage.userId}`;
-				else throw error;
-			}
-			let cached;
-			try {
-				cached = await this.getSnapshot(req, identifier);
-			} catch (storageError) {
-				console.error('Unable to read picker snapshot', storageError);
-				throw error;
-			}
-			if (!cached) throw error;
-			document.body.classList.add('stale');
-			document.getElementById('offline').textContent = 'Using saved data';
-			return {data: cached.data, source: 'cache', revision: cached.revision, savedAt: cached.savedAt};
-		}
-
-		const {data, revision} = result,
-			userId = data.userId ?? localStorage.userId;
-		if (userId && this.namespace != 'demo') {
-			this.namespace = `user:${userId}`;
-			localStorage.userId = userId;
-		}
-		try {
-			await this.put(req, identifier, data, revision);
-		} catch (storageError) {
-			console.error('Unable to save picker snapshot', storageError);
-		}
-		document.body.classList.remove('stale');
-		updateNetworkState();
-		return {data, source: 'network', revision};
-	}
-
-	//Go to the server for data
-	async read(req, params = {}) {
-		const query = new URLSearchParams({req, ...params}),
-			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
-		
-		if (response.status === 401) {
-			await this.reauthenticate();
-			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
-		}
-		return {
-			data: await this.interThen(response),
-			revision: response.headers.get('ETag')
-		};
-	}
-
-	//Write data to server
-	async write(data, then) {
-		if (this.namespace=='demo') return then(-1);
-		try {
-			const formData = new FormData();
-			for (const key in data) formData.append(key, data[key]);
-			let response = await fetch('/ajax.php', {method: 'POST', body: formData});
-			if (response.status === 401) {
-				await this.reauthenticate();
-				response = await fetch('/ajax.php', {method: 'POST', body: formData});
-			}
-			const result = await this.interThen(response);
-
-			return then ? then(result) : result;
-		} catch (error) {
-			if (error.authentication) throw error;
-		}
-	}
-
-	reauthenticate() {
-		if (this.reauthPromise) return this.reauthPromise;
-		const dialog = document.getElementById('reauth'),
-			form = document.getElementById('reauth-form'),
-			password = document.getElementById('reauth-password'),
-			error = document.getElementById('reauth-error');
-
-		this.reauthPromise = new Promise(resolve => {
-			dialog.oncancel = event => event.preventDefault();
-			form.onsubmit = async event => {
-				event.preventDefault();
-				const submit = form.querySelector('button[type="submit"]');
-				submit.disabled = true;
-				error.hidden = true;
-				try {
-					const result = await this.write({req: 'reauthenticate', password: password.value, userId: dialog.dataset.userId});
-					if (!result.success) {
-						error.textContent = 'The password was incorrect.';
-						error.hidden = false;
-						password.value = '';
-						password.focus();
-						return;
-					}
-					if (Number(result.userId) !== Number(dialog.dataset.userId)) {
-						window.location.href = '/';
-						return;
-					}
-					dialog.close();
-					password.value = '';
-					resolve();
-				} catch (requestError) {
-					error.textContent = requestError.message || 'Unable to verify password. Try again.';
-					error.hidden = false;
-				} finally {
-					submit.disabled = false;
-				}
-			};
-			dialog.showModal();
-			password.focus();
-		}).finally(() => { this.reauthPromise = null; });
-		return this.reauthPromise;
-	}
-
-	async interThen(response) {
-		if (!response.ok) throw new Error('Network error: '+response.status);
-		return await response.json();
-	}
-
-	open() {
-		return new Promise((resolve, reject) => {
-			const request = indexedDB.open('pickal', this.DB_VERSION);
-			request.onupgradeneeded = () => {
-				if (!request.result.objectStoreNames.contains(this.STORE_NAME))
-					request.result.createObjectStore(this.STORE_NAME, {keyPath: 'id'});
-			};
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(request.error);
-		});
-	}
-
-	key(type, identifier) {
-		return `${this.namespace}:${type}:${identifier}`;
-	}
-
-	normalize(data) {
-		const snapshot = structuredClone(data); //Bad practice to mutate the response object?
-		for (const student of snapshot.roster ?? []) {
-			if (student.excuseduntil != null && !(student.excuseduntil instanceof Date))
-				student.excuseduntil = new Date(student.excuseduntil);
-		}
-		return snapshot;
-	}
-
-	async put(type, identifier, data, revision) {
-		const db = await this.open();
-		return new Promise((resolve, reject) => {
-			const transaction = db.transaction(this.STORE_NAME, 'readwrite');
-			transaction.objectStore(this.STORE_NAME).put({
-				id: this.key(type, identifier),
-				namespace: this.namespace,
-				type,
-				identifier,
-				data: this.normalize(data),
-				revision,
-				savedAt: new Date().toISOString()
-			});
-			transaction.oncomplete = () => resolve();
-			transaction.onerror = () => reject(transaction.error);
-		});
-	}
-
-	async getSnapshot(type, identifier) {
-		const db = await this.open();
-		return new Promise((resolve, reject) => {
-			const request = db.transaction(this.STORE_NAME).objectStore(this.STORE_NAME).get(this.key(type, identifier));
-			request.onsuccess = () => {
-				const snapshot = request.result ?? null;
-				if (snapshot) snapshot.data = this.normalize(snapshot.data);
-				resolve(snapshot);
-			};
-			request.onerror = () => reject(request.error);
-		});
-	}
-};
-var remote = new Data();
+	classid = location.pathname.includes('class') ? parseInt(location.pathname.split('/').at(-1)) : null,
+	remote = new Data();
 
 function updateNetworkState() {
 	document.body.classList.toggle('offline', !navigator.onLine);
@@ -238,22 +44,15 @@ window.addEventListener('offline', updateNetworkState);
 				document.body.classList.add('demo');
 			} else if (!data.active) document.body.classList.add('inactive');
 			
-			const el = document.createElement('div');
-			el.innerHTML = data.schemaCss;
-			document.head.appendChild(el.firstElementChild);
+			document.head.appendChild(markup({tag: 'div', children: data.schemaCss}).firstElementChild);
 			
 			questions = data.questions;
 			if (questions && questions.length) {
 				document.querySelector('#q-queue').style.display = 'block';
-				const qhead = document.createElement('li'),
-					shead = document.querySelector('#roster li.head');
-				qhead.classList.add('head');
-				qhead.textContent = 'Questions';
-				document.querySelector('#roster ul').prepend(qhead);
+				const shead = document.querySelector('#roster li.head');
+				document.querySelector('#roster ul').prepend(markup({tag: 'li', attrs: {class: 'head'}, children: ['Questions']}));
 				for (const q of questions) {
-					const li = document.createElement('li');
-					li.dataset.q = q.id;
-					li.textContent = q.text;
+					const li = markup({tag: 'li', attrs: {'data-q': q.id}, children: [q.text]});
 					if (q.archived) li.classList.add('archived');
 					document.querySelector('#roster ul').insertBefore(li, shead);
 				}
@@ -263,9 +62,7 @@ window.addEventListener('offline', updateNetworkState);
 			if (roster.length) {
 				pickBtn.disabled = false;
 				for (const s of roster) {
-					let li = document.createElement('li');
-					li.dataset.id = s.id;
-					li.innerHTML = s.fname + ' ' + s.lname;
+					let li = markup({tag: 'li', attrs: {'data-id': s.id}, children: s.fname+' '+s.lname});
 
 					// Normalize excuseduntil into Date objects
 					if (s.excuseduntil != null) {
@@ -290,17 +87,13 @@ window.addEventListener('offline', updateNetworkState);
 
 			const clist = document.getElementById('bottom-anchor');
 			function classList(classes, title) {
-				const h2 = document.createElement('h2'),
-					ul = document.createElement('ul');
-				h2.classList.add(title.toLowerCase());
+				const h2 = markup({tag: 'h2', attrs: {class: title.toLowerCase()}, children: title+' Classes <span>/ '+(data.username ?? 'Demo User')+'</span>'}),
+					ul = markup({tag: 'ul', attrs: {class: 'classlist '+title.toLowerCase()}});
 				if (title=='Inactive' || data.inactive.length) h2.classList.add('switchable');
-				ul.classList.add('classlist', title.toLowerCase());
-				h2.innerHTML = title+' Classes <span>/ '+(data.username ?? 'Demo User')+'</span>';
-				for (const c of classes) {
-					const li = document.createElement('li');
-					li.innerHTML = `<a href='/class/${c.id}${!data.username ? '?try' : ''}'>${c.name} <span>${c.semester.charAt(0).toUpperCase() + c.semester.slice(1)} ${c.year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;${c.students} Students</span></a>`;
-					ul.append(li);
-				}
+				for (const c of classes)
+					ul.append(markup({tag: 'li', children: [
+						{tag: 'a', attrs: {href: `/class/${c.id}${!data.username ? '?try' : ''}`}, children: `${c.name} <span>${c.semester.charAt(0).toUpperCase() + c.semester.slice(1)} ${c.year}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;${c.students} Students</span>`}
+					]}));
 
 				return [h2, ul];
 			}
@@ -320,9 +113,7 @@ window.addEventListener('offline', updateNetworkState);
 	} catch (err) {
 		console.error('Failed to load class data', err);
 		// Leave UI disabled; user can still open shell but actions will fail until API implemented.
-		const warn = document.createElement('div');
-		warn.className = 'offline-warning';
-		warn.textContent = 'Unable to load class data from server.';
+		const warn = markup({tag: 'div', attrs: {class: 'offline-warning'}, children: 'Unable to load class data from server.'});
 		document.getElementById('bodywrap')?.prepend(warn);
 	}
 })(); //Kick off data load (non-blocking)
@@ -516,14 +307,10 @@ document.querySelector('#question .actions')?.addEventListener('click', e => {
 				const qs = document.querySelector('#roster li[data-q]');
 				let lihead;
 				if (!qs) {
-					lihead = document.createElement('li');
-					lihead.classList.add('head');
-					lihead.textContent='Questions';
+					lihead = markup({tag: 'li', attrs: {class: 'head'}, children: 'Questions'});
 					document.querySelector('#roster ul').prepend(lihead);
 				} else lihead = document.querySelector('#roster li.head');
-				const li = document.createElement('li');
-				li.dataset.q = currentQ;
-				li.textContent = document.getElementById('qtext').textContent;
+				const li = markup({tag: 'li', attrs: {'data-q': currentQ}, children: document.getElementById('qtext').textContent});
 				lihead.insertAdjacentElement('afterend', li);
 			} else {
 				document.querySelector(`#roster li[data-q="${currentQ}"]`).remove()
@@ -567,26 +354,20 @@ class StudentEvent {
 		this.info = student; //This will update the original roster data too
 		
 		//Create the HTML
-		this.element = document.createElement('div');
-		this.element.classList.add('studentinfo');
-		const h2 = document.createElement('h2'),
-			note = document.createElement('p'),
-			lnspan = document.createElement('span');
-		this.#actionlist = document.createElement('ul'),
-		h2.innerHTML = this.info.fname+' ';
-		lnspan.innerHTML = this.info.lname;
+		this.element = markup({tag: 'div', attrs: {class: 'studentinfo'}});
+		const h2 = markup({tag: 'h2', children: this.info.fname+' '}),
+			note = markup({tag: 'p', attrs: {class: 'note'}, children: this.info.note}),
+			lnspan = markup({tag: 'span', children: this.info.lname});
+		this.#actionlist = markup({tag: 'ul'});
 
 		//Check for duplicate first names, alert to read last name
 		if (roster.some(n => this.info.id != n.id && this.info.fname == n.fname))
 			lnspan.classList.add('dupename');
 
 		h2.append(lnspan);
-		note.classList.add('note');
-		note.innerHTML = this.info.note;
 		for (const s of schema) {
-			const li = document.createElement('li'),
-				btn = document.createElement('button');
-			btn.dataset.schemaval = s.value;
+			const li = markup({tag: 'li'}),
+				btn = markup({tag: 'button', attrs: {'data-schemaval': s.value}});
 			btn.addEventListener('click', (e) => {
 				for (const btn2 of this.#actions) {
 					btn2.disabled = true;

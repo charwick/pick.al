@@ -33,6 +33,7 @@ foreach ($sql->get_classes() as $class) {
 	<title>Pick.al Admin</title>
 	<?php headermeta(true);
 	embed_asset('ajax.js');
+	embed_asset('common.js');
 	embed_asset('search.js'); ?>
 </head>
 

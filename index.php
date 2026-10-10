@@ -24,6 +24,7 @@ if ($classid && $classid !== 0) {
 
 	<?php include('admin/parts.php');
 	embed_asset('picker.css');
+	embed_asset('ajax.js');
 	embed_asset('picker.js');
 	headermeta(); ?>
 </head>

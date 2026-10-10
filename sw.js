@@ -1,8 +1,9 @@
-const CACHE_NAME = 'pickal-v2';
+const CACHE_NAME = 'pickal-v3';
 const STATIC_ASSETS = [
 	'/',
 	'/class/0',
 	'/picker.css',
+	'/ajax.js',
 	'/picker.js',
 	'/manifest.webmanifest',
 ];
