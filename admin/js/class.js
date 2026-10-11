@@ -510,7 +510,7 @@ class EventsTable {
 				const result = a.dataset.schemaval;				
 				let params;
 				if (curval) params = {req: 'updateevent', event: row.dataset.id, result: result};
-				else params = {req: 'writeevent', rosterid: document.querySelector('dialog').student, result: result};
+				else params = {req: 'writeevent', rosterid: document.querySelector('dialog[data-student]').dataset.student, result: result};
 	
 				remote.write(params, response => {
 					for (const b of resultsCell.querySelectorAll('.result-button')) {
@@ -805,7 +805,7 @@ async function studentmodal(id, hlight) {
 		smodal.querySelector('.loader').remove();
 		smodal.children[0].append(actions, snote, excused, table.markup());
 		if (hlight) smodal.querySelector(`tr[data-id="${hlight}"]`).classList.add('new');
-		smodal.student = tr.dataset.id;
+		smodal.dataset.student = tr.dataset.id;
 	}
 
 	if (tr.querySelector('.score').textContent)

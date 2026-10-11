@@ -26,11 +26,11 @@ class Data {
 	}
 
 	//User-facing function to get data from the server or cache
-	async get(req, params = {}) {
+	async get(req, params = {}, json=true) {
 		const identifier = params.class ?? 'all';
 		let result;
 		try {
-			result = await this.read(req, params);
+			result = await this.read(req, params, json);
 		
 		//If network fails, try to get a cached version
 		} catch (error) {
@@ -66,7 +66,7 @@ class Data {
 	}
 
 	//Go to the server for data
-	async read(req, params = {}) {
+	async read(req, params = {}, json=true) {
 		const query = new URLSearchParams({req, ...params});
 		let response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
 		
@@ -75,7 +75,7 @@ class Data {
 			response = await fetch('/ajax.php?'+query.toString(), {method: 'GET'});
 		}
 		return {
-			data: await this.interThen(response),
+			data: await this.interThen(response, json),
 			revision: response.headers.get('ETag')
 		};
 	}
@@ -143,9 +143,10 @@ class Data {
 		return this.reauthPromise;
 	}
 
-	async interThen(response) {
-		if (!response.ok) throw new Error('Network error: '+response.status);
-		return await response.json();
+	async interThen(response, json=true) {
+		if (!response.ok)
+			throw Object.assign(new Error('Network error: '+response.status), {http: response.status});
+		return json ? await response.json() : await response.text();
 	}
 
 	open() {

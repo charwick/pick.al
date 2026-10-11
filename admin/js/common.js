@@ -85,7 +85,8 @@ class makeInput {
 			inps[0].type='text';
 			inps[0].setSelectionRange(0,0);
 			inps[0].type='email';
-		} else inps[0].setSelectionRange(0,0);
+		} else if (inps[0].type == 'date') inps[0].focus();
+		else inps[0].setSelectionRange(0,0);
 		if (this.editfunc instanceof Function) this.editfunc(inps);
 	}
 
